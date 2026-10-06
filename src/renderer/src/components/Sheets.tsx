@@ -7,6 +7,7 @@ import { useStore, type Sheet } from '../store'
 import { DiffView } from './DiffView'
 import { SettingsSheet } from './SettingsSheet'
 import { ShortcutsSheet } from './ShortcutsSheet'
+import { WhatsNewSheet } from './WhatsNew'
 
 /** Sheets drop from the toolbar over a dimmed window and return the same way. */
 export function SheetHost(): React.JSX.Element | null {
@@ -57,6 +58,7 @@ export function SheetHost(): React.JSX.Element | null {
         {shown.kind === 'conflicts' && <ConflictsSheet onClose={close} />}
         {shown.kind === 'settings' && <SettingsSheet onClose={close} />}
         {shown.kind === 'shortcuts' && <ShortcutsSheet onClose={close} />}
+        {shown.kind === 'whatsNew' && <WhatsNewSheet since={shown.since} onClose={close} />}
         {shown.kind === 'compare' && (
           <CompareSheet mine={shown.mine} theirs={shown.theirs} onClose={close} />
         )}

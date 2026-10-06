@@ -4,6 +4,7 @@ import { invoke } from './api'
 import { t } from './i18n'
 import { adjacentDay, journalDayOf, journalDays } from './lib/journal'
 import { toggleTheme } from './lib/theme'
+import { checkForUpdates } from './lib/updates'
 import { titleOf, useStore } from './store'
 
 async function exportPage(format: 'pdf' | 'html' | 'print', path: string): Promise<void> {
@@ -105,6 +106,10 @@ export async function runCommand(id: CommandId): Promise<void> {
         return s.toggleFocusMode()
       case 'view.theme':
         return await toggleTheme()
+      case 'update.check':
+        return await checkForUpdates()
+      case 'help.whatsNew':
+        return s.setSheet({ kind: 'whatsNew', since: null })
       case 'page.icon':
         if (page) useStore.setState({ iconPickerToken: s.iconPickerToken + 1 })
         return

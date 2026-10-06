@@ -31,7 +31,9 @@ import { IndexClient } from './indexClient'
 import { buildMenu } from './menu'
 import { loadSettings, saveSettings, vaultDataDir } from './settings'
 import { Vault } from './vault'
+import { createUpdater, type Updater } from './updates'
 import { createCaptureWindow, createMainWindow, showCapture } from './windows'
+import { compareVersions } from '@shared/changelog'
 
 const userData = env('USER_DATA')
 if (userData) app.setPath('userData', userData)
@@ -287,6 +289,16 @@ function registerIpc(): void {
     emit('settings:changed', s.settings)
     return s.settings
   })
+  handle('update:status', () => updater?.status() ?? { state: 'disabled' })
+  handle('update:check', () => updater?.check() ?? { state: 'disabled' })
+  handle('update:install', () => updater?.install())
+  // After an update, the renderer shows what changed since the version used last time
+  handle('app:whatsNew', async () => {
+    const version = app.getVersion()
+    const prev = (await loadSettings()).seenVersion ?? null
+    if (prev !== version) await saveSettings((s) => (s.seenVersion = version))
+    return { version, since: prev && compareVersions(version, prev) > 0 ? prev : null }
+  })
   handle('app:paths', () => ({
     vault: current?.root ?? null,
     data: current ? vaultDataDir(current.info.id) : null,
@@ -336,6 +348,7 @@ function flushWindow(win: BrowserWindow): Promise<void> {
 /** Swaps the global Quick Capture shortcut; returns false if macOS or another app owns it. */
 let captureShortcut: string | null = null
 let lastForgotten: { info: VaultInfo; index: number } | null = null
+let updater: Updater | null = null
 function registerCaptureShortcut(accelerator: string): boolean {
   if (captureShortcut) globalShortcut.unregister(captureShortcut)
   captureShortcut = null
@@ -458,15 +471,14 @@ app.whenReady().then(async () => {
     console.error('[vault] Öffnen fehlgeschlagen', err)
   }
 
-  if (app.isPackaged && !env('NO_UPDATES')) {
-    const { default: updater } = await import('electron-updater')
-    const check = (): void =>
-      void updater.autoUpdater
-        .checkForUpdatesAndNotify()
-        .catch((e) => console.warn('[update]', e.message))
-    check()
-    setInterval(check, 24 * 60 * 60 * 1000)
-  }
+  updater = await createUpdater({
+    enabled: app.isPackaged && !env('NO_UPDATES'),
+    emit: (status) => emit('update:status', status),
+    beforeInstall: shutdown
+  })
+  // Quietly at launch (once the window is up) and then daily
+  setTimeout(() => void updater?.check(), 5000)
+  setInterval(() => void updater?.check(), 24 * 60 * 60 * 1000)
 
   app.on('activate', () => {
     const win = mainWindow()
@@ -479,19 +491,20 @@ app.whenReady().then(async () => {
 })
 
 let quitting = false
+/** Pending edits first, then snapshots and the index; afterwards windows close without asking. */
+async function shutdown(): Promise<void> {
+  quitting = true
+  await Promise.all([...mainWindows].map(flushWindow))
+    .then(() => current?.close())
+    .catch(() => undefined)
+  index.close()
+  for (const w of mainWindows) w.removeAllListeners('close')
+}
+
 app.on('before-quit', (e) => {
   if (quitting) return
   e.preventDefault()
-  quitting = true
-  // Pending edits first, then snapshots and the index
-  void Promise.all([...mainWindows].map(flushWindow))
-    .then(() => current?.close())
-    .catch(() => undefined)
-    .finally(() => {
-      index.close()
-      for (const w of mainWindows) w.removeAllListeners('close')
-      app.quit()
-    })
+  void shutdown().finally(() => app.quit())
 })
 
 app.on('will-quit', () => globalShortcut.unregisterAll())

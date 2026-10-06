@@ -283,6 +283,27 @@ test('schaltet das Erscheinungsbild um und merkt es sich', async () => {
   await app.evaluate(({ nativeTheme }) => (nativeTheme.themeSource = 'system'))
 })
 
+test('zeigt die Neuerungen und antwortet auf „Nach Updates suchen“', async () => {
+  const send = (id: string): Promise<void> =>
+    app.evaluate(
+      ({ BrowserWindow }, cmd) =>
+        BrowserWindow.getAllWindows()
+          .find((w) => !w.webContents.getURL().includes('capture'))!
+          .webContents.send('menu:command', cmd),
+      id
+    )
+  await send('help.whatsNew')
+  const sheet = win.locator('.sheet')
+  await expect(sheet.getByRole('heading', { name: 'Neuerungen in Write' })).toBeVisible()
+  await expect(sheet.locator('.release h3').first()).toContainText('Version 0.1.0')
+  await expect(sheet.locator('.release li', { hasText: 'Textmarker' })).toBeVisible()
+  await sheet.getByRole('button', { name: 'Fertig' }).click()
+
+  // Development builds have no updater, but the click still gets an answer
+  await send('update.check')
+  await expect(win.locator('.toast')).toContainText('Updates gibt es nur in der installierten App.')
+})
+
 test('zeigt alle Tastaturkurzbefehle und filtert sie', async () => {
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()

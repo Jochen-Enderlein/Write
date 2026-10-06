@@ -44,7 +44,9 @@
     "exportPdf": "Export as PDF …",
     "exportHtml": "Export as HTML …",
     "print": "Print …",
-    "toggleTheme": "Toggle Light/Dark"
+    "toggleTheme": "Toggle Light/Dark",
+    "checkUpdates": "Check for Updates …",
+    "whatsNew": "What’s New in Write"
   },
   "menu": {
     "about": "About {{name}}",
@@ -359,7 +361,9 @@
     "theme": "Appearance",
     "themeSystem": "System",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "whatsNew": "What’s New",
+    "checkUpdates": "Check for Updates"
   },
   "keys": {
     "title": "Keyboard Shortcuts",
@@ -454,5 +458,25 @@
     "items_other": "{{count}} items",
     "subpages_one": "{{count}} subpage",
     "subpages_other": "{{count}} subpages"
+  },
+  "update": {
+    "checking": "Checking for updates …",
+    "current": "Write is up to date ({{version}}).",
+    "downloading": "Downloading Write {{version}} – keep working.",
+    "downloadingShort": "Downloading update {{version}} …",
+    "ready": "Write {{version}} is ready.",
+    "readyTitle": "Write {{version}} is ready",
+    "restart": "Restart",
+    "whatsNew": "What’s new?",
+    "disabled": "Updates are only available in the installed app.",
+    "error": "Couldn’t check for updates right now. Try again later."
+  },
+  "whatsNew": {
+    "title": "What’s New in Write",
+    "titleUpdated": "New in Write {{version}}",
+    "version": "Version {{version}}",
+    "continue": "Continue",
+    "none": "Write was updated to {{version}}.",
+    "allReleases": "All versions on GitHub"
   }
 }

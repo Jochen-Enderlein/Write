@@ -4,6 +4,7 @@ import type { AppSettings } from '@shared/types'
 import { acceleratorGlyphs, DEFAULT_CAPTURE_SHORTCUT } from '@shared/keymap'
 import { invoke } from '../api'
 import { setTheme } from '../lib/theme'
+import { checkForUpdates } from '../lib/updates'
 import { useStore } from '../store'
 import { VaultIcon, WarningIcon } from './Icons'
 
@@ -410,7 +411,22 @@ export function SettingsSheet({ onClose }: { onClose(): void }): React.JSX.Eleme
           </div>
         </section>
 
-        {paths && <p className="settings-footer">Write {paths.version}</p>}
+        {paths && (
+          <p className="settings-footer">
+            Write {paths.version}
+            <span aria-hidden="true"> · </span>
+            <button
+              className="link-button"
+              onClick={() => s().setSheet({ kind: 'whatsNew', since: null })}
+            >
+              {t('settings.whatsNew')}
+            </button>
+            <span aria-hidden="true"> · </span>
+            <button className="link-button" onClick={() => void checkForUpdates()}>
+              {t('settings.checkUpdates')}
+            </button>
+          </p>
+        )}
       </div>
     </>
   )

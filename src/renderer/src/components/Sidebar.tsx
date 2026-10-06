@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { acceleratorGlyphs, COMMANDS } from '@shared/keymap'
 import { dayKey } from '@shared/dates'
 import { invoke } from '../api'
+import { RELEASES_URL } from '@shared/changelog'
 import { createSpring, rubberband } from '../lib/spring'
+import { installUpdate } from '../lib/updates'
 import { useStore, titleOf } from '../store'
 import { ContextMenu, type MenuItem } from './ContextMenu'
 import { PageTree } from './PageTree'
@@ -41,6 +43,7 @@ export function Sidebar({
   const conflicts = useStore((s) => s.conflicts)
   const indexStatus = useStore((s) => s.indexStatus)
   const notices = useStore((s) => s.notices)
+  const update = useStore((s) => s.update)
   const titleIndex = useStore((s) => s.titleIndex)
   const s = useStore.getState
   const [vaultMenu, setVaultMenu] = useState<{ x: number; y: number } | null>(null)
@@ -194,6 +197,33 @@ export function Sidebar({
               <span>{t(n.message)}</span>
             </div>
           ))}
+          {update.state === 'downloading' && (
+            <div className="index-progress" role="status">
+              <span>{t('update.downloadingShort', { version: update.version })}</span>
+              <progress max={100} value={update.percent} />
+            </div>
+          )}
+          {/* Stays until restarted: unlike a notification, it can't be missed */}
+          {update.state === 'ready' && (
+            <div className="update-notice" role="status">
+              <div className="update-text">
+                <span className="update-title">
+                  {t('update.readyTitle', { version: update.version })}
+                </span>
+                <a
+                  className="update-link"
+                  href={`${RELEASES_URL}/tag/v${update.version}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t('update.whatsNew')}
+                </a>
+              </div>
+              <button className="button primary small" onClick={installUpdate}>
+                {t('update.restart')}
+              </button>
+            </div>
+          )}
           {indexStatus.state === 'indexing' && indexStatus.total > 0 && (
             <div className="index-progress" role="status">
               <span>

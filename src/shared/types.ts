@@ -59,6 +59,16 @@ export interface PageSummary {
   mtimeMs: number
 }
 
+/** Where the app is with updates; drives the sidebar notice and manual checks. */
+export type UpdateStatus =
+  | { state: 'disabled' } // development builds
+  | { state: 'idle' }
+  | { state: 'checking' }
+  | { state: 'downloading'; version: string; percent: number }
+  | { state: 'ready'; version: string }
+  | { state: 'current'; version: string }
+  | { state: 'error'; message: string }
+
 export interface TagCount {
   tag: string
   count: number

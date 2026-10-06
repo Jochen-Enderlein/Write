@@ -13,7 +13,10 @@ async function mainWindow(app) {
     if (isMain(w)) return w
   }
 }
-const app = await electron.launch({ executablePath: exe, env: { ...process.env, WRITE_VAULT: vault, WRITE_USER_DATA: ud, WRITE_NO_UPDATES: '1' } })
+const app = await electron.launch({
+  executablePath: exe,
+  env: { ...process.env, WRITE_VAULT: vault, WRITE_USER_DATA: ud, WRITE_NO_UPDATES: '1' }
+})
 const logs = []
 app.process().stdout?.on('data', (d) => logs.push('[main] ' + d))
 app.process().stderr?.on('data', (d) => logs.push('[main] ' + d))
@@ -29,7 +32,12 @@ try {
 } catch (err) {
   console.log('FEHLER:', err.message.split('\n')[0])
   if (shot) await win.screenshot({ path: shot })
-  console.log(logs.filter((l) => !l.includes('viewport meta')).join('\n').slice(0, 3000))
+  console.log(
+    logs
+      .filter((l) => !l.includes('viewport meta'))
+      .join('\n')
+      .slice(0, 3000)
+  )
   process.exitCode = 1
 } finally {
   await app.close()

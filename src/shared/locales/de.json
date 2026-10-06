@@ -44,7 +44,9 @@
     "exportPdf": "Als PDF exportieren …",
     "exportHtml": "Als HTML exportieren …",
     "print": "Drucken …",
-    "toggleTheme": "Hell/Dunkel umschalten"
+    "toggleTheme": "Hell/Dunkel umschalten",
+    "checkUpdates": "Nach Updates suchen …",
+    "whatsNew": "Neuerungen in Write"
   },
   "menu": {
     "about": "Über {{name}}",
@@ -359,7 +361,9 @@
     "theme": "Erscheinungsbild",
     "themeSystem": "System",
     "themeLight": "Hell",
-    "themeDark": "Dunkel"
+    "themeDark": "Dunkel",
+    "whatsNew": "Neuerungen",
+    "checkUpdates": "Nach Updates suchen"
   },
   "keys": {
     "title": "Tastaturkurzbefehle",
@@ -454,5 +458,25 @@
     "items_other": "{{count}} Einträge",
     "subpages_one": "{{count}} Unterseite",
     "subpages_other": "{{count}} Unterseiten"
+  },
+  "update": {
+    "checking": "Suche nach Updates …",
+    "current": "Write ist auf dem neuesten Stand ({{version}}).",
+    "downloading": "Write {{version}} wird geladen – du kannst weiterarbeiten.",
+    "downloadingShort": "Update {{version}} wird geladen …",
+    "ready": "Write {{version}} ist bereit.",
+    "readyTitle": "Write {{version}} ist bereit",
+    "restart": "Neu starten",
+    "whatsNew": "Was ist neu?",
+    "disabled": "Updates gibt es nur in der installierten App.",
+    "error": "Updates konnten gerade nicht geprüft werden. Später erneut versuchen."
+  },
+  "whatsNew": {
+    "title": "Neuerungen in Write",
+    "titleUpdated": "Neu in Write {{version}}",
+    "version": "Version {{version}}",
+    "continue": "Weiter",
+    "none": "Write wurde auf {{version}} aktualisiert.",
+    "allReleases": "Alle Versionen auf GitHub"
   }
 }

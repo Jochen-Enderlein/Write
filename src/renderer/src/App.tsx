@@ -22,6 +22,7 @@ import { editorBridge } from './editor/bridge'
 import { useIpcEvent, usePresence } from './lib/hooks'
 import i18next from './i18n'
 import { createSpring } from './lib/spring'
+import { announceReady, showWhatsNewIfUpdated } from './lib/updates'
 import { applyMoves, linkTargetExists, useStore } from './store'
 
 const WIDTH_KEY = 'sidebar:width'
@@ -142,6 +143,24 @@ export function App(): React.JSX.Element {
     applyMoves(moves)
     refreshTree()
   })
+  // Updates: the sidebar shows the state; a finished download is announced once
+  useEffect(() => {
+    void invoke('update:status').then((update) => {
+      useStore.setState({ update })
+      if (update.state === 'ready') announceReady(update.version)
+    })
+  }, [])
+  useIpcEvent('update:status', (update) => {
+    const was = useStore.getState().update
+    useStore.setState({ update })
+    if (update.state === 'ready' && was.state !== 'ready') announceReady(update.version)
+  })
+  // Once a vault is open (sheets need the main window), tell what's new after an update
+  const shell = view.kind !== 'loading' && view.kind !== 'welcome'
+  useEffect(() => {
+    if (shell) void showWhatsNewIfUpdated()
+  }, [shell])
+
   useIpcEvent('settings:changed', (next) => {
     useStore.setState({ settings: next })
     void invoke('app:language').then((lng) => {

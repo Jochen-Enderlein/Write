@@ -7,6 +7,7 @@ import type {
   PageMeta,
   TagCount,
   TreeNode,
+  UpdateStatus,
   VaultNotice,
   VaultState
 } from '@shared/types'
@@ -34,6 +35,8 @@ export type Sheet =
   | { kind: 'compare'; path: string; mine: string; theirs: string }
   | { kind: 'settings' }
   | { kind: 'shortcuts' }
+  /** Release notes; `since` = last version used, null shows the current version only. */
+  | { kind: 'whatsNew'; since: string | null }
 
 export interface HeadingInfo {
   id: string
@@ -81,6 +84,7 @@ interface State {
   sheet: Sheet
   infoOpen: boolean
   toast: { id: number; text: string; action?: { label: string; run(): void } } | null
+  update: UpdateStatus
   titleFocusToken: number
   /** The next editor that mounts should take focus (e.g. after Enter in the title). */
   pendingEditorFocus: boolean
@@ -166,6 +170,7 @@ export const useStore = create<State>((set, get) => ({
   sheet: null,
   infoOpen: false,
   toast: null,
+  update: { state: 'idle' },
   titleFocusToken: 0,
   pendingEditorFocus: false,
   pendingTreeEdit: null,

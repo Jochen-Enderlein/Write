@@ -2135,6 +2135,127 @@ kbd {
   color: var(--label-3);
 }
 
+/* A plain text button, e.g. in the settings footer */
+.link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: var(--accent);
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+/* ── Updates and release notes ───────────────────────────────────────────── */
+
+.update-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: materialize 240ms var(--ease-out);
+}
+
+.update-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.update-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sidebar-label);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.update-link {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.update-link:hover {
+  text-decoration: underline;
+}
+
+.whats-new {
+  overflow-y: auto;
+  padding: 4px 26px 20px;
+}
+
+.whats-new .release + .release {
+  margin-top: 8px;
+  padding-top: 14px;
+  box-shadow: 0 -0.5px 0 var(--separator);
+}
+
+.whats-new h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 12px 0 6px;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.whats-new .release-date {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--label-3);
+}
+
+.whats-new h4 {
+  margin: 14px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label-2);
+}
+
+.whats-new ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.whats-new li,
+.whats-new p {
+  margin: 4px 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.whats-new code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--code-bg);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.whats-new-empty {
+  color: var(--label-2);
+}
+
+.whats-new-footer {
+  margin-top: 18px;
+  font-size: 12px;
+}
+
+.whats-new-footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
 /* ── Welcome ─────────────────────────────────────────────────────────────── */
 
 .welcome {

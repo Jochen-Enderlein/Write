@@ -45,6 +45,8 @@ export type CommandId =
   | 'journal.calendar'
   | 'view.focus'
   | 'view.theme'
+  | 'update.check'
+  | 'help.whatsNew'
 
 export interface CommandDef {
   id: CommandId
@@ -56,6 +58,7 @@ export interface CommandDef {
 }
 
 export const COMMANDS: CommandDef[] = [
+  { id: 'update.check', label: 'cmd.checkUpdates', menu: 'app' },
   { id: 'settings.open', label: 'cmd.settings', accelerator: 'CmdOrCtrl+,', menu: 'app' },
   { id: 'page.new', label: 'cmd.pageNew', accelerator: 'CmdOrCtrl+N', menu: 'file' },
   { id: 'folder.new', label: 'cmd.folderNew', accelerator: 'CmdOrCtrl+Shift+N', menu: 'file' },
@@ -123,7 +126,8 @@ export const COMMANDS: CommandDef[] = [
   { id: 'conflicts.show', label: 'cmd.conflicts', menu: 'go' },
   { id: 'index.rebuild', label: 'cmd.rebuildIndex', menu: 'file' },
   { id: 'capture.open', label: 'cmd.capture', menu: 'file' },
-  { id: 'shortcuts.show', label: 'cmd.shortcuts', accelerator: 'CmdOrCtrl+/', menu: 'help' }
+  { id: 'shortcuts.show', label: 'cmd.shortcuts', accelerator: 'CmdOrCtrl+/', menu: 'help' },
+  { id: 'help.whatsNew', label: 'cmd.whatsNew', menu: 'help' }
 ]
 
 /** Shortcuts handled by the editor itself (BlockNote/Tiptap); listed in the overview only. */

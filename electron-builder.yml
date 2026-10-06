@@ -33,6 +33,9 @@ mac:
     NSHumanReadableCopyright: Copyright © 2026 Jochen Enderlein
 dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}
+# Release text on GitHub = this version's section of CHANGELOG.md (scripts/release-notes.mjs)
+releaseInfo:
+  releaseNotesFile: out/release-notes.md
 publish:
   provider: github
   owner: Jochen-Enderlein

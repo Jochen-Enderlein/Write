@@ -9,6 +9,7 @@ import type {
   SearchHit,
   PageSummary,
   TagCount,
+  UpdateStatus,
   TemplateInfo,
   TrashEntry,
   TreeNode,
@@ -112,6 +113,10 @@ export const ipcSchemas = {
       .partial()
   ]),
   'app:paths': z.tuple([]),
+  'app:whatsNew': z.tuple([]),
+  'update:status': z.tuple([]),
+  'update:check': z.tuple([]),
+  'update:install': z.tuple([]),
   'app:revealPath': z.tuple([z.enum(['vault', 'data'])]),
   'app:accentColor': z.tuple([]),
   'app:language': z.tuple([]),
@@ -187,6 +192,11 @@ export interface IpcResults {
   'settings:get': AppSettings
   'settings:set': AppSettings
   'app:paths': { vault: string | null; data: string | null; version: string }
+  /** Current version, and the one used last time if the app was updated since (else null). */
+  'app:whatsNew': { version: string; since: string | null }
+  'update:status': UpdateStatus
+  'update:check': UpdateStatus
+  'update:install': void
   'app:revealPath': void
   'app:accentColor': string | null
   'app:language': 'de' | 'en'
@@ -197,6 +207,7 @@ export interface IpcResults {
 export interface IpcEvents {
   'vault:changed': [VaultState]
   'tree:changed': []
+  'update:status': [UpdateStatus]
   /** A page changed on disk through something other than this window's own save. */
   'page:changed': [path: string]
   /** A page was renamed or moved: old path → new path (also for descendants). */

@@ -10,6 +10,8 @@ interface SettingsFile {
   settings: AppSettings
   windowBounds?: { x: number; y: number; width: number; height: number }
   sidebarWidth?: number
+  /** App version at the last start; a higher version now means "show what's new". */
+  seenVersion?: string
 }
 
 const defaults: SettingsFile = {
