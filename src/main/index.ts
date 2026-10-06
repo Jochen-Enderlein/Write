@@ -11,6 +11,7 @@ import {
   systemPreferences
 } from 'electron'
 import { existsSync, mkdirSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -302,6 +303,16 @@ function registerIpc(): void {
       s.settings.autoUpdates === 'ask' &&
       (s.launches ?? 0) >= 2
     )
+  })
+  handle('app:licenses', async () => {
+    try {
+      return await readFile(
+        path.join(import.meta.dirname, '../renderer/third-party-licenses.txt'),
+        'utf8'
+      )
+    } catch {
+      return null
+    }
   })
   // After an update, the renderer shows what changed since the version used last time
   handle('app:whatsNew', async () => {

@@ -39,6 +39,7 @@ export type Sheet =
   | { kind: 'whatsNew'; since: string | null }
   /** One-time question whether Write may check for updates on its own. */
   | { kind: 'updatePermission' }
+  | { kind: 'licenses' }
 
 export interface HeadingInfo {
   id: string

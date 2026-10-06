@@ -459,6 +459,9 @@ export function SettingsSheet({ onClose }: { onClose(): void }): React.JSX.Eleme
               <a href={LINKS.license} target="_blank" rel="noreferrer">
                 {t('about.licenseLink')}
               </a>
+              <button className="link-button" onClick={() => s().setSheet({ kind: 'licenses' })}>
+                {t('about.thirdParty')}
+              </button>
               <a href={LINKS.impressum} target="_blank" rel="noreferrer">
                 {t('about.impressum')}
               </a>

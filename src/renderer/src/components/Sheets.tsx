@@ -7,6 +7,7 @@ import { useStore, type Sheet } from '../store'
 import { DiffView } from './DiffView'
 import { SettingsSheet } from './SettingsSheet'
 import { ShortcutsSheet } from './ShortcutsSheet'
+import { LicensesSheet } from './Licenses'
 import { UpdatePermissionSheet } from './UpdatePermission'
 import { WhatsNewSheet } from './WhatsNew'
 
@@ -67,6 +68,7 @@ export function SheetHost(): React.JSX.Element | null {
         {shown.kind === 'shortcuts' && <ShortcutsSheet onClose={close} />}
         {shown.kind === 'whatsNew' && <WhatsNewSheet since={shown.since} onClose={close} />}
         {shown.kind === 'updatePermission' && <UpdatePermissionSheet onClose={close} />}
+        {shown.kind === 'licenses' && <LicensesSheet onClose={close} />}
         {shown.kind === 'compare' && (
           <CompareSheet mine={shown.mine} theirs={shown.theirs} onClose={close} />
         )}

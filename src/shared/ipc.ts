@@ -115,6 +115,7 @@ export const ipcSchemas = {
   ]),
   'app:paths': z.tuple([]),
   'app:whatsNew': z.tuple([]),
+  'app:licenses': z.tuple([]),
   'update:status': z.tuple([]),
   'update:check': z.tuple([]),
   'update:install': z.tuple([]),
@@ -196,6 +197,8 @@ export interface IpcResults {
   'app:paths': { vault: string | null; data: string | null; version: string }
   /** Current version, and the one used last time if the app was updated since (else null). */
   'app:whatsNew': { version: string; since: string | null }
+  /** Notices of the bundled open-source libraries (null in development builds). */
+  'app:licenses': string | null
   'update:status': UpdateStatus
   'update:check': UpdateStatus
   'update:install': void

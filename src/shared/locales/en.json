@@ -488,7 +488,9 @@
     "issues": "Report a problem",
     "licenseLink": "License",
     "impressum": "Legal notice",
-    "privacy": "Privacy: Write sends no data to its developer. Your notes stay in your folder. The only connection to the internet is the update check at GitHub – automatically only if you turn it on above, otherwise only when you check yourself."
+    "privacy": "Privacy: Write sends no data to its developer. Your notes stay in your folder. The only connection to the internet is the update check at GitHub – automatically only if you turn it on above, otherwise only when you check yourself.",
+    "thirdParty": "Third-Party Licenses",
+    "thirdPartyMissing": "The license list is created when the app is built and is missing in this development version."
   },
   "updatePermission": {
     "title": "Check for updates automatically?",

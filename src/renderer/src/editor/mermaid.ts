@@ -16,6 +16,9 @@ export async function renderMermaid(source: string, el: HTMLElement): Promise<vo
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'strict',
+        // Mermaid 12 lays out with ELK by default; ELK (EPL-2.0) isn't GPL-compatible and is left
+        // out of the build (editor/elk-stub.ts), so use the classic dagre layout (MIT)
+        layout: 'dagre',
         theme: wanted,
         fontFamily: '-apple-system, system-ui, sans-serif'
       })

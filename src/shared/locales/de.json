@@ -488,7 +488,9 @@
     "issues": "Fehler melden",
     "licenseLink": "Lizenz",
     "impressum": "Impressum",
-    "privacy": "Datenschutz: Write sendet keine Daten an den Entwickler. Deine Notizen bleiben in deinem Ordner. Einzige Verbindung ins Internet ist die Update-Prüfung bei GitHub – automatisch nur, wenn du sie oben einschaltest, sonst nur, wenn du selbst danach suchst."
+    "privacy": "Datenschutz: Write sendet keine Daten an den Entwickler. Deine Notizen bleiben in deinem Ordner. Einzige Verbindung ins Internet ist die Update-Prüfung bei GitHub – automatisch nur, wenn du sie oben einschaltest, sonst nur, wenn du selbst danach suchst.",
+    "thirdParty": "Lizenzen von Drittanbietern",
+    "thirdPartyMissing": "Die Lizenzliste entsteht beim Bauen der App und fehlt in dieser Entwicklungsversion."
   },
   "updatePermission": {
     "title": "Automatisch nach Updates suchen?",

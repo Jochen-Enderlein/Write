@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
+import { thirdPartyLicenses } from './scripts/third-party-licenses'
 
 const shared = { '@shared': resolve('src/shared') }
 
@@ -29,8 +30,15 @@ export default defineConfig({
     }
   },
   renderer: {
-    plugins: [react()],
-    resolve: { alias: { ...shared, '@renderer': resolve('src/renderer/src') } },
+    plugins: [react(), thirdPartyLicenses()],
+    resolve: {
+      alias: {
+        ...shared,
+        '@renderer': resolve('src/renderer/src'),
+        // EPL-2.0, not GPL-compatible: Mermaid's optional ELK layout is left out (see the stub)
+        'elkjs/lib/elk.bundled.js': resolve('src/renderer/src/editor/elk-stub.ts')
+      }
+    },
     build: {
       rollupOptions: {
         input: {

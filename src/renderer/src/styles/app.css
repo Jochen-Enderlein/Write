@@ -2198,6 +2198,27 @@ kbd {
   text-decoration: underline;
 }
 
+.licenses {
+  overflow-y: auto;
+  padding: 12px 22px 20px;
+}
+
+.licenses pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--label-2);
+  user-select: text;
+}
+
+.licenses-missing {
+  color: var(--label-2);
+  font-size: 13px;
+}
+
 /* The one-time question about automatic update checks: a small, centred alert */
 .sheet.compact {
   width: min(440px, calc(100vw - 64px));

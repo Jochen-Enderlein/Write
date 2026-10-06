@@ -323,6 +323,23 @@ test('sucht nur mit Erlaubnis automatisch nach Updates', async () => {
   await win.keyboard.press('Escape')
 })
 
+test('liefert die Lizenzen der Bibliotheken mit und rendert Diagramme ohne ELK', async () => {
+  await win.locator('.sidebar-item', { hasText: 'Einstellungen' }).click()
+  await win.locator('.sheet').getByRole('button', { name: 'Lizenzen von Drittanbietern' }).click()
+  const pre = win.locator('.licenses pre')
+  await expect(pre).toContainText('@blocknote/core')
+  await expect(pre).not.toContainText('elkjs')
+  await win.keyboard.press('Escape')
+
+  // Mermaid's default layout still works although elkjs (EPL-2.0) is left out
+  writeFileSync(
+    path.join(vault, 'Diagramm.md'),
+    '# Diagramm\n\n```mermaid\ngraph TD\n  A --> B\n```\n'
+  )
+  await win.locator('.tree-row .name', { hasText: 'Diagramm' }).click()
+  await expect(win.locator('.mermaid-preview svg')).toBeVisible({ timeout: 15000 })
+})
+
 test('zeigt alle Tastaturkurzbefehle und filtert sie', async () => {
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
