@@ -89,7 +89,9 @@ export APPLE_ID=… APPLE_APP_SPECIFIC_PASSWORD=… APPLE_TEAM_ID=…
 npm run dist
 ```
 
-Signiert wird mit dem Developer-ID-Zertifikat aus dem Schlüsselbund. Ohne Zertifikat geht ein unsignierter Testbuild:
+Signiert wird mit dem Developer-ID-Zertifikat aus dem Schlüsselbund.
+
+Veröffentlichen: `npm run release` baut, signiert, notarisiert und lädt DMG und ZIP als Release auf [GitHub](https://github.com/Jochen-Enderlein/Write/releases) hoch. Dafür braucht es ein GitHub-Token mit Schreibrecht auf das Repo (`GH_TOKEN`); vorher die Version in `package.json` erhöhen. Installierte Apps finden das Update über `electron-updater` selbst. Ohne Zertifikat geht ein unsignierter Testbuild:
 
 ```bash
 CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --dir -c.mac.notarize=false
@@ -105,6 +107,9 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --dir -c.mac.notari
 ## Offene Punkte
 
 - [ ] Developer-Account für Signierung und Notarisierung
-- [ ] GitHub-Owner/-Repo für Auto-Updates (`publish` in `electron-builder.yml`)
 - [ ] Nur Apple Silicon oder auch Intel (derzeit nur arm64)
 - [ ] `.docuapp/` bleibt aus Kompatibilität mit bestehenden, gesyncten Vaults so benannt; eine Umbenennung bräuchte eine Migration auf allen Geräten
+
+## Lizenz
+
+Write steht unter der [GNU General Public License v3.0 oder später](LICENSE). Du darfst es nutzen, verändern und weitergeben – wer eine veränderte Fassung veröffentlicht, muss ihren Quellcode ebenfalls unter der GPL offenlegen.

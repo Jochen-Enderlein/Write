@@ -7,6 +7,13 @@
   "type": "module",
   "private": true,
   "author": "Jochen Enderlein",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/Jochen-Enderlein/Write",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jochen-Enderlein/Write.git"
+  },
+  "bugs": "https://github.com/Jochen-Enderlein/Write/issues",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",

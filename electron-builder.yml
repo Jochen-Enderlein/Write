@@ -1,4 +1,3 @@
-# Offener Punkt: GitHub-Repo für Auto-Updates festlegen (siehe README).
 appId: com.jochenenderlein.write
 productName: Write
 copyright: Copyright © 2026 Jochen Enderlein
@@ -36,6 +35,6 @@ dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}
 publish:
   provider: github
-  owner: OWNER # TODO: GitHub-Benutzer
-  repo: write # TODO: Repository
+  owner: Jochen-Enderlein
+  repo: Write
   releaseType: release
