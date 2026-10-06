@@ -114,7 +114,7 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --dir -c.mac.notari
 
 Write sendet keine Daten an den Entwickler, es gibt weder Konto noch Telemetrie. Notizen, Index und Versionsgeschichte bleiben auf deinem Mac bzw. in dem Ordner, den du selbst synchronisierst.
 
-Die einzige Verbindung ins Internet ist die Update-Prüfung bei [GitHub Releases](https://github.com/Jochen-Enderlein/Write/releases). Dabei sieht GitHub die IP-Adresse und die Write-Version. Automatisch (einmal täglich) prüft Write nur, wenn du es erlaubst – gefragt wird einmal beim zweiten Start, ändern lässt es sich jederzeit unter _Einstellungen → Über Write_. _Write → Nach Updates suchen …_ prüft nur auf deinen Klick.
+Die einzige Verbindung ins Internet ist die Update-Prüfung bei [GitHub Releases](https://github.com/Jochen-Enderlein/Write/releases). Dabei sieht GitHub die IP-Adresse und welche Dateien abgerufen werden. Automatisch (einmal täglich) prüft Write nur, wenn du es erlaubst – gefragt wird einmal beim zweiten Start, ändern lässt es sich jederzeit unter _Einstellungen → Über Write_. _Write → Nach Updates suchen …_ prüft nur auf deinen Klick. Alles Weitere steht in der [Datenschutzerklärung](DATENSCHUTZ.md).
 
 ## Impressum
 

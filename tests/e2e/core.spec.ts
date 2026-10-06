@@ -316,6 +316,10 @@ test('sucht nur mit Erlaubnis automatisch nach Updates', async () => {
     'href',
     'https://beerball.jochens-toller-server.de/impressum'
   )
+  await expect(sheet.getByRole('link', { name: 'Datenschutz' })).toHaveAttribute(
+    'href',
+    'https://github.com/Jochen-Enderlein/Write/blob/main/DATENSCHUTZ.md'
+  )
   await toggle.click()
   await eventually(() => expect(saved()).toBe('on'))
   await toggle.click()

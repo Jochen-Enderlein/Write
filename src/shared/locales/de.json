@@ -483,19 +483,20 @@
     "title": "Über Write",
     "license": "Freie Software unter der GNU GPL v3 oder später",
     "autoUpdates": "Automatisch nach Updates suchen",
-    "autoUpdatesHint": "Einmal täglich bei GitHub nachsehen. Dabei sieht GitHub deine IP-Adresse und die Write-Version.",
+    "autoUpdatesHint": "Einmal täglich bei GitHub nachsehen. Dabei sieht GitHub deine IP-Adresse.",
     "source": "Quellcode",
     "issues": "Fehler melden",
     "licenseLink": "Lizenz",
     "impressum": "Impressum",
-    "privacy": "Datenschutz: Write sendet keine Daten an den Entwickler. Deine Notizen bleiben in deinem Ordner. Einzige Verbindung ins Internet ist die Update-Prüfung bei GitHub – automatisch nur, wenn du sie oben einschaltest, sonst nur, wenn du selbst danach suchst.",
+    "privacy": "Write sendet keine Daten an den Entwickler, deine Notizen bleiben in deinem Ordner. Einzige Verbindung ins Internet ist die Update-Prüfung bei GitHub – automatisch nur, wenn du sie oben einschaltest, sonst nur auf deinen Klick. Details in der Datenschutzerklärung.",
     "thirdParty": "Lizenzen von Drittanbietern",
-    "thirdPartyMissing": "Die Lizenzliste entsteht beim Bauen der App und fehlt in dieser Entwicklungsversion."
+    "thirdPartyMissing": "Die Lizenzliste entsteht beim Bauen der App und fehlt in dieser Entwicklungsversion.",
+    "privacyLink": "Datenschutz"
   },
   "updatePermission": {
     "title": "Automatisch nach Updates suchen?",
     "body": "Write kann einmal täglich bei GitHub nachsehen, ob es eine neue Version gibt, und sie im Hintergrund laden. Installiert wird erst, wenn du neu startest.",
-    "note": "Dabei sieht GitHub deine IP-Adresse und die Write-Version – sonst nichts. Du kannst das jederzeit in den Einstellungen unter „Über Write“ ändern.",
+    "note": "Dabei sieht GitHub deine IP-Adresse und welche Dateien abgerufen werden – nie Inhalte deiner Notizen. Du kannst das jederzeit in den Einstellungen unter „Über Write“ ändern.",
     "no": "Nicht automatisch",
     "yes": "Automatisch suchen"
   }

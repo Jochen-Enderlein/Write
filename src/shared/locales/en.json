@@ -483,19 +483,20 @@
     "title": "About Write",
     "license": "Free software under the GNU GPL v3 or later",
     "autoUpdates": "Check for updates automatically",
-    "autoUpdatesHint": "Asks GitHub once a day. GitHub sees your IP address and the Write version.",
+    "autoUpdatesHint": "Asks GitHub once a day. GitHub sees your IP address.",
     "source": "Source code",
     "issues": "Report a problem",
     "licenseLink": "License",
     "impressum": "Legal notice",
-    "privacy": "Privacy: Write sends no data to its developer. Your notes stay in your folder. The only connection to the internet is the update check at GitHub – automatically only if you turn it on above, otherwise only when you check yourself.",
+    "privacy": "Write sends no data to its developer; your notes stay in your folder. The only connection to the internet is the update check at GitHub – automatically only if you turn it on above, otherwise only when you click. Details in the privacy policy.",
     "thirdParty": "Third-Party Licenses",
-    "thirdPartyMissing": "The license list is created when the app is built and is missing in this development version."
+    "thirdPartyMissing": "The license list is created when the app is built and is missing in this development version.",
+    "privacyLink": "Privacy"
   },
   "updatePermission": {
     "title": "Check for updates automatically?",
     "body": "Write can ask GitHub once a day whether there is a new version and download it in the background. It installs only when you restart.",
-    "note": "GitHub sees your IP address and the Write version – nothing else. You can change this anytime in Settings under “About Write”.",
+    "note": "GitHub sees your IP address and which files are requested – never the contents of your notes. You can change this anytime in Settings under “About Write”.",
     "no": "Don’t Check",
     "yes": "Check Automatically"
   }
