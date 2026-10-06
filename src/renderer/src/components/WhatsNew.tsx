@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { entriesSince, parseChangelog, RELEASES_URL } from '@shared/changelog'
+import { entriesSince, parseChangelog } from '@shared/changelog'
+import { LINKS } from '@shared/links'
 import changelog from '../../../../CHANGELOG.md?raw'
 import { invoke } from '../api'
 import { locale } from '../i18n'
@@ -94,7 +95,7 @@ export function WhatsNewSheet({
           </section>
         ))}
         <p className="whats-new-footer">
-          <a href={RELEASES_URL} target="_blank" rel="noreferrer">
+          <a href={LINKS.releases} target="_blank" rel="noreferrer">
             {t('whatsNew.allReleases')}
           </a>
         </p>

@@ -37,6 +37,8 @@ export type Sheet =
   | { kind: 'shortcuts' }
   /** Release notes; `since` = last version used, null shows the current version only. */
   | { kind: 'whatsNew'; since: string | null }
+  /** One-time question whether Write may check for updates on its own. */
+  | { kind: 'updatePermission' }
 
 export interface HeadingInfo {
   id: string

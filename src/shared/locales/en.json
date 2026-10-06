@@ -478,5 +478,23 @@
     "continue": "Continue",
     "none": "Write was updated to {{version}}.",
     "allReleases": "All versions on GitHub"
+  },
+  "about": {
+    "title": "About Write",
+    "license": "Free software under the GNU GPL v3 or later",
+    "autoUpdates": "Check for updates automatically",
+    "autoUpdatesHint": "Asks GitHub once a day. GitHub sees your IP address and the Write version.",
+    "source": "Source code",
+    "issues": "Report a problem",
+    "licenseLink": "License",
+    "impressum": "Legal notice",
+    "privacy": "Privacy: Write sends no data to its developer. Your notes stay in your folder. The only connection to the internet is the update check at GitHub – automatically only if you turn it on above, otherwise only when you check yourself."
+  },
+  "updatePermission": {
+    "title": "Check for updates automatically?",
+    "body": "Write can ask GitHub once a day whether there is a new version and download it in the background. It installs only when you restart.",
+    "note": "GitHub sees your IP address and the Write version – nothing else. You can change this anytime in Settings under “About Write”.",
+    "no": "Don’t Check",
+    "yes": "Check Automatically"
   }
 }

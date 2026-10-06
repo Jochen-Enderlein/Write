@@ -68,6 +68,3 @@ export function entriesSince(
     )
     .sort((a, b) => compareVersions(b.version, a.version))
 }
-
-/** Where every version's notes and downloads live (GitHub Releases, tagged `v1.2.3`). */
-export const RELEASES_URL = 'https://github.com/Jochen-Enderlein/Write/releases'

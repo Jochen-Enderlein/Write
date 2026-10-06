@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { acceleratorGlyphs, COMMANDS } from '@shared/keymap'
 import { dayKey } from '@shared/dates'
 import { invoke } from '../api'
-import { RELEASES_URL } from '@shared/changelog'
+import { LINKS } from '@shared/links'
 import { createSpring, rubberband } from '../lib/spring'
 import { installUpdate } from '../lib/updates'
 import { useStore, titleOf } from '../store'
@@ -212,7 +212,7 @@ export function Sidebar({
                 </span>
                 <a
                   className="update-link"
-                  href={`${RELEASES_URL}/tag/v${update.version}`}
+                  href={`${LINKS.releases}/tag/v${update.version}`}
                   target="_blank"
                   rel="noreferrer"
                 >

@@ -7,6 +7,7 @@ import { useStore, type Sheet } from '../store'
 import { DiffView } from './DiffView'
 import { SettingsSheet } from './SettingsSheet'
 import { ShortcutsSheet } from './ShortcutsSheet'
+import { UpdatePermissionSheet } from './UpdatePermission'
 import { WhatsNewSheet } from './WhatsNew'
 
 /** Sheets drop from the toolbar over a dimmed window and return the same way. */
@@ -53,12 +54,19 @@ export function SheetHost(): React.JSX.Element | null {
       className={`overlay dim ${closing ? 'closing' : ''}`}
       onPointerDown={(e) => e.target === e.currentTarget && close()}
     >
-      <div ref={dialog} className="sheet glass" role="dialog" aria-modal="true" tabIndex={-1}>
+      <div
+        ref={dialog}
+        className={`sheet glass ${shown.kind === 'updatePermission' ? 'compact' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+      >
         {shown.kind === 'history' && <HistorySheet path={shown.path} onClose={close} />}
         {shown.kind === 'conflicts' && <ConflictsSheet onClose={close} />}
         {shown.kind === 'settings' && <SettingsSheet onClose={close} />}
         {shown.kind === 'shortcuts' && <ShortcutsSheet onClose={close} />}
         {shown.kind === 'whatsNew' && <WhatsNewSheet since={shown.since} onClose={close} />}
+        {shown.kind === 'updatePermission' && <UpdatePermissionSheet onClose={close} />}
         {shown.kind === 'compare' && (
           <CompareSheet mine={shown.mine} theirs={shown.theirs} onClose={close} />
         )}

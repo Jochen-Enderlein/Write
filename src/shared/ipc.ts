@@ -108,7 +108,8 @@ export const ipcSchemas = {
         editorFontSize: z.number().int().min(12).max(26),
         editorWidth: z.enum(['narrow', 'normal', 'wide', 'full']),
         language: z.enum(['system', 'de', 'en']),
-        theme: z.enum(['system', 'light', 'dark'])
+        theme: z.enum(['system', 'light', 'dark']),
+        autoUpdates: z.enum(['ask', 'on', 'off'])
       })
       .partial()
   ]),
@@ -117,6 +118,7 @@ export const ipcSchemas = {
   'update:status': z.tuple([]),
   'update:check': z.tuple([]),
   'update:install': z.tuple([]),
+  'update:shouldAsk': z.tuple([]),
   'app:revealPath': z.tuple([z.enum(['vault', 'data'])]),
   'app:accentColor': z.tuple([]),
   'app:language': z.tuple([]),
@@ -197,6 +199,8 @@ export interface IpcResults {
   'update:status': UpdateStatus
   'update:check': UpdateStatus
   'update:install': void
+  /** Time to ask for permission to check automatically (second launch, not decided yet). */
+  'update:shouldAsk': boolean
   'app:revealPath': void
   'app:accentColor': string | null
   'app:language': 'de' | 'en'

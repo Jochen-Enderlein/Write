@@ -110,6 +110,16 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --dir -c.mac.notari
 - [ ] Nur Apple Silicon oder auch Intel (derzeit nur arm64)
 - [ ] `.docuapp/` bleibt aus Kompatibilität mit bestehenden, gesyncten Vaults so benannt; eine Umbenennung bräuchte eine Migration auf allen Geräten
 
+## Datenschutz
+
+Write sendet keine Daten an den Entwickler, es gibt weder Konto noch Telemetrie. Notizen, Index und Versionsgeschichte bleiben auf deinem Mac bzw. in dem Ordner, den du selbst synchronisierst.
+
+Die einzige Verbindung ins Internet ist die Update-Prüfung bei [GitHub Releases](https://github.com/Jochen-Enderlein/Write/releases). Dabei sieht GitHub die IP-Adresse und die Write-Version. Automatisch (einmal täglich) prüft Write nur, wenn du es erlaubst – gefragt wird einmal beim zweiten Start, ändern lässt es sich jederzeit unter _Einstellungen → Über Write_. _Write → Nach Updates suchen …_ prüft nur auf deinen Klick.
+
+## Impressum
+
+Anbieter von Write: siehe [Impressum](https://beerball.jochens-toller-server.de/impressum).
+
 ## Lizenz
 
 Write steht unter der [GNU General Public License v3.0 oder später](LICENSE). Du darfst es nutzen, verändern und weitergeben – wer eine veränderte Fassung veröffentlicht, muss ihren Quellcode ebenfalls unter der GPL offenlegen.

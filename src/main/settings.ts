@@ -12,6 +12,8 @@ interface SettingsFile {
   sidebarWidth?: number
   /** App version at the last start; a higher version now means "show what's new". */
   seenVersion?: string
+  /** Number of app starts, so the update question waits until the second one. */
+  launches?: number
 }
 
 const defaults: SettingsFile = {
@@ -26,7 +28,8 @@ const defaults: SettingsFile = {
     editorFontSize: 16,
     editorWidth: 'normal',
     language: 'system',
-    theme: 'system'
+    theme: 'system',
+    autoUpdates: 'ask'
   }
 }
 

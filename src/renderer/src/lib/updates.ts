@@ -45,11 +45,17 @@ export async function checkForUpdates(): Promise<void> {
   }
 }
 
-/** After an update: show what changed since the version used last time (once). */
-export async function showWhatsNewIfUpdated(): Promise<void> {
+/**
+ * At startup: after an update, show what changed since the version used last time (once).
+ * Otherwise, on the second launch, ask whether Write may check for updates by itself – never
+ * both at once; the question simply waits for the next launch.
+ */
+export async function startupSheets(): Promise<void> {
   try {
     const { since } = await invoke('app:whatsNew')
-    if (since) useStore.getState().setSheet({ kind: 'whatsNew', since })
+    const s = useStore.getState()
+    if (since) return s.setSheet({ kind: 'whatsNew', since })
+    if (!s.sheet && (await invoke('update:shouldAsk'))) s.setSheet({ kind: 'updatePermission' })
   } catch {
     // not worth an error message
   }

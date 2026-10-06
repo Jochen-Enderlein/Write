@@ -121,6 +121,11 @@ export interface AppSettings {
   language: LanguageSetting
   /** Light or dark appearance; `system` follows macOS. */
   theme: ThemeSetting
+  /**
+   * Daily update check at GitHub. Off until the user agrees (asked once on the second launch),
+   * since every check tells GitHub the IP address; a manual check is always possible.
+   */
+  autoUpdates: 'ask' | 'on' | 'off'
 }
 
 export interface VaultNotice {

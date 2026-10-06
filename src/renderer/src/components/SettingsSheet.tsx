@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { AppSettings } from '@shared/types'
 import { acceleratorGlyphs, DEFAULT_CAPTURE_SHORTCUT } from '@shared/keymap'
 import { invoke } from '../api'
+import { LINKS } from '@shared/links'
 import { setTheme } from '../lib/theme'
 import { checkForUpdates } from '../lib/updates'
 import { useStore } from '../store'
@@ -411,22 +412,60 @@ export function SettingsSheet({ onClose }: { onClose(): void }): React.JSX.Eleme
           </div>
         </section>
 
-        {paths && (
-          <p className="settings-footer">
-            Write {paths.version}
-            <span aria-hidden="true"> · </span>
-            <button
-              className="link-button"
-              onClick={() => s().setSheet({ kind: 'whatsNew', since: null })}
-            >
-              {t('settings.whatsNew')}
-            </button>
-            <span aria-hidden="true"> · </span>
-            <button className="link-button" onClick={() => void checkForUpdates()}>
-              {t('settings.checkUpdates')}
-            </button>
-          </p>
-        )}
+        {/* Like any Mac app's "About": version, updates, where it comes from, what it sends */}
+        <section>
+          <h3>{t('about.title')}</h3>
+          <div className="group">
+            <div className="row">
+              <div className="row-main">
+                <div className="row-title">Write {paths?.version ?? ''}</div>
+                <div className="row-sub">{t('about.license')}</div>
+              </div>
+              <button
+                className="button"
+                onClick={() => s().setSheet({ kind: 'whatsNew', since: null })}
+              >
+                {t('settings.whatsNew')}
+              </button>
+              <button className="button" onClick={() => void checkForUpdates()}>
+                {t('settings.checkUpdates')}
+              </button>
+            </div>
+            {settings && (
+              <div className="row">
+                <div className="row-main">
+                  <div className="row-title" id="auto-updates-label">
+                    {t('about.autoUpdates')}
+                  </div>
+                  <div className="row-sub">{t('about.autoUpdatesHint')}</div>
+                </div>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  className="switch"
+                  aria-labelledby="auto-updates-label"
+                  checked={settings.autoUpdates === 'on'}
+                  onChange={(e) => void update({ autoUpdates: e.target.checked ? 'on' : 'off' })}
+                />
+              </div>
+            )}
+            <div className="row links">
+              <a href={LINKS.repo} target="_blank" rel="noreferrer">
+                {t('about.source')}
+              </a>
+              <a href={LINKS.issues} target="_blank" rel="noreferrer">
+                {t('about.issues')}
+              </a>
+              <a href={LINKS.license} target="_blank" rel="noreferrer">
+                {t('about.licenseLink')}
+              </a>
+              <a href={LINKS.impressum} target="_blank" rel="noreferrer">
+                {t('about.impressum')}
+              </a>
+            </div>
+          </div>
+          <p className="settings-note">{t('about.privacy')}</p>
+        </section>
       </div>
     </>
   )

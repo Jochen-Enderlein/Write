@@ -286,12 +286,23 @@ function registerIpc(): void {
     if (patch.language) await applyLanguage(patch.language)
     // Native glass, the capture panel and every window's CSS follow this together
     if (patch.theme) nativeTheme.themeSource = patch.theme
+    if (patch.autoUpdates && patch.autoUpdates !== before.autoUpdates)
+      scheduleUpdateChecks(patch.autoUpdates, true)
     emit('settings:changed', s.settings)
     return s.settings
   })
   handle('update:status', () => updater?.status() ?? { state: 'disabled' })
   handle('update:check', () => updater?.check() ?? { state: 'disabled' })
   handle('update:install', () => updater?.install())
+  handle('update:shouldAsk', async () => {
+    if (env('ASK_UPDATES') === '1') return true
+    const s = await loadSettings()
+    return (
+      updater?.status().state !== 'disabled' &&
+      s.settings.autoUpdates === 'ask' &&
+      (s.launches ?? 0) >= 2
+    )
+  })
   // After an update, the renderer shows what changed since the version used last time
   handle('app:whatsNew', async () => {
     const version = app.getVersion()
@@ -349,6 +360,21 @@ function flushWindow(win: BrowserWindow): Promise<void> {
 let captureShortcut: string | null = null
 let lastForgotten: { info: VaultInfo; index: number } | null = null
 let updater: Updater | null = null
+let updateTimers: NodeJS.Timeout[] = []
+
+/**
+ * Background checks only with the user's permission (each one contacts GitHub). Manual checks
+ * from the menu or the settings work regardless.
+ */
+function scheduleUpdateChecks(mode: 'ask' | 'on' | 'off', now = false): void {
+  for (const t of updateTimers) clearTimeout(t)
+  updateTimers = []
+  if (mode !== 'on') return
+  updateTimers.push(
+    setTimeout(() => void updater?.check(), now ? 0 : 5000),
+    setInterval(() => void updater?.check(), 24 * 60 * 60 * 1000)
+  )
+}
 function registerCaptureShortcut(accelerator: string): boolean {
   if (captureShortcut) globalShortcut.unregister(captureShortcut)
   captureShortcut = null
@@ -476,9 +502,8 @@ app.whenReady().then(async () => {
     emit: (status) => emit('update:status', status),
     beforeInstall: shutdown
   })
-  // Quietly at launch (once the window is up) and then daily
-  setTimeout(() => void updater?.check(), 5000)
-  setInterval(() => void updater?.check(), 24 * 60 * 60 * 1000)
+  await saveSettings((s) => (s.launches = (s.launches ?? 0) + 1))
+  scheduleUpdateChecks(settings.settings.autoUpdates)
 
   app.on('activate', () => {
     const win = mainWindow()

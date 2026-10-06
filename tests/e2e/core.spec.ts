@@ -304,6 +304,25 @@ test('zeigt die Neuerungen und antwortet auf „Nach Updates suchen“', async (
   await expect(win.locator('.toast')).toContainText('Updates gibt es nur in der installierten App.')
 })
 
+test('sucht nur mit Erlaubnis automatisch nach Updates', async () => {
+  const saved = (): string =>
+    JSON.parse(readFileSync(path.join(path.dirname(vault), 'userdata', 'settings.json'), 'utf8'))
+      .settings.autoUpdates
+  await win.locator('.sidebar-item', { hasText: 'Einstellungen' }).click()
+  const sheet = win.locator('.sheet')
+  const toggle = sheet.getByRole('switch', { name: 'Automatisch nach Updates suchen' })
+  await expect(toggle).not.toBeChecked()
+  await expect(sheet.getByRole('link', { name: 'Impressum' })).toHaveAttribute(
+    'href',
+    'https://beerball.jochens-toller-server.de/impressum'
+  )
+  await toggle.click()
+  await eventually(() => expect(saved()).toBe('on'))
+  await toggle.click()
+  await eventually(() => expect(saved()).toBe('off'))
+  await win.keyboard.press('Escape')
+})
+
 test('zeigt alle Tastaturkurzbefehle und filtert sie', async () => {
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
