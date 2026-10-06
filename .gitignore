@@ -12,3 +12,4 @@ coverage/
 *.cer
 *.provisionprofile
 .claude/settings.local.json
+*.pem
