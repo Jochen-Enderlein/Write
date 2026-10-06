@@ -527,12 +527,25 @@ app.whenReady().then(async () => {
 })
 
 let quitting = false
-/** Pending edits first, then snapshots and the index; afterwards windows close without asking. */
+/**
+ * Pending edits first (each window answers within 4 s), then snapshots and the index; afterwards
+ * windows close without asking. The edits are what matters – they are on disk once the windows
+ * have flushed. Finishing the version history (a large snapshot or the daily cleanup may be
+ * running) gets a few seconds more, but never keeps the app from quitting or updating.
+ */
+const HISTORY_GRACE_MS = 5000
 async function shutdown(): Promise<void> {
   quitting = true
-  await Promise.all([...mainWindows].map(flushWindow))
-    .then(() => current?.close())
-    .catch(() => undefined)
+  await Promise.all([...mainWindows].map(flushWindow)).catch(() => undefined)
+  let timer: NodeJS.Timeout | undefined
+  const gaveUp = await Promise.race([
+    Promise.resolve(current?.close())
+      .catch(() => undefined)
+      .then(() => false),
+    new Promise<boolean>((resolve) => (timer = setTimeout(() => resolve(true), HISTORY_GRACE_MS)))
+  ])
+  clearTimeout(timer)
+  if (gaveUp) console.warn('[quit] Versionsgeschichte nicht rechtzeitig fertig, beende trotzdem')
   index.close()
   for (const w of mainWindows) w.removeAllListeners('close')
 }

@@ -295,7 +295,8 @@ test('zeigt die Neuerungen und antwortet auf „Nach Updates suchen“', async (
   await send('help.whatsNew')
   const sheet = win.locator('.sheet')
   await expect(sheet.getByRole('heading', { name: 'Neuerungen in Write' })).toBeVisible()
-  await expect(sheet.locator('.release h3').first()).toContainText('Version 0.1.0')
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
+  await expect(sheet.locator('.release h3').first()).toContainText(`Version ${version}`)
   await expect(sheet.locator('.release li', { hasText: 'Textmarker' })).toBeVisible()
   await sheet.getByRole('button', { name: 'Fertig' }).click()
 

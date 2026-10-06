@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.1.1 – 2026-10-06
+
+### Behoben
+
+- Write lässt sich wieder zuverlässig beenden und für ein Update neu starten, auch wenn im Hintergrund gerade die Versionsgeschichte geschrieben oder aufgeräumt wird. Deine Notizen sind dabei immer schon gespeichert.
+
 ## 0.1.0 – 2026-10-06
 
 ### Neu
