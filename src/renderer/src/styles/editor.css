@@ -1,0 +1,479 @@
+/*
+ * Editor typography: system font, calm measure, size-specific tracking and leading.
+ * The editor stays opaque so long writing sessions remain comfortable.
+ */
+.page .bn-container[data-color-scheme] {
+  --bn-font-family: var(--editor-font, var(--font-ui));
+  --bn-colors-editor-background: var(--editor-bg);
+  --bn-colors-editor-text: var(--label);
+  --bn-colors-side-menu: var(--label-4);
+  --bn-colors-menu-background: var(--glass-bg-strong);
+  --bn-colors-menu-text: var(--label);
+  --bn-colors-tooltip-background: var(--surface-raised);
+  --bn-colors-tooltip-text: var(--label);
+  --bn-colors-hovered-background: var(--fill-hover);
+  --bn-colors-hovered-text: var(--label);
+  --bn-colors-selected-background: var(--accent);
+  --bn-colors-selected-text: var(--accent-text);
+  --bn-colors-border: var(--separator);
+  --bn-colors-shadow: rgba(0, 0, 0, 0.12);
+  --bn-border-radius-small: 6px;
+  --bn-border-radius-medium: 10px;
+  --bn-border-radius-large: 14px;
+  --bn-border-radius: 8px;
+}
+
+.page .bn-editor {
+  padding-inline: 54px;
+  background: transparent;
+  font-size: var(--editor-size, 16px);
+  line-height: 1.62;
+  letter-spacing: -0.006em;
+  color: var(--label);
+}
+
+.page .bn-block-content {
+  padding: 2px 0;
+}
+
+/* Headings: tighter leading and negative tracking as they grow */
+.page .bn-block-content[data-content-type='heading'] {
+  font-family: var(--editor-heading-font, var(--font-display));
+  font-weight: 700;
+  margin-top: 0.7em;
+}
+
+.page .bn-block-content[data-content-type='heading'][data-level='1'] {
+  --level: 1.75em;
+  line-height: 1.18;
+  letter-spacing: -0.021em;
+}
+
+.page .bn-block-content[data-content-type='heading'][data-level='2'] {
+  --level: 1.38em;
+  line-height: 1.24;
+  letter-spacing: -0.017em;
+}
+
+.page .bn-block-content[data-content-type='heading'][data-level='3'] {
+  --level: 1.15em;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+}
+
+.page .bn-block-content[data-content-type='heading'][data-level='4'],
+.page .bn-block-content[data-content-type='heading'][data-level='5'],
+.page .bn-block-content[data-content-type='heading'][data-level='6'] {
+  --level: 1em;
+  line-height: 1.4;
+  letter-spacing: -0.006em;
+}
+
+.page .bn-block-content[data-content-type='heading'][data-level='6'] {
+  color: var(--label-2);
+}
+
+.page .bn-inline-content code,
+.page code.raw-inline {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  padding: 0.12em 0.36em;
+  border-radius: 5px;
+  background: var(--code-bg);
+}
+
+.page .bn-inline-content a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.page .bn-block-content[data-content-type='quote'] blockquote,
+.page .bn-block-content[data-content-type='quote'] {
+  color: var(--label-2);
+}
+
+.page [data-content-type='checkListItem'][data-checked='true'] .bn-inline-content {
+  color: var(--label-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--label-4);
+}
+
+.page [data-content-type='checkListItem'] input[type='checkbox'] {
+  accent-color: var(--accent);
+}
+
+/* Code blocks: SF Mono, soft surface */
+.page .bn-block-content[data-content-type='codeBlock'] {
+  background: var(--code-bg) !important;
+  color: var(--label) !important;
+  border-radius: 12px !important;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 6px 0;
+}
+
+.page .bn-block-content[data-content-type='codeBlock'] pre,
+.page .bn-block-content[data-content-type='codeBlock'] code {
+  font-family: var(--font-mono) !important;
+}
+
+.page .bn-block-content[data-content-type='codeBlock'] select {
+  color: var(--label-3) !important;
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .page .shiki,
+  .page .shiki span {
+    color: var(--shiki-dark) !important;
+  }
+}
+
+.mermaid-block {
+  width: 100%;
+  margin: 6px 0;
+  border-radius: 12px;
+  background: var(--fill-2);
+  box-shadow: inset 0 0 0 0.5px var(--separator);
+  overflow: hidden;
+}
+
+.mermaid-label {
+  display: none;
+  padding: 6px 14px 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  user-select: none;
+}
+
+/* Source stays in the document (it is the content) but only shows while editing */
+.mermaid-source {
+  margin: 0;
+  padding: 0 14px;
+  height: 0;
+  overflow: hidden;
+  font: 13px/1.55 var(--font-mono);
+  white-space: pre-wrap;
+}
+
+.mermaid-block.active .mermaid-label {
+  display: block;
+}
+
+.mermaid-block.active .mermaid-source {
+  height: auto;
+  padding: 4px 14px 12px;
+  border-top: 0.5px solid var(--separator);
+}
+
+.mermaid-preview {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  font-family: var(--font-ui);
+  white-space: normal;
+}
+
+.mermaid-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-preview.error {
+  color: var(--red);
+  font-size: 12px;
+}
+
+/* Tables */
+.page .bn-block-content[data-content-type='table'] table {
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.page .bn-block-content[data-content-type='table'] th,
+.page .bn-block-content[data-content-type='table'] td {
+  border: 0.5px solid var(--separator-strong);
+  padding: 6px 10px;
+}
+
+.page .bn-block-content[data-content-type='table'] th {
+  background: var(--fill-2);
+  font-weight: 600;
+}
+
+/* Images */
+.page [data-content-type='image'] img {
+  border-radius: 10px;
+}
+
+.page .bn-file-caption {
+  color: var(--label-3);
+  font-size: 13px;
+}
+
+/* Wiki links */
+.wikilink {
+  color: var(--accent);
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 0 1px;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  transition: background-color var(--dur-fast) linear;
+}
+
+.wikilink:hover {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.wikilink:active {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.wikilink.missing {
+  color: var(--label-2);
+  background: none;
+  border-bottom: 1px dashed var(--label-4);
+  border-radius: 0;
+}
+
+/* Callouts */
+.callout {
+  --tint: var(--blue);
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px 14px 10px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--tint) 9%, var(--editor-bg));
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--tint) 30%, transparent);
+}
+
+.callout[data-kind='tip'],
+.callout[data-kind='success'] {
+  --tint: var(--green);
+}
+.callout[data-kind='warning'],
+.callout[data-kind='caution'],
+.callout[data-kind='todo'] {
+  --tint: var(--orange);
+}
+.callout[data-kind='danger'] {
+  --tint: var(--red);
+}
+.callout[data-kind='important'],
+.callout[data-kind='example'] {
+  --tint: var(--purple);
+}
+.callout[data-kind='question'] {
+  --tint: var(--teal);
+}
+.callout[data-kind='quote'] {
+  --tint: var(--gray);
+}
+
+.callout-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.callout-kind {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 6px;
+  background: var(--tint);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.callout-kind:active {
+  transform: scale(0.9);
+}
+
+.callout-kind select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.callout-title {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-weight: 650;
+  font-size: 15px;
+  color: color-mix(in srgb, var(--tint) 75%, var(--label));
+  user-select: text;
+}
+
+.callout-title::placeholder {
+  color: color-mix(in srgb, var(--tint) 60%, var(--label-3));
+}
+
+.callout-body {
+  margin-top: 2px;
+  padding-left: 30px;
+}
+
+/* Verbatim markdown */
+.raw-md {
+  width: 100%;
+  margin: 4px 0;
+  padding: 8px 12px 10px;
+  border-radius: 10px;
+  background: var(--fill-2);
+  box-shadow: inset 0 0 0 0.5px var(--separator);
+}
+
+.raw-md-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  margin-bottom: 4px;
+  user-select: none;
+}
+
+.raw-md pre,
+.raw-md textarea {
+  margin: 0;
+  font: 12.5px/1.55 var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--label-2);
+}
+
+.raw-md textarea {
+  display: block;
+  width: 100%;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--label);
+}
+
+.slash-glyph {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Floating editor menus get the same glass as the rest of the app */
+.bn-container .bn-toolbar,
+.bn-container .bn-suggestion-menu,
+.bn-container .bn-menu-dropdown,
+.bn-container .bn-panel,
+.bn-container .bn-link-toolbar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(28px) saturate(185%);
+  box-shadow:
+    var(--glass-shadow-small),
+    inset 0 0.5px 0 var(--glass-edge) !important;
+  border: 0.5px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  animation: materialize 160ms var(--ease-out);
+}
+
+.bn-container .bn-suggestion-menu-item[aria-selected='true'],
+.bn-container .bn-suggestion-menu-item:hover {
+  background: var(--accent) !important;
+  color: var(--accent-text) !important;
+}
+
+.bn-container .bn-suggestion-menu-item[aria-selected='true'] *,
+.bn-container .bn-suggestion-menu-item:hover * {
+  color: var(--accent-text) !important;
+}
+
+.bn-container .bn-suggestion-menu-label {
+  color: var(--label-3) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+/* ── Embeds: ![[Bild.png]] and ![[Seite]] ──────────────────────────────── */
+
+.embed-image {
+  display: block;
+  margin: 6px 0;
+}
+
+.embed-image img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.embed-page {
+  display: block;
+  margin: 6px 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--separator-strong);
+  border-radius: 0 8px 8px 0;
+  background: var(--fill-2);
+  white-space: normal;
+}
+
+.embed-page-title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.86em;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.embed-page-title:hover {
+  text-decoration: underline;
+}
+
+.embed-page-text {
+  display: block;
+  white-space: pre-wrap;
+  font-size: 0.94em;
+  color: var(--label-2);
+  max-height: 22em;
+  overflow: hidden;
+}
+
+.embed-missing {
+  color: var(--red);
+  font-size: 0.9em;
+}
+
+/* The caret shows where the focus is; a ring around the whole page would only distract */
+.page .bn-editor:focus-visible {
+  outline: none;
+}
+
+/* Text marker (`==text==`): a soft stroke that wraps cleanly across line breaks */
+.write-editor .write-mark {
+  background: var(--mark-bg);
+  color: inherit;
+  /* No side padding: runs split by bold/italic then join without a visible seam */
+  border-radius: 2px;
+  padding: 0.05em 0;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

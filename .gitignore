@@ -1,0 +1,14 @@
+node_modules
+out
+dist
+test-results
+playwright-report
+.DS_Store
+*.log
+*.tsbuildinfo
+.env*
+coverage/
+*.p12
+*.cer
+*.provisionprofile
+.claude/settings.local.json

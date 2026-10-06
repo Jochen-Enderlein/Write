@@ -1,0 +1,106 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  font: 13px/1.4 var(--font-ui);
+  color: var(--label);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* The native glass sits behind; this layer only adds structure and a light edge */
+.capture {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px 12px;
+  border-radius: 26px;
+  box-shadow:
+    inset 0 0.5px 0 var(--glass-edge),
+    inset 0 0 0 0.5px var(--glass-border);
+  -webkit-app-region: drag;
+  animation: capture-in 260ms var(--ease-out);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .capture {
+    background: var(--surface-raised);
+  }
+}
+
+@keyframes capture-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+    filter: blur(4px);
+  }
+}
+
+.capture-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--label-2);
+}
+
+.capture textarea {
+  flex: 1;
+  min-height: 0;
+  margin-top: 8px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font: 500 19px/1.4 var(--font-display);
+  letter-spacing: -0.012em;
+  color: var(--label);
+  -webkit-app-region: no-drag;
+  user-select: text;
+}
+
+.capture textarea::placeholder {
+  color: var(--label-3);
+}
+
+.capture-foot {
+  font-size: 11.5px;
+  color: var(--label-3);
+  letter-spacing: 0.01em;
+}
+
+.capture-foot .ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.capture-foot .err {
+  color: var(--red);
+}
+
+.capture.saved textarea {
+  opacity: 0.4;
+  transition: opacity var(--dur) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capture {
+    animation: none;
+  }
+}

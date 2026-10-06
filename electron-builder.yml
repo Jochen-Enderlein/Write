@@ -1,0 +1,41 @@
+# Offener Punkt: GitHub-Repo für Auto-Updates festlegen (siehe README).
+appId: com.jochenenderlein.write
+productName: Write
+copyright: Copyright © 2026 Jochen Enderlein
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**
+  - package.json
+  - '!resources/**'
+asarUnpack:
+  - '**/*.node'
+mac:
+  target:
+    - target: dmg
+      arch: [arm64]
+    - target: zip # electron-updater lädt Updates als ZIP
+      arch: [arm64]
+  icon: resources/icon.icns
+  category: public.app-category.productivity
+  minimumSystemVersion: '26.0'
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+  # Developer-ID-Zertifikat aus dem Anmelde-Schlüsselbund
+  identity: 'Jochen Enderlein (LT2V3H4DBU)'
+  # Notarisierung über das Schlüsselbund-Profil aus `xcrun notarytool store-credentials write-notary`
+  # (APPLE_KEYCHAIN_PROFILE wird von `npm run dist` gesetzt)
+  notarize: true
+  extendInfo:
+    LSMinimumSystemVersion: '26.0'
+    NSHumanReadableCopyright: Copyright © 2026 Jochen Enderlein
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+publish:
+  provider: github
+  owner: OWNER # TODO: GitHub-Benutzer
+  repo: write # TODO: Repository
+  releaseType: release

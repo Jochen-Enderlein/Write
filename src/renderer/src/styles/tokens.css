@@ -1,0 +1,145 @@
+/*
+ * Design tokens. Light/dark follow the system; the accent comes from System Settings
+ * (set as --accent by the app). Values mirror macOS 26 system colors.
+ */
+:root {
+  color-scheme: light dark;
+  --accent: #0a84ff;
+  --accent-text: #ffffff;
+
+  --font-ui: -apple-system, BlinkMacSystemFont, system-ui, 'SF Pro Text', sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, system-ui, 'SF Pro Display', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Text */
+  --label: rgba(0, 0, 0, 0.88);
+  --label-2: rgba(60, 60, 67, 0.72);
+  --label-3: rgba(60, 60, 67, 0.48);
+  --label-4: rgba(60, 60, 67, 0.28);
+
+  /* Surfaces */
+  --editor-bg: #ffffff;
+  --surface-raised: #ffffff;
+  --fill: rgba(120, 120, 128, 0.12);
+  --fill-2: rgba(120, 120, 128, 0.08);
+  --fill-hover: rgba(0, 0, 0, 0.05);
+  --fill-press: rgba(0, 0, 0, 0.09);
+  --separator: rgba(60, 60, 67, 0.16);
+  --separator-strong: rgba(60, 60, 67, 0.29);
+
+  /* Sidebar sits directly on native Liquid Glass */
+  --sidebar-label: rgba(0, 0, 0, 0.84);
+  --sidebar-label-2: rgba(0, 0, 0, 0.5);
+  --sidebar-hover: rgba(0, 0, 0, 0.05);
+  --sidebar-selected: rgba(0, 0, 0, 0.09);
+  --sidebar-fallback: rgba(246, 246, 248, 0.86);
+
+  /* CSS glass for floating elements (palette, popovers, menus, toolbar) */
+  --glass-bg: rgba(255, 255, 255, 0.68);
+  --glass-bg-strong: rgba(250, 250, 252, 0.84);
+  --glass-edge: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.12), 0 24px 64px rgba(0, 0, 0, 0.14);
+  --glass-shadow-small: 0 0 0 0.5px rgba(0, 0, 0, 0.08), 0 4px 14px rgba(0, 0, 0, 0.12);
+  --scrim: rgba(0, 0, 0, 0.18);
+
+  /* Semantic */
+  --red: #ff3b30;
+  --orange: #ff9500;
+  --yellow: #ffcc00;
+  --green: #34c759;
+  --teal: #30b0c7;
+  --blue: #007aff;
+  --purple: #af52de;
+  --gray: #8e8e93;
+
+  --code-bg: rgba(120, 120, 128, 0.1);
+  --mark-bg: rgba(255, 204, 0, 0.42);
+  --mark-solid: #ffcc00;
+  --diff-add: rgba(52, 199, 89, 0.16);
+  --diff-del: rgba(255, 59, 48, 0.14);
+
+  /* Geometry */
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --radius-xl: 24px;
+  --toolbar-h: 52px;
+  --sidebar-w: 264px;
+  --column: 720px;
+
+  /* Motion: critically damped defaults, see lib/spring.ts for gesture-driven motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
+  --dur-fast: 120ms;
+  --dur: 240ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --label: rgba(255, 255, 255, 0.9);
+    --label-2: rgba(235, 235, 245, 0.66);
+    --label-3: rgba(235, 235, 245, 0.42);
+    --label-4: rgba(235, 235, 245, 0.22);
+
+    --editor-bg: #1c1c1e;
+    --surface-raised: #2c2c2e;
+    --fill: rgba(120, 120, 128, 0.26);
+    --fill-2: rgba(120, 120, 128, 0.16);
+    --fill-hover: rgba(255, 255, 255, 0.06);
+    --fill-press: rgba(255, 255, 255, 0.11);
+    --separator: rgba(84, 84, 88, 0.5);
+    --separator-strong: rgba(84, 84, 88, 0.75);
+
+    --sidebar-label: rgba(255, 255, 255, 0.88);
+    --sidebar-label-2: rgba(255, 255, 255, 0.5);
+    --sidebar-hover: rgba(255, 255, 255, 0.06);
+    --sidebar-selected: rgba(255, 255, 255, 0.11);
+    --sidebar-fallback: rgba(40, 40, 42, 0.86);
+
+    --glass-bg: rgba(44, 44, 46, 0.62);
+    --glass-bg-strong: rgba(38, 38, 40, 0.84);
+    --glass-edge: rgba(255, 255, 255, 0.16);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow:
+      0 0 0 0.5px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.36),
+      0 24px 64px rgba(0, 0, 0, 0.44);
+    --glass-shadow-small: 0 0 0 0.5px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.34);
+    --scrim: rgba(0, 0, 0, 0.36);
+
+    --red: #ff453a;
+    --orange: #ff9f0a;
+    --yellow: #ffd60a;
+    --green: #30d158;
+    --teal: #40c8e0;
+    --blue: #0a84ff;
+    --purple: #bf5af2;
+    --gray: #98989d;
+
+    --code-bg: rgba(120, 120, 128, 0.2);
+    --mark-bg: rgba(255, 214, 10, 0.32);
+    --mark-solid: #ffd60a;
+    --diff-add: rgba(48, 209, 88, 0.18);
+    --diff-del: rgba(255, 69, 58, 0.2);
+  }
+}
+
+/* Reduce transparency: frosted surfaces become solid */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: var(--surface-raised);
+    --glass-bg-strong: var(--surface-raised);
+  }
+}
+
+/* Increase contrast: near-solid backgrounds, defined borders */
+@media (prefers-contrast: more) {
+  :root {
+    --glass-bg: var(--surface-raised);
+    --glass-bg-strong: var(--surface-raised);
+    --glass-border: var(--label-2);
+    --separator: var(--label-3);
+    --label-2: var(--label);
+  }
+}

@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'IconImpact';
+        src: local('Impact'), url('file:///System/Library/Fonts/Supplemental/Impact.ttf');
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1024px;
+        height: 1024px;
+        background: transparent;
+        overflow: hidden;
+      }
+      svg {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <svg id="icon" width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Body gradient: warm sunrise into electric violet -->
+        <linearGradient id="body" x1="0.15" y1="0" x2="0.85" y2="1">
+          <stop offset="0" stop-color="#ff9a3c" />
+          <stop offset="0.42" stop-color="#ff3f6c" />
+          <stop offset="1" stop-color="#6a2cff" />
+        </linearGradient>
+        <!-- Soft light from the top-left, like light catching glass -->
+        <radialGradient id="sheen" cx="0.28" cy="0.08" r="0.9">
+          <stop offset="0" stop-color="#fff" stop-opacity="0.42" />
+          <stop offset="0.45" stop-color="#fff" stop-opacity="0.08" />
+          <stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity="0.75" />
+          <stop offset="0.5" stop-color="#fff" stop-opacity="0.12" />
+          <stop offset="1" stop-color="#fff" stop-opacity="0.35" />
+        </linearGradient>
+        <linearGradient id="glyph" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffffff" />
+          <stop offset="1" stop-color="#ffe3ec" />
+        </linearGradient>
+        <linearGradient id="caret" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff6c9" />
+          <stop offset="1" stop-color="#ffd23f" />
+        </linearGradient>
+        <filter id="lift" x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#2a0050" flood-opacity="0.38" />
+        </filter>
+        <filter id="glow" x="-200%" y="-20%" width="500%" height="140%">
+          <feGaussianBlur stdDeviation="14" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <clipPath id="clip"><path id="squircle-clip" /></clipPath>
+      </defs>
+
+      <g clip-path="url(#clip)">
+        <rect width="1024" height="1024" fill="url(#body)" />
+        <!-- faint ruled lines: the page you write on -->
+        <g stroke="#fff" stroke-opacity="0.07" stroke-width="6">
+          <line x1="100" y1="330" x2="924" y2="330" />
+          <line x1="100" y1="470" x2="924" y2="470" />
+          <line x1="100" y1="610" x2="924" y2="610" />
+          <line x1="100" y1="750" x2="924" y2="750" />
+        </g>
+        <rect width="1024" height="1024" fill="url(#sheen)" />
+      </g>
+
+      <g filter="url(#lift)">
+        <text
+          id="w"
+          x="478"
+          y="742"
+          text-anchor="middle"
+          font-family="IconImpact, Impact"
+          font-size="600"
+          fill="url(#glyph)"
+          letter-spacing="0"
+        >W</text>
+      </g>
+      <!-- text cursor right after the W -->
+      <rect id="caret-bar" x="0" y="268" width="40" height="500" rx="20" fill="url(#caret)" filter="url(#glow)" />
+
+      <!-- light edge of the glass body -->
+      <path id="squircle-edge" fill="none" stroke="url(#edge)" stroke-width="5" />
+    </svg>
+    <script>
+      // Apple-style continuous corner: superellipse body, 824px inside the 1024 canvas
+      function squircle(x, y, size, n = 5) {
+        const r = size / 2
+        const cx = x + r
+        const cy = y + r
+        const pts = []
+        for (let i = 0; i < 360; i++) {
+          const t = (i / 360) * Math.PI * 2
+          const c = Math.cos(t)
+          const s = Math.sin(t)
+          pts.push([cx + r * Math.sign(c) * Math.abs(c) ** (2 / n), cy + r * Math.sign(s) * Math.abs(s) ** (2 / n)])
+        }
+        return 'M' + pts.map((p) => p.map((v) => v.toFixed(2)).join(',')).join('L') + 'Z'
+      }
+      const d = squircle(100, 100, 824)
+      document.getElementById('squircle-clip').setAttribute('d', d)
+      document.getElementById('squircle-edge').setAttribute('d', squircle(102.5, 102.5, 819))
+      document.fonts.ready.then(() => {
+        // Center W + gap + cursor as one group
+        const w = document.getElementById('w')
+        const caret = document.getElementById('caret-bar')
+        const gap = 30
+        const caretW = 40
+        const box = w.getBBox()
+        const start = 512 - (box.width + gap + caretW) / 2
+        w.setAttribute('x', String(start + box.width / 2))
+        const moved = w.getBBox()
+        caret.setAttribute('x', String(moved.x + moved.width + gap))
+        window.__ready = true
+      })
+    </script>
+  </body>
+</html>
