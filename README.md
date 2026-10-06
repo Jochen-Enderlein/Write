@@ -91,7 +91,13 @@ npm run dist
 
 Signiert wird mit dem Developer-ID-Zertifikat aus dem Schlüsselbund.
 
-Veröffentlichen: `npm run release` baut, signiert, notarisiert und lädt DMG und ZIP als Release auf [GitHub](https://github.com/Jochen-Enderlein/Write/releases) hoch. Dafür braucht es ein GitHub-Token mit Schreibrecht auf das Repo (`GH_TOKEN`); vorher die Version in `package.json` erhöhen. Installierte Apps finden das Update über `electron-updater` selbst. Ohne Zertifikat geht ein unsignierter Testbuild:
+Veröffentlichen:
+
+1. Version in `package.json` erhöhen und in `CHANGELOG.md` einen Abschnitt `## x.y.z – Datum` schreiben, committen, pushen.
+2. GitHub-Token setzen (Fine-grained, nur dieses Repo, _Contents: Read and write_): `read -s GH_TOKEN && export GH_TOKEN`
+3. `npm run release`
+
+Das Skript (`scripts/release.mjs`) prüft, dass alles gepusht ist, legt den Git-Tag `vx.y.z` an, baut, signiert und notarisiert, lädt alles in einen **Entwurf** und veröffentlicht ihn erst, wenn DMG, ZIP und `latest-mac.yml` vollständig da sind. Bricht ein Lauf ab, einfach erneut starten. Installierte Apps finden das Update über `electron-updater` selbst. Ohne Zertifikat geht ein unsignierter Testbuild:
 
 ```bash
 CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --dir -c.mac.notarize=false

@@ -33,11 +33,12 @@ mac:
     NSHumanReadableCopyright: Copyright © 2026 Jochen Enderlein
 dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}
-# Release text on GitHub = this version's section of CHANGELOG.md (scripts/release-notes.mjs)
+# Release text on GitHub = this version's section of CHANGELOG.md (scripts/release.mjs)
 releaseInfo:
   releaseNotesFile: out/release-notes.md
 publish:
   provider: github
   owner: Jochen-Enderlein
   repo: Write
-  releaseType: release
+  # Uploads go into a draft; scripts/release.mjs publishes it once every file is there
+  releaseType: draft

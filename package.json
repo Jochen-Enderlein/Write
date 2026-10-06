@@ -29,7 +29,7 @@
     "postinstall": "electron-builder install-app-deps",
     "dist": "npm run build && APPLE_KEYCHAIN_PROFILE=write-notary electron-builder --mac --publish never",
     "dist:local": "npm run build && electron-builder --mac --publish never -c.mac.identity=- -c.mac.hardenedRuntime=false -c.mac.notarize=false",
-    "release": "node scripts/release-notes.mjs && npm run build && node scripts/release-notes.mjs && APPLE_KEYCHAIN_PROFILE=write-notary electron-builder --mac --publish always",
+    "release": "node scripts/release.mjs prepare && npm run build && node scripts/release.mjs notes && APPLE_KEYCHAIN_PROFILE=write-notary electron-builder --mac --publish always && node scripts/release.mjs publish",
     "dist:signed": "npm run build && electron-builder --mac --publish never -c.mac.notarize=false"
   },
   "dependencies": {
