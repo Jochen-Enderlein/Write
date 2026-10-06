@@ -66,6 +66,17 @@ async function prepare() {
   }
   git('push', '--quiet', '--force', 'origin', `refs/tags/${tag}`)
 
+  // One draft, created before electron-builder starts: its parallel uploads (DMG, ZIP) then
+  // all find it instead of racing to create releases of their own
+  if (!release) {
+    await api('POST', '/releases', {
+      tag_name: tag,
+      name: version,
+      body: readFileSync(path.join(root, 'out', 'release-notes.md'), 'utf8'),
+      draft: true
+    })
+    console.log(`✓ Entwurf für ${tag} angelegt`)
+  }
   // A published but incomplete release from an earlier attempt goes back to draft, so nobody
   // sees it half-done while electron-builder fills it
   if (release && !release.draft) {
@@ -102,21 +113,71 @@ async function api(method, url, body) {
     body: body ? JSON.stringify(body) : undefined
   })
   if (!res.ok) fail(`GitHub ${method} ${url}: ${res.status} ${await res.text()}`)
-  return res.json()
+  return res.status === 204 ? null : res.json()
 }
 
 async function publish() {
   if (!process.env.GH_TOKEN) fail('GH_TOKEN ist nicht gesetzt.')
-  const releases = await api('GET', '/releases?per_page=30')
-  const release = releases.find((r) => r.tag_name === tag)
-  if (!release) fail(`Kein Release ${tag} auf GitHub gefunden.`)
-  const names = release.assets.map((a) => a.name)
-  const missing = neededAssets().filter((n) => !names.includes(n))
+  const all = (await api('GET', '/releases?per_page=50')).filter((r) => r.tag_name === tag)
+  if (!all.length) fail(`Kein Release ${tag} auf GitHub gefunden.`)
+  if (all.some((r) => !r.draft) && all.length > 1)
+    fail(
+      `Zu ${tag} gibt es ein veröffentlichtes Release und weitere Entwürfe. Bitte auf GitHub prüfen.`
+    )
+
+  // Parallel uploads may have spread the files over several drafts: keep the fullest one
+  const has = (r, n) => r.assets.some((a) => a.name === n && a.state === 'uploaded')
+  const score = (r) => neededAssets().filter((n) => has(r, n)).length
+  const [release, ...duplicates] = [...all].sort((a, b) => score(b) - score(a))
+
+  // Whatever is missing comes straight from this build's dist/
+  const dist = path.join(root, 'dist')
+  const wanted = [
+    ...neededAssets(),
+    ...neededAssets()
+      .slice(0, 2)
+      .map((n) => `${n}.blockmap`)
+  ]
+  for (const name of wanted) {
+    if (has(release, name)) continue
+    const file = path.join(dist, name)
+    let data
+    try {
+      data = readFileSync(file)
+    } catch {
+      if (neededAssets().includes(name))
+        fail(`${name} fehlt im Release und in dist/. Bitte neu bauen.`)
+      continue
+    }
+    const broken = release.assets.find((a) => a.name === name)
+    if (broken) await api('DELETE', `/releases/assets/${broken.id}`)
+    const res = await fetch(
+      `https://uploads.github.com/repos/${repo}/releases/${release.id}/assets?name=${encodeURIComponent(name)}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.GH_TOKEN}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/octet-stream'
+        },
+        body: data
+      }
+    )
+    if (!res.ok) fail(`Hochladen von ${name}: ${res.status} ${await res.text()}`)
+    console.log(`✓ ${name} nachgeladen`)
+  }
+  for (const d of duplicates) {
+    await api('DELETE', `/releases/${d.id}`)
+    console.log(`✓ Doppelten Entwurf entfernt`)
+  }
+
+  const final = await api('GET', `/releases/${release.id}`)
+  const missing = neededAssets().filter((n) => !has(final, n))
   if (missing.length) fail(`Im Release fehlen: ${missing.join(', ')}. Nicht veröffentlicht.`)
-  if (release.draft)
+  if (final.draft)
     await api('PATCH', `/releases/${release.id}`, { draft: false, make_latest: 'true' })
-  console.log(`✓ ${tag} veröffentlicht: ${release.html_url.replace('/untagged-', '/tag/')}`)
-  console.log(`  Dateien: ${names.join(', ')}`)
+  console.log(`✓ ${tag} veröffentlicht: https://github.com/${repo}/releases/tag/${tag}`)
+  console.log(`  Dateien: ${final.assets.map((a) => a.name).join(', ')}`)
 }
 
 const step = process.argv[2]
