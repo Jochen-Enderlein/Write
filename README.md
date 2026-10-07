@@ -91,7 +91,17 @@ npm run dist
 
 Signiert wird mit dem Developer-ID-Zertifikat aus dem Schlüsselbund.
 
-Veröffentlichen:
+Veröffentlichen über GitHub Actions (`.github/workflows/ci.yml`): Jeder Push auf `main` und jeder Pull Request läuft durch Typecheck, Lint, Unit- und E2E-Tests. Ist der Lauf auf `main` grün und die Version in `package.json` noch nicht veröffentlicht, baut, signiert, notarisiert und veröffentlicht der Release-Job sie – Version erhöhen und `CHANGELOG.md`-Abschnitt schreiben genügt. Ohne neue Version wird nur getestet. Dafür braucht das Repo diese Secrets (_Settings → Secrets and variables → Actions_):
+
+| Secret                        | Inhalt                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `MAC_CERTIFICATE_P12_BASE64`  | „Developer ID Application“-Zertifikat samt Schlüssel als `.p12`, base64-kodiert |
+| `MAC_CERTIFICATE_PASSWORD`    | Passwort, mit dem die `.p12` exportiert wurde                                   |
+| `APPLE_ID`                    | Apple-ID des Entwicklerkontos                                                   |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-spezifisches Passwort von [account.apple.com](https://account.apple.com)    |
+| `APPLE_TEAM_ID`               | Team-ID (`LT2V3H4DBU`)                                                          |
+
+Den GitHub-Token stellt Actions selbst. Lokal geht es weiterhin von Hand:
 
 1. Version in `package.json` erhöhen und in `CHANGELOG.md` einen Abschnitt `## x.y.z – Datum` schreiben, committen, pushen.
 2. GitHub-Token setzen (Fine-grained, nur dieses Repo, _Contents: Read and write_): `read -s GH_TOKEN && export GH_TOKEN`

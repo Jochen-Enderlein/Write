@@ -1,0 +1,102 @@
+name: CI
+
+# Every push to main and every pull request runs the tests. After a green run on main, the
+# release job publishes the version in package.json – but only if that version isn't out yet,
+# so merges without a version bump just test.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests
+    # Write is a macOS app (vibrancy, Liquid Glass, native modules built for Electron)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Typen prüfen
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit-Tests
+        run: npm test
+
+      - name: End-to-End-Tests
+        run: npm run test:e2e
+
+      - name: Testberichte aufheben
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ergebnisse
+          path: test-results/
+          retention-days: 7
+
+  release:
+    name: Release
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 60
+    # Never two releases at once; a newer push waits instead of cancelling a running upload
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    permissions:
+      # Tag pushen, Release-Entwurf anlegen, Dateien hochladen, veröffentlichen
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags and history for release.mjs (tag check, HEAD == origin/main)
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Ist diese Version schon veröffentlicht?
+        id: check
+        run: node scripts/release.mjs check
+
+      - name: Abhängigkeiten installieren
+        if: steps.check.outputs.needed == 'true'
+        run: npm ci
+
+      - name: Bauen, signieren, notarisieren, veröffentlichen
+        if: steps.check.outputs.needed == 'true'
+        env:
+          # Developer-ID-Zertifikat (.p12, base64) – electron-builder legt dafür einen
+          # temporären Schlüsselbund an
+          CSC_LINK: ${{ secrets.MAC_CERTIFICATE_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          # Notarisierung mit Apple-ID und app-spezifischem Passwort
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm run release:ci

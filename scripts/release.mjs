@@ -4,6 +4,7 @@
 //   node scripts/release.mjs prepare   checks, release notes, git tag, clean dist/
 //   (electron-builder uploads into a *draft* release)
 //   node scripts/release.mjs publish   verifies the draft's files, then publishes it
+//   node scripts/release.mjs check     whether this version still needs a release (for CI)
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -180,8 +181,28 @@ async function publish() {
   console.log(`  Dateien: ${final.assets.map((a) => a.name).join(', ')}`)
 }
 
+/**
+ * For CI: is this version not yet completely published? Prints the answer and, on GitHub
+ * Actions, sets the step output `needed`, so merges without a version bump skip the release.
+ */
+async function check() {
+  if (!process.env.GH_TOKEN) fail('GH_TOKEN ist nicht gesetzt.')
+  const release = (await api('GET', '/releases?per_page=30')).find((r) => r.tag_name === tag)
+  const complete =
+    release &&
+    !release.draft &&
+    neededAssets().every((n) => release.assets.some((a) => a.name === n && a.state === 'uploaded'))
+  const needed = !complete
+  console.log(
+    needed ? `→ ${tag} ist noch nicht veröffentlicht` : `✓ ${tag} ist schon veröffentlicht`
+  )
+  if (process.env.GITHUB_OUTPUT)
+    writeFileSync(process.env.GITHUB_OUTPUT, `needed=${needed}\n`, { flag: 'a' })
+}
+
 const step = process.argv[2]
 if (step === 'prepare') await prepare()
+else if (step === 'check') await check()
 else if (step === 'publish') await publish()
 else if (step === 'notes') releaseNotes()
-else fail('Aufruf: node scripts/release.mjs prepare|publish|notes')
+else fail('Aufruf: node scripts/release.mjs prepare|publish|notes|check')
