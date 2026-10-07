@@ -16,6 +16,7 @@ import { SheetHost } from './components/Sheets'
 import { SIDEBAR_MAX, SIDEBAR_MIN, Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
 import { SearchView, TagsView, TrashView } from './components/Views'
+import { GraphView } from './components/GraphView'
 import { Welcome } from './components/Welcome'
 import { Toast } from './components/Toast'
 import { editorBridge } from './editor/bridge'
@@ -249,6 +250,7 @@ export function App(): React.JSX.Element {
             )}
             {view.kind === 'tags' && <TagsView />}
             {view.kind === 'trash' && <TrashView />}
+            {view.kind === 'graph' && <GraphView center={view.center} />}
             {view.kind === 'empty' && <div className="center-message">{t('page.emptyHint')}</div>}
           </ErrorBoundary>
         </div>

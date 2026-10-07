@@ -187,6 +187,15 @@ export const CalloutIcon = (p: P) => (
     <path d="M7.5 6.5h4M7.5 9.5h3" />
   </Icon>
 )
+/** A sun with two planets on their orbits. */
+export const GraphIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="8" cy="8" r="2" />
+    <ellipse cx="8" cy="8" rx="6.25" ry="3.25" transform="rotate(-25 8 8)" />
+    <circle cx="13.4" cy="5.3" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="3.1" cy="10.9" r="0.9" fill="currentColor" stroke="none" />
+  </Icon>
+)
 export const DiagramIcon = (p: P) => (
   <Icon {...p}>
     <rect x="5.5" y="1.75" width="5" height="3.5" rx="1" />

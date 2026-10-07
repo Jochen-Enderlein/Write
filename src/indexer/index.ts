@@ -103,6 +103,8 @@ function query(name: string, args: unknown[]): unknown {
       return db.mentions(String(args[0]))
     case 'tags':
       return db.tags()
+    case 'graph':
+      return db.graph()
     case 'resolve':
       return db.resolve(String(args[0]))
     case 'linkSources':

@@ -239,6 +239,9 @@ function registerIpc(): void {
   handle('index:backlinks', (rel) => index.backlinks(rel))
   handle('index:mentions', (rel) => index.mentions(rel))
   handle('index:tags', () => (current ? index.tags() : []))
+  handle('index:graph', () =>
+    current ? index.graph() : Promise.resolve({ pages: [], links: [], ghosts: [] })
+  )
   handle('index:summaries', (paths) => (current ? index.summaries(paths) : []))
   handle('index:resolve', (title) => index.resolve(title))
   handle('index:rebuild', () => index.rebuild())

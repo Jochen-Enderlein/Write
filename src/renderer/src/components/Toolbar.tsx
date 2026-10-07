@@ -7,6 +7,7 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ClockIcon,
+  GraphIcon,
   InfoIcon,
   OutlineIcon,
   SearchIcon,
@@ -141,6 +142,13 @@ export function Toolbar({ status }: { status: SaveStatus }): React.JSX.Element {
             onClick={() => void s().toggleFavorite(page)}
           >
             <StarIcon filled={favorites.includes(page)} />
+          </button>
+          <button
+            className="icon-button"
+            title={t('graph.pageButton')}
+            onClick={() => s().navigate({ kind: 'graph', center: page })}
+          >
+            <GraphIcon />
           </button>
           <button
             className="icon-button"

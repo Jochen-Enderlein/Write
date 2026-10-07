@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type {
   AppSettings,
   ConflictInfo,
+  GraphData,
   HistoryEntry,
   IndexStatus,
   PageFile,
@@ -70,6 +71,7 @@ export const ipcSchemas = {
   'index:backlinks': z.tuple([relPath]),
   'index:mentions': z.tuple([relPath]),
   'index:tags': z.tuple([]),
+  'index:graph': z.tuple([]),
   'index:summaries': z.tuple([z.array(relPath).max(5000)]),
   'index:resolve': z.tuple([z.string().min(1).max(300)]),
   'index:rebuild': z.tuple([]),
@@ -166,6 +168,7 @@ export interface IpcResults {
   'index:backlinks': SearchHit[]
   'index:mentions': SearchHit[]
   'index:tags': TagCount[]
+  'index:graph': GraphData
   'index:summaries': PageSummary[]
   'index:resolve': string | null
   'index:rebuild': void

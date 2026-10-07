@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3'
-import type { PageMeta, PageSummary, SearchHit, TagCount } from '@shared/types'
+import type { GraphData, PageMeta, PageSummary, SearchHit, TagCount } from '@shared/types'
 import { normalizeTitle, parseLinkTarget } from '@shared/wikilinks'
 import { stemOf } from '@shared/paths'
 import type { ExtractedPage } from './extract'
@@ -245,6 +245,82 @@ export class IndexDb {
     return this.stmt(
       `SELECT tag, count(*) AS count FROM tags GROUP BY tag ORDER BY count DESC, tag`
     ).all() as TagCount[]
+  }
+
+  /**
+   * All pages with their links resolved like resolve() does: a target with a slash by vault
+   * path, otherwise by title first, then file name; the shortest path wins ties.
+   */
+  graph(): GraphData {
+    const rows = this.stmt(
+      `SELECT path, title, icon, title_norm, stem_norm FROM pages ORDER BY length(path), path`
+    ).all() as {
+      path: string
+      title: string
+      icon: string | null
+      title_norm: string
+      stem_norm: string
+    }[]
+    const index = new Map<string, number>()
+    const byTitle = new Map<string, number>()
+    const byStem = new Map<string, number>()
+    const byPath = new Map<string, number>()
+    rows.forEach((r, i) => {
+      index.set(r.path, i)
+      if (!byTitle.has(r.title_norm)) byTitle.set(r.title_norm, i)
+      if (!byStem.has(r.stem_norm)) byStem.set(r.stem_norm, i)
+      byPath.set(normalizeTitle(r.path.replace(/\.md$/i, '')), i)
+    })
+    const pathEntries = [...byPath]
+    const resolve = (n: string): number | undefined => {
+      if (n.includes('/')) {
+        const exact = byPath.get(n)
+        if (exact !== undefined) return exact
+        const suffix = pathEntries.find(([p]) => p.endsWith('/' + n))
+        if (suffix) return suffix[1]
+      }
+      return byTitle.get(n) ?? byStem.get(n)
+    }
+
+    const tags = new Map<string, string[]>()
+    for (const t of this.stmt(`SELECT path, tag FROM tags ORDER BY tag`).all() as {
+      path: string
+      tag: string
+    }[]) {
+      const list = tags.get(t.path)
+      if (list) list.push(t.tag)
+      else tags.set(t.path, [t.tag])
+    }
+
+    const links: [number, number][] = []
+    const seen = new Set<string>()
+    const ghosts = new Map<string, Set<number>>()
+    for (const l of this.stmt(`SELECT source, target_norm FROM links`).all() as {
+      source: string
+      target_norm: string
+    }[]) {
+      const from = index.get(l.source)
+      if (from === undefined) continue
+      const to = resolve(l.target_norm)
+      if (to === undefined) {
+        const g = ghosts.get(l.target_norm) ?? new Set<number>()
+        g.add(from)
+        ghosts.set(l.target_norm, g)
+      } else if (to !== from && !seen.has(`${from}>${to}`)) {
+        seen.add(`${from}>${to}`)
+        links.push([from, to])
+      }
+    }
+    return {
+      pages: rows.map((r) => ({
+        path: r.path,
+        title: r.title,
+        icon: r.icon,
+        tags: tags.get(r.path) ?? []
+      })),
+      links,
+      ghosts: [...ghosts].map(([title, from]) => ({ title, from: [...from] }))
+    }
   }
 
   count(): number {

@@ -362,6 +362,27 @@ test('bearbeitet Mermaid im ausklappbaren Codefeld mit Einrückung', async () =>
   )
 })
 
+test('zeigt die Verknüpfungen als Graph, global und um eine Seite', async () => {
+  await win.locator('.sidebar-item', { hasText: 'Graph' }).click()
+  await expect(win.locator('.graph-canvas canvas')).toBeVisible({ timeout: 15000 })
+  await expect(win.locator('.graph-mode button[aria-selected="true"]')).toHaveText('Global')
+  const search = win.locator('.graph-search input')
+  await search.fill('Anker')
+  await search.press('Enter')
+  await expect(win.locator('.graph-info-title')).toHaveText('Anker')
+  await win.locator('.graph-info button', { hasText: 'In die Mitte' }).click()
+  await expect(win.locator('.graph-mode button[aria-selected="true"]')).toHaveText('Lokal')
+  await expect(win.locator('.graph-label[data-role="sun"]')).toHaveText('Anker')
+  await expect(win.locator('.graph-label', { hasText: 'Abschnitte' }).first()).toBeVisible()
+
+  // From a page, the toolbar button opens the graph around it
+  await win.locator('.tree-row .name', { hasText: 'Abschnitte' }).click()
+  await win.getByRole('button', { name: 'Lokaler Graph' }).click()
+  await expect(win.locator('.graph-label[data-role="sun"]')).toHaveText('Abschnitte')
+  await win.locator('.toolbar button[title^="Zurück"]').click()
+  await expect(win.locator('.page-title')).toHaveValue('Abschnitte')
+})
+
 test('zeigt alle Tastaturkurzbefehle und filtert sie', async () => {
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()

@@ -46,7 +46,9 @@
     "print": "Drucken …",
     "toggleTheme": "Hell/Dunkel umschalten",
     "checkUpdates": "Nach Updates suchen …",
-    "whatsNew": "Neuerungen in Write"
+    "whatsNew": "Neuerungen in Write",
+    "graph": "Graph anzeigen",
+    "pageGraph": "Lokalen Graphen der Seite zeigen"
   },
   "menu": {
     "about": "Über {{name}}",
@@ -107,7 +109,8 @@
     "toggle": "Seitenleiste",
     "resize": "Breite der Seitenleiste ändern",
     "newFolder": "Neuer Ordner",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "graph": "Graph"
   },
   "tree": {
     "newSubpage": "Neue Unterseite",
@@ -501,5 +504,28 @@
     "note": "Dabei sieht GitHub deine IP-Adresse und welche Dateien abgerufen werden – nie Inhalte deiner Notizen. Du kannst das jederzeit in den Einstellungen unter „Über Write“ ändern.",
     "no": "Nicht automatisch",
     "yes": "Automatisch suchen"
+  },
+  "graph": {
+    "global": "Global",
+    "local": "Lokal",
+    "localHint": "Wähle zuerst einen Himmelskörper aus",
+    "find": "Seite oder Tag finden …",
+    "depth": "Tiefe",
+    "tags": "Tags zeigen",
+    "ghosts": "Fehlende Seiten zeigen",
+    "truncated": "Sehr viele Verknüpfungen – nicht alle werden gezeigt.",
+    "tagPages_one": "{{count}} Seite",
+    "tagPages_other": "{{count}} Seiten",
+    "links_one": "{{count}} Verknüpfung",
+    "links_other": "{{count}} Verknüpfungen",
+    "ghost": "Seite gibt es noch nicht",
+    "open": "Öffnen",
+    "showPages": "Seiten zeigen",
+    "centre": "In die Mitte",
+    "failed": "Die 3D-Ansicht konnte nicht gestartet werden.",
+    "empty": "Noch keine Seiten im Graphen.",
+    "notIndexed": "Diese Seite ist noch nicht im Index.",
+    "hint": "Ziehen dreht · Scrollen zoomt · Klick wählt · Doppelklick öffnet",
+    "pageButton": "Lokaler Graph"
   }
 }

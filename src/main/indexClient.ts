@@ -1,6 +1,13 @@
 import { utilityProcess, type UtilityProcess } from 'electron'
 import path from 'node:path'
-import type { IndexStatus, PageMeta, PageSummary, SearchHit, TagCount } from '@shared/types'
+import type {
+  GraphData,
+  IndexStatus,
+  PageMeta,
+  PageSummary,
+  SearchHit,
+  TagCount
+} from '@shared/types'
 import type { IndexCommand, IndexMessage, QueryName } from '../indexer/protocol'
 
 type Listener = { status(s: IndexStatus): void; updated(): void }
@@ -78,6 +85,7 @@ export class IndexClient {
   backlinks = (p: string): Promise<SearchHit[]> => this.query('backlinks', p)
   mentions = (p: string): Promise<SearchHit[]> => this.query('mentions', p)
   tags = (): Promise<TagCount[]> => this.query('tags')
+  graph = (): Promise<GraphData> => this.query('graph')
   resolve = (title: string): Promise<string | null> => this.query('resolve', title)
   linkSources = (titles: string[]): Promise<string[]> => this.query('linkSources', titles)
   summaries = (paths: string[]): Promise<PageSummary[]> => this.query('summaries', paths)

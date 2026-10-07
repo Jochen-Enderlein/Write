@@ -14,6 +14,7 @@ export type QueryName =
   | 'backlinks'
   | 'mentions'
   | 'tags'
+  | 'graph'
   | 'resolve'
   | 'linkSources'
   | 'summaries'

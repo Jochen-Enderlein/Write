@@ -25,6 +25,8 @@ export type View =
   | { kind: 'search'; query: string; tag: string | null }
   | { kind: 'tags' }
   | { kind: 'trash' }
+  /** The link graph; `center` (a page path or `#tag`) makes it the local view around it. */
+  | { kind: 'graph'; center: string | null }
 
 export type PaletteMode = 'all' | 'pages' | 'templates' | 'vaults' | 'move'
 

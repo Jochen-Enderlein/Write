@@ -27,6 +27,8 @@ export type CommandId =
   | 'vault.create'
   | 'trash.show'
   | 'tags.show'
+  | 'graph.show'
+  | 'page.graph'
   | 'conflicts.show'
   | 'index.rebuild'
   | 'capture.open'
@@ -123,6 +125,8 @@ export const COMMANDS: CommandDef[] = [
   // No shortcut: ⇧⌘⌫ empties the trash in Finder, the muscle memory is too risky
   { id: 'trash.show', label: 'cmd.trash', menu: 'go' },
   { id: 'tags.show', label: 'cmd.tags', accelerator: 'Control+CmdOrCtrl+T', menu: 'go' },
+  { id: 'graph.show', label: 'cmd.graph', accelerator: 'Control+CmdOrCtrl+G', menu: 'go' },
+  { id: 'page.graph', label: 'cmd.pageGraph', menu: 'page' },
   { id: 'conflicts.show', label: 'cmd.conflicts', menu: 'go' },
   { id: 'index.rebuild', label: 'cmd.rebuildIndex', menu: 'file' },
   { id: 'capture.open', label: 'cmd.capture', menu: 'file' },

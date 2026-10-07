@@ -46,7 +46,9 @@
     "print": "Print …",
     "toggleTheme": "Toggle Light/Dark",
     "checkUpdates": "Check for Updates …",
-    "whatsNew": "What’s New in Write"
+    "whatsNew": "What’s New in Write",
+    "graph": "Show Graph",
+    "pageGraph": "Show Local Graph of Page"
   },
   "menu": {
     "about": "About {{name}}",
@@ -107,7 +109,8 @@
     "toggle": "Sidebar",
     "resize": "Resize sidebar",
     "newFolder": "New Folder",
-    "settings": "Settings"
+    "settings": "Settings",
+    "graph": "Graph"
   },
   "tree": {
     "newSubpage": "New Subpage",
@@ -501,5 +504,28 @@
     "note": "GitHub sees your IP address and which files are requested – never the contents of your notes. You can change this anytime in Settings under “About Write”.",
     "no": "Don’t Check",
     "yes": "Check Automatically"
+  },
+  "graph": {
+    "global": "Global",
+    "local": "Lokal",
+    "localHint": "Select a body first",
+    "find": "Find page or tag …",
+    "depth": "Depth",
+    "tags": "Show tags",
+    "ghosts": "Show missing pages",
+    "truncated": "Very many links – not all are shown.",
+    "tagPages_one": "{{count}} page",
+    "tagPages_other": "{{count}} pages",
+    "links_one": "{{count}} link",
+    "links_other": "{{count}} links",
+    "ghost": "Page does not exist yet",
+    "open": "Open",
+    "showPages": "Show pages",
+    "centre": "Centre",
+    "failed": "The 3D view could not be started.",
+    "empty": "No pages in the graph yet.",
+    "notIndexed": "This page is not indexed yet.",
+    "hint": "Drag to rotate · Scroll to zoom · Click to select · Double-click to open",
+    "pageButton": "Local graph"
   }
 }

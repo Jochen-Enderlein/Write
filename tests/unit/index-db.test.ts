@@ -62,4 +62,26 @@ describe('Index', () => {
     expect(toFtsQuery('a "b" OR c*')).toBe('"a"* "b"* "OR"* "c*"*')
     expect(() => db().search('NEAR( " AND', null)).not.toThrow()
   })
+
+  it('liefert den Graphen mit aufgelösten Links, Tags und fehlenden Zielen', () => {
+    const d = db()
+    d.upsert('A.md', stamp, extractPage('A.md', '[[Ziel]] [[ziel]] [[Ordner/B]] [[Neu]] #projekt'))
+    d.upsert(
+      'Ordner/B.md',
+      stamp,
+      extractPage('Ordner/B.md', '---\ntitle: Bee\n---\n[[A]] [[Bee]]')
+    )
+    d.upsert('Ziel.md', stamp, extractPage('Ziel.md', 'Nichts #projekt #x'))
+    const g = d.graph()
+    const name = (i: number): string => g.pages[i]!.path
+    expect(g.links.map(([a, b]) => `${name(a)}>${name(b)}`).sort()).toEqual([
+      'A.md>Ordner/B.md',
+      'A.md>Ziel.md',
+      'Ordner/B.md>A.md'
+    ])
+    expect(g.pages.find((p) => p.path === 'Ziel.md')!.tags).toEqual(['projekt', 'x'])
+    expect(g.ghosts).toEqual([
+      { title: 'neu', from: [g.pages.findIndex((p) => p.path === 'A.md')] }
+    ])
+  })
 })

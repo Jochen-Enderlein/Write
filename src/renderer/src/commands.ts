@@ -77,6 +77,11 @@ export async function runCommand(id: CommandId): Promise<void> {
         return s.navigate({ kind: 'trash' })
       case 'tags.show':
         return s.navigate({ kind: 'tags' })
+      case 'graph.show':
+        return s.navigate({ kind: 'graph', center: null })
+      case 'page.graph':
+        if (page) s.navigate({ kind: 'graph', center: page })
+        return
       case 'conflicts.show':
         return s.setSheet({ kind: 'conflicts' })
       case 'index.rebuild':

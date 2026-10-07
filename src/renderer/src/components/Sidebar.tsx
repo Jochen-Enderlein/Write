@@ -13,6 +13,7 @@ import {
   CalendarIcon,
   FolderPlusIcon,
   GearIcon,
+  GraphIcon,
   ChevronDownIcon,
   PlusIcon,
   SearchIcon,
@@ -114,6 +115,14 @@ export function Sidebar({
             <SearchIcon />
             <span className="label">{t('sidebar.search')}</span>
             <span className="shortcut">{glyph('search.fulltext')}</span>
+          </button>
+          <button
+            className={`sidebar-item ${view.kind === 'graph' && view.center === null ? 'active' : ''}`}
+            onClick={() => s().navigate({ kind: 'graph', center: null })}
+          >
+            <GraphIcon />
+            <span className="label">{t('sidebar.graph')}</span>
+            <span className="shortcut">{glyph('graph.show')}</span>
           </button>
         </div>
 

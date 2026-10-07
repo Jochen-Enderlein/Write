@@ -74,6 +74,15 @@ export interface TagCount {
   count: number
 }
 
+/** Pages and how they are connected, for the graph view. */
+export interface GraphData {
+  pages: { path: string; title: string; icon: string | null; tags: string[] }[]
+  /** Resolved wiki-links as [source, target] indices into `pages`, without duplicates. */
+  links: [number, number][]
+  /** Link targets without a page yet, with the pages that link to them. */
+  ghosts: { title: string; from: number[] }[]
+}
+
 export interface IndexStatus {
   state: 'idle' | 'indexing'
   done: number
