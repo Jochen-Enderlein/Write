@@ -104,7 +104,10 @@ export function createCaptureWindow(glass: GlassService): BrowserWindow {
     }
   })
   harden(win)
-  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+  // Without skipTransformProcessType Electron briefly turns the whole app into a UIElement
+  // application; on recent macOS it doesn't come back, so the app loses its Dock indicator and
+  // menu bar. As a panel the window can join full-screen spaces without that transformation.
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })
   win.webContents.once('did-finish-load', () => glass.apply(win, { cornerRadius: 26 }))
   win.on('blur', () => win.hide())
   load(win, 'capture')
