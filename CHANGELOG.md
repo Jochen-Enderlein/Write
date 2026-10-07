@@ -5,6 +5,24 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.3.0 – 2026-10-07
+
+### Neu
+
+- **KI-Assistenten:** Claude, OpenCode und andere können deinen Vault durchsuchen, lesen und – wenn du es erlaubst – Seiten anlegen und ändern. Einschalten und einrichten unter _Einstellungen → KI-Assistenten_. Jede Änderung landet in der Versionsgeschichte und lässt sich dort rückgängig machen.
+- **Teilen:** Über den Teilen-Knopf oben rechts eine Seite – oder nur den markierten Teil – als Markdown, PDF oder HTML per Mail, Nachrichten, AirDrop & Co. weitergeben oder als Markdown kopieren.
+- **Formeln:** `$E = mc^2$` im Text und `$$ … $$` als eigener Block werden schön gesetzt. Im Slash-Menü unter _Formel_.
+- **Fußnoten:** `[^1]` erscheint als kleiner Verweis, ein Klick springt zur Notiz. Im Slash-Menü unter _Fußnote_.
+- **Verschachtelte Tags:** `#projekt/write` ordnet sich unter `#projekt` ein; die Tag-Übersicht zeigt einen Baum, und Tags lassen sich für alle Seiten umbenennen.
+
+### Verbessert
+
+- Im Markdown-Modus werden `[[Links]]` und `#Tags` beim Tippen vervollständigt.
+
+### Behoben
+
+- Der PDF-Export erzeugt wieder vollständige Seiten statt einer leeren.
+
 ## 0.2.1 – 2026-10-07
 
 ### Verbessert
