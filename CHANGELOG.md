@@ -5,6 +5,13 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.2.0 – 2026-10-07
+
+### Neu
+
+- **Graph:** Deine Seiten als Sonnensystem in 3D. Die globale Ansicht (Seitenleiste → _Graph_ oder ⌃⌘G) zeigt jede Gruppe eng verknüpfter Seiten als eigenes Sonnensystem, Seiten ohne Verknüpfung kreisen im Asteroidengürtel. Über den Knopf oben rechts auf einer Seite siehst du ihren lokalen Graphen: die Seite als Sonne, ihre Links als Planeten und Monde. Tags erscheinen als goldene Himmelskörper. Klick wählt aus, Doppelklick öffnet.
+- **Markdown-Modus:** Seiten lassen sich jetzt auch als reines Markdown bearbeiten – oder geteilt, mit Markdown links und Vorschau rechts. Umschalten über die drei Knöpfe in der Toolbar oder ⌃⌘1, ⌃⌘2 und ⌃⌘3.
+
 ## 0.1.2 – 2026-10-07
 
 ### Neu
