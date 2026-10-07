@@ -181,6 +181,8 @@
     "calloutTitle": "Titel",
     "mermaid": "Mermaid-Diagramm",
     "mermaidHint": "Flussdiagramm, Sequenz, Gantt …",
+    "mermaidEditCode": "Code bearbeiten",
+    "mermaidHideCode": "Code ausblenden",
     "mermaidError": "Diagramm konnte nicht gerendert werden",
     "raw": "Markdown",
     "rawHint": "Wird unverändert gespeichert · Doppelklick zum Bearbeiten",

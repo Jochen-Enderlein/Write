@@ -9,16 +9,13 @@ import {
 } from '@blocknote/core'
 import { Mark, markInputRule, markPasteRule } from '@tiptap/core'
 import { codeBlockOptions } from '@blocknote/code-block'
-import {
-  createReactBlockSpec,
-  createReactInlineContentSpec,
-  useEditorState
-} from '@blocknote/react'
+import { createReactBlockSpec, createReactInlineContentSpec } from '@blocknote/react'
 import { useEffect, useRef, useState } from 'react'
 import { CALLOUT_KINDS } from '@shared/markdown'
 import { IMAGE_EXT_RE, linkLabel, parseLinkTarget } from '@shared/wikilinks'
 import { t } from '../i18n'
 import { renderMermaid } from './mermaid'
+import { editForKey } from './codeIndent'
 import { editorBridge } from './bridge'
 
 export const CALLOUT_ICONS: Record<string, string> = {
@@ -259,53 +256,160 @@ export const SUPPORTED_LANGUAGES = {
   ...codeBlockOptions.supportedLanguages
 } as Record<string, { name: string; aliases?: string[] }>
 
-/** Mermaid diagram: rendered preview, source editable below while the cursor is inside. */
+/** Mermaid blocks whose code panel should open once they render (freshly inserted ones). */
+const openOnMount = new Set<string>()
+export function openMermaidEditor(id: string): void {
+  openOnMount.add(id)
+}
+
+/**
+ * Mermaid diagram: the page shows only the rendered graph. The source lives in a prop and is
+ * edited in a plain text field that folds out beside the graph, so typing never runs through
+ * the rich-text editor (which would split lines into new blocks and swallow indentation).
+ */
 export const Mermaid = createReactBlockSpec(
-  { type: 'mermaid', propSchema: {}, content: 'plain' },
+  { type: 'mermaid', propSchema: { source: { default: '' } }, content: 'none' },
   {
-    render: function Render({ block, editor, contentRef }) {
-      const source = Array.isArray(block.content)
-        ? block.content.map((c) => ('text' in c ? c.text : '')).join('')
-        : ''
-      const preview = useRef<HTMLDivElement>(null)
-      const active = useEditorState({
-        editor,
-        selector: ({ editor: ed }) => {
-          try {
-            return ed.getTextCursorPosition().block.id === block.id
-          } catch {
-            return false
-          }
-        }
-      })
+    render: function Render({ block, editor }) {
+      const source = String(block.props.source)
+      const [open, setOpen] = useState(() => openOnMount.delete(block.id))
+      const [draft, setDraft] = useState(source)
+      const [svg, setSvg] = useState('')
+      const [error, setError] = useState('')
+      const field = useRef<HTMLTextAreaElement>(null)
+      const commitTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+      const caret = useRef<[number, number] | null>(null)
+
+      // Changes from outside (undo, a reload from disk) replace the draft unless it is ahead
+      const committed = useRef(source)
       useEffect(() => {
-        const el = preview.current
-        if (!el) return
-        const id = setTimeout(() => {
-          el.classList.remove('error')
-          void renderMermaid(source, el)
-        }, 250)
-        return () => clearTimeout(id)
+        if (source !== committed.current) {
+          committed.current = source
+          setDraft(source)
+        }
       }, [source])
+
+      useEffect(() => {
+        let stale = false
+        const id = setTimeout(() => {
+          if (!draft.trim()) {
+            setSvg('')
+            setError('')
+            return
+          }
+          void renderMermaid(draft).then((res) => {
+            if (stale) return
+            // While typing, a half-written graph keeps the last good drawing
+            if ('svg' in res) {
+              setSvg(res.svg)
+              setError('')
+            } else setError(res.error)
+          })
+        }, 250)
+        return () => {
+          stale = true
+          clearTimeout(id)
+        }
+      }, [draft])
+
+      const commit = (text: string): void => {
+        clearTimeout(commitTimer.current)
+        commitTimer.current = setTimeout(() => {
+          if (text === committed.current || !editor.getBlock(block.id)) return
+          committed.current = text
+          editor.updateBlock(block.id, { props: { source: text } } as never)
+        }, 300)
+      }
+      useEffect(() => () => clearTimeout(commitTimer.current), [])
+
+      const change = (text: string): void => {
+        setDraft(text)
+        commit(text)
+      }
+
+      // Keep the caret where an indentation edit put it once React has rendered the new text
+      useEffect(() => {
+        const el = field.current
+        if (el && caret.current) {
+          el.setSelectionRange(...caret.current)
+          caret.current = null
+        }
+        if (el) {
+          el.style.height = 'auto'
+          el.style.height = `${el.scrollHeight}px`
+        }
+      }, [draft, open])
+
+      useEffect(() => {
+        if (open) field.current?.focus()
+      }, [open])
+
       return (
-        <div className={`mermaid-block ${active ? 'active' : ''}`}>
+        <div className={`mermaid-block ${open ? 'open' : ''}`} contentEditable={false}>
           <div
-            className="mermaid-preview"
-            ref={preview}
-            contentEditable={false}
-            onMouseDown={(e) => {
-              // Pressing the diagram opens its source for editing
-              e.preventDefault()
-              editor.setTextCursorPosition(block, 'end')
-              editor.focus()
-            }}
-          />
-          <div className="mermaid-label" contentEditable={false}>
-            Mermaid
+            className={`mermaid-preview ${error && !svg ? 'error' : ''}`}
+            onDoubleClick={() => setOpen(true)}
+          >
+            {svg ? (
+              <div className="mermaid-svg" dangerouslySetInnerHTML={{ __html: svg }} />
+            ) : (
+              error || (!draft.trim() && <span className="mermaid-empty">Mermaid</span>)
+            )}
           </div>
-          <pre className="mermaid-source">
-            <code ref={contentRef} />
-          </pre>
+          {open && (
+            <div className="mermaid-code">
+              <div className="mermaid-label">Mermaid</div>
+              <textarea
+                ref={field}
+                className="mermaid-input"
+                value={draft}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                onChange={(e) => change(e.target.value)}
+                onBlur={() => {
+                  clearTimeout(commitTimer.current)
+                  if (draft !== committed.current) {
+                    committed.current = draft
+                    editor.updateBlock(block.id, { props: { source: draft } } as never)
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    setOpen(false)
+                    return
+                  }
+                  const key =
+                    e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.altKey
+                      ? 'Enter'
+                      : e.key === 'Tab'
+                        ? e.shiftKey
+                          ? 'Shift-Tab'
+                          : 'Tab'
+                        : null
+                  if (!key || (key === 'Enter' && e.shiftKey)) return
+                  const el = e.currentTarget
+                  const edit = editForKey(key, el.value, el.selectionStart, el.selectionEnd)
+                  if (!edit) return
+                  e.preventDefault()
+                  caret.current = [edit.start, edit.end]
+                  change(edit.text)
+                }}
+              />
+              {error && svg && <div className="mermaid-error">{error}</div>}
+            </div>
+          )}
+          <button
+            type="button"
+            className="mermaid-toggle"
+            title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
+            aria-pressed={open}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {'</>'}
+          </button>
         </div>
       )
     }
@@ -408,7 +512,14 @@ export function prepareBlocks<
   const fix = (b: B): B => {
     let out = b
     if (b.type === 'codeBlock' && String(b.props.language).toLowerCase() === 'mermaid') {
-      out = { ...b, type: 'mermaid', props: {} }
+      const content = (b as { content?: unknown }).content
+      const source =
+        typeof content === 'string'
+          ? content
+          : Array.isArray(content)
+            ? content.map((c: { text?: string }) => c.text ?? '').join('')
+            : ''
+      out = { ...b, type: 'mermaid', props: { source }, content: undefined }
     } else if (b.type === 'codeBlock') {
       const lang = String(b.props.language ?? 'text')
       const key = byAlias.get(lang.toLowerCase())

@@ -4,9 +4,8 @@ let counter = 0
 let loaded: Promise<typeof import('mermaid').default> | null = null
 let theme: string | null = null
 
-/** Renders a Mermaid diagram into `el`; Mermaid itself is loaded on first use. */
-export async function renderMermaid(source: string, el: HTMLElement): Promise<void> {
-  if (!source.trim()) return
+/** Renders a Mermaid diagram to SVG; Mermaid itself is loaded on first use. */
+export async function renderMermaid(source: string): Promise<{ svg: string } | { error: string }> {
   try {
     loaded ??= import('mermaid').then((m) => m.default)
     const mermaid = await loaded
@@ -25,9 +24,10 @@ export async function renderMermaid(source: string, el: HTMLElement): Promise<vo
       theme = wanted
     }
     const { svg } = await mermaid.render(`mermaid-${++counter}`, source)
-    el.innerHTML = svg
+    return { svg }
   } catch (err) {
-    el.textContent = `${t('editor.mermaidError')}: ${err instanceof Error ? err.message.split('\n')[0] : String(err)}`
-    el.classList.add('error')
+    return {
+      error: `${t('editor.mermaidError')}: ${err instanceof Error ? err.message.split('\n')[0] : String(err)}`
+    }
   }
 }

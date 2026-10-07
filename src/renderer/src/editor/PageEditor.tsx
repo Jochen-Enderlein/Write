@@ -10,6 +10,7 @@ import {
 import { filterSuggestionItems } from '@blocknote/core/extensions'
 import { de, en } from '@blocknote/core/locales'
 import { syntaxHighlighter } from '@blocknote/code-block'
+import { codeIndent } from './codeIndent'
 import {
   BasicTextStyleButton,
   DragHandleMenu,
@@ -51,7 +52,7 @@ import { useColorScheme, useIpcEvent } from '../lib/hooks'
 import { scrollBehavior } from '../lib/motion'
 import { CalloutIcon, DiagramIcon, DocIcon, HighlighterIcon, PlusIcon } from '../components/Icons'
 import { buildExportHtml } from './exportHtml'
-import { prepareBlocks, schema, type WriteEditor } from './schema'
+import { openMermaidEditor, prepareBlocks, schema, type WriteEditor } from './schema'
 
 export interface PageEditorHandle {
   flush(): Promise<void>
@@ -137,7 +138,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
         }
       },
       initialContent: loaded.parsed.blocks.length ? (loaded.parsed.blocks as never) : undefined,
-      extensions: [syntaxHighlighter],
+      extensions: [syntaxHighlighter, codeIndent],
       tables: {
         headers: true,
         splitCells: false,
@@ -415,11 +416,19 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
           aliases: ['mermaid', 'diagramm', 'diagram', 'flowchart'],
           group: t('editor.groupMarkdown'),
           icon: <DiagramIcon size={18} />,
-          onItemClick: () =>
-            replaceOrInsert(editor, {
+          onItemClick: () => {
+            // A new diagram opens with its code panel; the empty line it was typed in goes
+            const block = {
+              id: makeId(),
               type: 'mermaid',
-              content: 'graph TD\n  A[Start] --> B[Ziel]'
-            })
+              props: { source: 'graph TD\n  A[Start] --> B[Ziel]' }
+            } as const
+            openMermaidEditor(block.id)
+            const cur = editor.getTextCursorPosition().block
+            if (Array.isArray(cur.content) && cur.content.length === 0)
+              editor.replaceBlocks([cur], [block])
+            else editor.insertBlocks([block], cur, 'after')
+          }
         },
         ...templates.map((tpl) => ({
           title: t('editor.template', { name: tpl.name }),

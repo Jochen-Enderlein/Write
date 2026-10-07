@@ -10,7 +10,7 @@ body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .page .bn-editor { padding-inline: 0; }
 .page-title { font: 700 34px/1.2 var(--font-display); color: var(--label); margin: 0 0 22px; padding: 0; }
 .page-icon { font-size: 46px; line-height: 1; margin: 0 0 10px; padding: 0; }
-.bn-side-menu, .mermaid-label, .mermaid-source, .raw-md-label, .bn-trailing-block { display: none !important; }
+.bn-side-menu, .mermaid-code, .mermaid-toggle, .raw-md-label, .bn-trailing-block { display: none !important; }
 .callout-kind select { display: none; }
 .wikilink { text-decoration: none; }
 @media print {

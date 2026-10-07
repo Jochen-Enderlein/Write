@@ -276,7 +276,7 @@ function ownFlow(b: Block): BlockContent[] {
       ]
     }
     case 'mermaid':
-      return [{ type: 'code', lang: 'mermaid', meta: null, value: plain(b.content) }]
+      return [{ type: 'code', lang: 'mermaid', meta: null, value: String(b.props.source ?? '') }]
     case 'quote':
       return [
         {

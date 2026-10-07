@@ -345,6 +345,23 @@ test('liefert die Lizenzen der Bibliotheken mit und rendert Diagramme ohne ELK',
   await expect(win.locator('.mermaid-preview svg')).toBeVisible({ timeout: 15000 })
 })
 
+test('bearbeitet Mermaid im ausklappbaren Codefeld mit Einrückung', async () => {
+  await expect(win.locator('.mermaid-input')).toHaveCount(0)
+  await win.locator('.mermaid-block').hover()
+  await win.locator('.mermaid-toggle').click()
+  const field = win.locator('.mermaid-input')
+  await expect(field).toBeFocused()
+  await field.press('Meta+ArrowDown')
+  await field.press('Enter')
+  await field.pressSequentially('B --> C')
+  await expect(win.locator('.mermaid-preview svg .node')).toHaveCount(3)
+  await field.press('Escape')
+  await expect(field).toHaveCount(0)
+  await eventually(() =>
+    expect(read('Diagramm.md')).toContain('```mermaid\ngraph TD\n  A --> B\n  B --> C\n```\n')
+  )
+})
+
 test('zeigt alle Tastaturkurzbefehle und filtert sie', async () => {
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
