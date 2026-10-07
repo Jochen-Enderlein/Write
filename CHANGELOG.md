@@ -5,6 +5,23 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.1.2 – 2026-10-07
+
+### Neu
+
+- **Mermaid-Diagramme:** Auf der Seite steht nur noch das Diagramm. Über `</>` (oder einen Doppelklick) klappt daneben der Code auf; das Diagramm aktualisiert sich beim Tippen, Escape klappt den Code wieder zu.
+
+### Verbessert
+
+- Code-Blöcke behalten beim Zeilenumbruch die Einrückung, nach `{`, `(`, `[` und `:` eine Ebene mehr. Tab und ⇧Tab rücken markierte Zeilen ein und aus.
+
+### Behoben
+
+- Eingefügtes Markdown und formatierter Text, etwa aus einem Chat oder dem Browser, kommen formatiert an – auch mit Code-Blöcken, bei denen bisher gar nichts eingefügt wurde.
+- In Mermaid-Diagrammen verrutscht beim Tippen nicht mehr die Einrückung.
+- Write blockiert das Herunterfahren und Abmelden des Macs nicht mehr; offene Änderungen werden vorher gespeichert.
+- Nach dem Start bleibt Write die aktive App: mit Punkt im Dock und eigener Menüleiste.
+
 ## 0.1.1 – 2026-10-06
 
 ### Behoben
