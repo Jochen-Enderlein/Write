@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.2.1 – 2026-10-07
+
+### Verbessert
+
+- Neues, ruhigeres App-Symbol: nur noch das W.
+
 ## 0.2.0 – 2026-10-07
 
 ### Neu
