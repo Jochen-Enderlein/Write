@@ -152,17 +152,26 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
         invoke('asset:save', path, f.name, new Uint8Array(await f.arrayBuffer())),
       pasteHandler: ({ event, editor: ed, defaultPasteHandler }) => {
         const data = event.clipboardData
+        const inCode = ed.getTextCursorPosition().block.type === 'codeBlock'
         if (
           !data ||
+          inCode ||
+          data.files.length ||
           data.types.includes('blocknote/html') ||
-          data.types.includes('text/html') ||
-          data.files.length
+          data.types.includes('vscode-editor-data')
         )
           return defaultPasteHandler()
-        const text = data.getData('text/plain')
-        if (!text || !/\n|^#{1,6}\s|^\s*([-*+]|\d+\.)\s|^>|```|\[\[/.test(text))
-          return defaultPasteHandler()
-        const blocks = prepareBlocks(markdownToBlocks(text, makeId))
+        // Everything else goes through our own parsers and prepareBlocks(), like a loaded file.
+        // BlockNote's default would pick its own markdown parser whenever the text looks like
+        // markdown, even next to HTML, and e.g. a ```ts fence then breaks the whole paste.
+        const html = data.getData('text/html')
+        const text = data.getData('text/markdown') || data.getData('text/plain')
+        let blocks: Block[]
+        if (text && (data.types.includes('text/markdown') || looksLikeMarkdown(text, !html)))
+          blocks = markdownToBlocks(text, makeId)
+        else if (html) blocks = ed.tryParseHTMLToBlocks(html) as unknown as Block[]
+        else return defaultPasteHandler()
+        blocks = prepareBlocks(blocks)
         if (blocks.length <= 1 && blocks[0]?.type === 'paragraph') {
           ed.insertInlineContent((blocks[0].content ?? []) as never)
           return true
@@ -551,6 +560,19 @@ function replaceOrInsert(editor: WriteEditor, block: Record<string, unknown>): v
   else editor.insertBlocks([block as never], cur, 'after')
   const target = empty ? editor.getBlock(cur.id) : editor.getTextCursorPosition().nextBlock
   if (target) editor.setTextCursorPosition(target, 'end')
+}
+
+const MARKDOWN_BLOCK = /^ {0,3}(#{1,6}\s|([-*+]|\d+\.)\s|>|```|~~~|\|.*\|\s*$)/m
+const MARKDOWN_INLINE = /(\*\*|__|==|~~)\S|`[^`\n]+`|\[[^\]\n]+\]\([^)\s]+\)|\[\[/
+
+/**
+ * Whether pasted text should be read as markdown. Next to HTML only clear markdown syntax
+ * counts, so rich text from a web page keeps its formatting; plain text with several lines is
+ * read as markdown too, since that is what the editor's own files are.
+ */
+function looksLikeMarkdown(text: string, plainOnly: boolean): boolean {
+  if (MARKDOWN_BLOCK.test(text) || MARKDOWN_INLINE.test(text)) return true
+  return plainOnly && text.includes('\n')
 }
 
 function insertBlocksAtCursor(editor: WriteEditor, blocks: Block[]): void {

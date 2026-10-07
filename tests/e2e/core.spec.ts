@@ -484,6 +484,34 @@ test('öffnet das Journal ohne doppelten Titel', async () => {
   await win.keyboard.press('Escape')
 })
 
+test('fügt Markdown aus einem Chat (HTML und Text) formatiert ein', async () => {
+  await win.getByRole('button', { name: 'Neue Seite', exact: true }).click()
+  const title = win.locator('.page-title')
+  await title.fill('Eingefügt')
+  await title.press('Enter')
+  await eventually(() => expect(existsSync(path.join(vault, 'Eingefügt.md'))).toBe(true))
+  await expect(win.locator('.bn-editor')).toBeFocused()
+  const markdown = '## Plan\n\n- **eins**\n- zwei\n\n```ts\nconst x = 1\n```'
+  const html =
+    '<h2>Plan</h2><ul><li><b>eins</b></li><li>zwei</li></ul><pre><code class="language-ts">const x = 1</code></pre>'
+  await win.evaluate(
+    ([text, html]) => {
+      const data = new DataTransfer()
+      data.setData('text/plain', text!)
+      data.setData('text/html', html!)
+      document.activeElement!.dispatchEvent(
+        new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true })
+      )
+    },
+    [markdown, html]
+  )
+  await eventually(() =>
+    expect(read('Eingefügt.md')).toContain(
+      '## Plan\n\n- **eins**\n- zwei\n\n```typescript\nconst x = 1\n```\n'
+    )
+  )
+})
+
 test('speichert eben Getipptes auch beim sofortigen Schließen des Fensters', async () => {
   await win.locator('.tree-row .name', { hasText: 'Quelle' }).click()
   await expect(win.locator('.page-title')).toHaveValue('Quelle')
