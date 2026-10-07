@@ -44,7 +44,7 @@ import { buildFrontmatter, splitFrontmatter, updateFrontmatter } from '@shared/f
 import { composePage, readHeader } from '@shared/page'
 import { resolveRelative } from '@shared/paths'
 import { normalizeTitle } from '@shared/wikilinks'
-import type { EditorView } from 'prosemirror-view'
+import { proseMirrorFind, type FindTarget } from './find'
 import { invoke } from '../api'
 import i18next, { t } from '../i18n'
 import { useStore, type HeadingInfo } from '../store'
@@ -67,7 +67,7 @@ export interface PageEditorHandle {
   scrollToHeading(text: string): boolean
   updateFrontmatter(changes: Record<string, unknown>): void
   exportHtml(): string
-  view(): EditorView | null
+  findTarget(): FindTarget | null
 }
 
 interface Props {
@@ -103,10 +103,10 @@ const HIDDEN_TOOLBAR = new Set([
 ])
 
 let idCounter = 0
-const makeId = (): string => `blk-${Date.now().toString(36)}-${(++idCounter).toString(36)}`
+export const makeId = (): string => `blk-${Date.now().toString(36)}-${(++idCounter).toString(36)}`
 
 /** Turns a vault-relative path into a URL the custom protocol serves. */
-function assetUrl(rel: string): string {
+export function assetUrl(rel: string): string {
   return 'vault-asset://vault/' + rel.split('/').map(encodeURIComponent).join('/')
 }
 
@@ -368,9 +368,9 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
           state.current.header.icon,
           i18next.language
         ),
-      view: () => {
+      findTarget: () => {
         try {
-          return editor.prosemirrorView ?? null
+          return editor.prosemirrorView ? proseMirrorFind(editor.prosemirrorView) : null
         } catch {
           return null
         }

@@ -7,6 +7,30 @@ export interface Match {
   to: number
 }
 
+/** What the find bar needs from an editor; the rich and the Markdown editor both provide it. */
+export interface FindTarget {
+  find(query: string, matchCase: boolean): Match[]
+  highlight(matches: Match[], current: number): void
+  clear(): void
+  reveal(m: Match | undefined): void
+  select(m: Match | undefined): void
+  replace(m: Match, text: string): void
+  replaceAll(matches: Match[], text: string): number
+}
+
+/** Find and replace in the rich (ProseMirror) editor. */
+export function proseMirrorFind(view: EditorView): FindTarget {
+  return {
+    find: (q, c) => findMatches(view, q, c),
+    highlight: (m, i) => highlight(view, m, i),
+    clear: clearHighlight,
+    reveal: (m) => revealMatch(view, m),
+    select: (m) => selectMatch(view, m),
+    replace: (m, t) => replaceMatch(view, m, t),
+    replaceAll: (m, t) => replaceAll(view, m, t)
+  }
+}
+
 const HL_ALL = 'write-find'
 const HL_CURRENT = 'write-find-current'
 

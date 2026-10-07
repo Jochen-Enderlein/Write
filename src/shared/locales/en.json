@@ -48,7 +48,10 @@
     "checkUpdates": "Check for Updates …",
     "whatsNew": "What’s New in Write",
     "graph": "Show Graph",
-    "pageGraph": "Show Local Graph of Page"
+    "pageGraph": "Show Local Graph of Page",
+    "modeRich": "Edit Formatted",
+    "modeMarkdown": "Edit as Markdown",
+    "modeSplit": "Markdown with Preview"
   },
   "menu": {
     "about": "About {{name}}",
@@ -162,7 +165,11 @@
     "linked_one": "Linked {{count}} mention",
     "linked_other": "Linked {{count}} mentions",
     "keptMine": "Your version was saved.",
-    "titleRequired": "A page needs a title – keeping the current one."
+    "titleRequired": "A page needs a title – keeping the current one.",
+    "mode": "Editing mode",
+    "preview": "Preview",
+    "markdownEditor": "Markdown text of the page",
+    "markdownPlaceholder": "Write in Markdown …"
   },
   "editor": {
     "callout": "Callout",

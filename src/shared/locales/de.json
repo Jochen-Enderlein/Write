@@ -48,7 +48,10 @@
     "checkUpdates": "Nach Updates suchen …",
     "whatsNew": "Neuerungen in Write",
     "graph": "Graph anzeigen",
-    "pageGraph": "Lokalen Graphen der Seite zeigen"
+    "pageGraph": "Lokalen Graphen der Seite zeigen",
+    "modeRich": "Formatiert bearbeiten",
+    "modeMarkdown": "Als Markdown bearbeiten",
+    "modeSplit": "Markdown mit Vorschau"
   },
   "menu": {
     "about": "Über {{name}}",
@@ -162,7 +165,11 @@
     "linked_one": "{{count}} Erwähnung verlinkt",
     "linked_other": "{{count}} Erwähnungen verlinkt",
     "keptMine": "Deine Version wurde gespeichert.",
-    "titleRequired": "Eine Seite braucht einen Titel – der bisherige bleibt."
+    "titleRequired": "Eine Seite braucht einen Titel – der bisherige bleibt.",
+    "mode": "Bearbeitungsmodus",
+    "preview": "Vorschau",
+    "markdownEditor": "Markdown-Text der Seite",
+    "markdownPlaceholder": "Schreibe in Markdown …"
   },
   "editor": {
     "callout": "Hinweisbox",

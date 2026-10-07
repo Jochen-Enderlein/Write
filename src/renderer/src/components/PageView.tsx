@@ -6,8 +6,10 @@ import { readHeader } from '@shared/page'
 import { invoke } from '../api'
 import { journalDayOf } from '../lib/journal'
 import { PageEditor, type PageEditorHandle } from '../editor/PageEditor'
+import { MarkdownEditor } from '../editor/MarkdownEditor'
+import { MarkdownPreview, type MarkdownPreviewHandle } from '../editor/MarkdownPreview'
 import { useIpcEvent } from '../lib/hooks'
-import { useStore } from '../store'
+import { useStore, type EditorMode } from '../store'
 import { WarningIcon } from './Icons'
 import { IconPicker } from './IconPicker'
 import { JournalBar } from './JournalBar'
@@ -31,7 +33,14 @@ export function PageView({
   const [token, setToken] = useState(0)
   const [banner, setBanner] = useState<Banner>(null)
   const editorRef = useRef<PageEditorHandle>(null)
+  const previewRef = useRef<MarkdownPreviewHandle>(null)
+  const previewPane = useRef<HTMLDivElement>(null)
   const dirty = useRef(false)
+  // The mode on screen follows the chosen one once the page is saved and read again
+  const mode = useStore((s) => s.editorMode)
+  const [shownMode, setShownMode] = useState<EditorMode>(mode)
+  const [body, setBody] = useState('')
+  const bodyTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const setEditor = useStore((s) => s.setEditor)
   const setSheet = useStore((s) => s.setSheet)
   const notify = useStore((s) => s.notify)
@@ -41,27 +50,57 @@ export function PageView({
   const wanted = useRef(path)
   wanted.current = path
 
-  const load = useCallback(async () => {
-    try {
-      const f = await invoke('page:read', path)
-      if (wanted.current !== path) return
-      setFile(f)
-      setMissing(false)
-      setToken((n) => n + 1)
-      setBanner(null)
-      dirty.current = false
-    } catch {
-      if (wanted.current !== path) return
-      setFile(null)
-      setMissing(true)
-    }
-  }, [path])
+  const load = useCallback(
+    async (nextMode?: EditorMode) => {
+      try {
+        const f = await invoke('page:read', path)
+        if (wanted.current !== path) return
+        if (nextMode) setShownMode(nextMode)
+        setFile(f)
+        setMissing(false)
+        setToken((n) => n + 1)
+        setBanner(null)
+        dirty.current = false
+      } catch {
+        if (wanted.current !== path) return
+        setFile(null)
+        setMissing(true)
+      }
+    },
+    [path]
+  )
 
   // Keep showing the previous page until the next one is read, instead of flashing an empty
   // page on every switch
   useEffect(() => {
     void load()
   }, [load])
+
+  // Switching modes: save what the current editor holds, then let the other one read the file
+  useEffect(() => {
+    if (mode === shownMode) return
+    let stale = false
+    void (async () => {
+      await editorRef.current?.flush()
+      if (!stale) await load(mode)
+    })()
+    return () => {
+      stale = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
+
+  const onBody = useCallback((text: string) => {
+    clearTimeout(bodyTimer.current)
+    bodyTimer.current = setTimeout(() => setBody(text), 120)
+  }, [])
+  useEffect(() => () => clearTimeout(bodyTimer.current), [])
+
+  // In split view the preview follows the editor's scroll position
+  const onScroll = useCallback((fraction: number) => {
+    const el = previewPane.current
+    if (el) el.scrollTop = fraction * (el.scrollHeight - el.clientHeight)
+  }, [])
 
   // What is on screen; differs from `path` only while the next page is loading
   const shown = file?.path ?? null
@@ -101,7 +140,7 @@ export function PageView({
       scrollToHeading: (text) => ed()?.scrollToHeading(text) ?? false,
       updateFrontmatter: (changes) => ed()?.updateFrontmatter(changes),
       exportHtml: () => ed()?.exportHtml() ?? '',
-      view: () => ed()?.view() ?? null
+      findTarget: () => ed()?.findTarget() ?? null
     })
     // Coming from full-text search: show the hits on the page
     const query = useStore.getState().pendingFind
@@ -127,6 +166,9 @@ export function PageView({
     setMeta((m) => ({ ...m, tags }))
     editorRef.current?.updateFrontmatter({ tags: tags.length ? tags : undefined })
   }
+
+  const exportHtml = (): string =>
+    previewRef.current?.exportHtml(header?.title ?? '', meta.icon) ?? ''
 
   if (missing) return <div className="center-message">{t('page.notFound')}</div>
   if (!file || !header) return <div className="page" aria-busy="true" />
@@ -164,7 +206,11 @@ export function PageView({
   }
 
   return (
-    <div className="page" key={token} aria-busy={shown !== path || undefined}>
+    <div
+      className={`page ${shownMode === 'rich' ? '' : `mode-${shownMode}`}`}
+      key={token}
+      aria-busy={shown !== path || undefined}
+    >
       {banner && (
         <div className="banner" role="alert">
           <WarningIcon />
@@ -191,7 +237,32 @@ export function PageView({
         onEnter={() => editorRef.current?.focusStart()}
       />
       <TagEditor tags={meta.tags} onChange={setTags} />
-      <PageEditor ref={editorRef} file={file} onStatus={status} onConflict={conflict} />
+      {shownMode === 'rich' ? (
+        <PageEditor ref={editorRef} file={file} onStatus={status} onConflict={conflict} />
+      ) : (
+        <div className={shownMode === 'split' ? 'split-panes' : 'markdown-pane'}>
+          <div className="split-source">
+            <MarkdownEditor
+              ref={editorRef}
+              file={file}
+              onStatus={status}
+              onConflict={conflict}
+              onBody={onBody}
+              onScroll={shownMode === 'split' ? onScroll : undefined}
+              exportHtml={exportHtml}
+            />
+          </div>
+          {/* Hidden in Markdown mode; it still renders the page for export and printing */}
+          <div
+            className="split-preview"
+            ref={previewPane}
+            hidden={shownMode !== 'split'}
+            aria-label={t('page.preview')}
+          >
+            <MarkdownPreview ref={previewRef} path={file.path} body={body} />
+          </div>
+        </div>
+      )}
       <Backlinks path={file.path} title={header.title} />
     </div>
   )

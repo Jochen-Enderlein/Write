@@ -1,4 +1,4 @@
-import type { EditorView } from 'prosemirror-view'
+import type { FindTarget } from './editor/find'
 import { create } from 'zustand'
 import type {
   AppSettings,
@@ -64,12 +64,16 @@ export interface EditorHandle {
   updateFrontmatter(changes: Record<string, unknown>): void
   /** Self-contained HTML of the rendered page, for export and printing. */
   exportHtml(): string
-  /** The ProseMirror view (find and replace). */
-  view(): EditorView | null
+  /** Find and replace in whichever editor shows the page. */
+  findTarget(): FindTarget | null
 }
 
 const RECENT_MAX = 12
 const OUTLINE_KEY = 'outline:open'
+const MODE_KEY = 'editor:mode'
+
+/** How pages are edited: rich blocks, plain Markdown, or Markdown with a live preview. */
+export type EditorMode = 'rich' | 'markdown' | 'split'
 
 interface State {
   vault: VaultState | null
@@ -108,6 +112,7 @@ interface State {
   pendingFind: string | null
   find: { open: boolean; replace: boolean; token: number; step: number }
   outlineOpen: boolean
+  editorMode: EditorMode
   focusMode: boolean
   wordCount: number
   calendarOpen: boolean
@@ -151,6 +156,7 @@ interface State {
   stepFind(dir: 1 | -1): void
   closeFind(): void
   toggleOutline(): void
+  setEditorMode(mode: EditorMode): void
   toggleFocusMode(): void
   updateSettings(patch: Partial<AppSettings>): Promise<void>
 }
@@ -188,6 +194,7 @@ export const useStore = create<State>((set, get) => ({
   pendingFind: null,
   find: { open: false, replace: false, token: 0, step: 0 },
   outlineOpen: readFlag(OUTLINE_KEY),
+  editorMode: readMode(),
   focusMode: false,
   wordCount: 0,
   calendarOpen: false,
@@ -517,6 +524,14 @@ export const useStore = create<State>((set, get) => ({
   closeFind() {
     set({ find: { ...get().find, open: false } })
   },
+  setEditorMode(editorMode) {
+    try {
+      localStorage.setItem(MODE_KEY, editorMode)
+    } catch {
+      // per-viewer convenience only
+    }
+    set({ editorMode })
+  },
   toggleOutline() {
     const outlineOpen = !get().outlineOpen
     writeFlag(OUTLINE_KEY, outlineOpen)
@@ -557,6 +572,15 @@ function readRecent(vaultId: string): string[] {
     return Array.isArray(list) ? list.filter((p): p is string => typeof p === 'string') : []
   } catch {
     return []
+  }
+}
+
+function readMode(): EditorMode {
+  try {
+    const m = localStorage.getItem(MODE_KEY)
+    return m === 'markdown' || m === 'split' ? m : 'rich'
+  } catch {
+    return 'rich'
   }
 }
 

@@ -77,6 +77,12 @@ export async function runCommand(id: CommandId): Promise<void> {
         return s.navigate({ kind: 'trash' })
       case 'tags.show':
         return s.navigate({ kind: 'tags' })
+      case 'view.modeRich':
+        return s.setEditorMode('rich')
+      case 'view.modeMarkdown':
+        return s.setEditorMode('markdown')
+      case 'view.modeSplit':
+        return s.setEditorMode('split')
       case 'graph.show':
         return s.navigate({ kind: 'graph', center: null })
       case 'page.graph':

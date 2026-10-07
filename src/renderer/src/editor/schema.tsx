@@ -348,7 +348,7 @@ export const Mermaid = createReactBlockSpec(
         <div className={`mermaid-block ${open ? 'open' : ''}`} contentEditable={false}>
           <div
             className={`mermaid-preview ${error && !svg ? 'error' : ''}`}
-            onDoubleClick={() => setOpen(true)}
+            onDoubleClick={() => editor.isEditable && setOpen(true)}
           >
             {svg ? (
               <div className="mermaid-svg" dangerouslySetInnerHTML={{ __html: svg }} />
@@ -400,16 +400,18 @@ export const Mermaid = createReactBlockSpec(
               {error && svg && <div className="mermaid-error">{error}</div>}
             </div>
           )}
-          <button
-            type="button"
-            className="mermaid-toggle"
-            title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
-            aria-pressed={open}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {'</>'}
-          </button>
+          {editor.isEditable && (
+            <button
+              type="button"
+              className="mermaid-toggle"
+              title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
+              aria-pressed={open}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setOpen((o) => !o)}
+            >
+              {'</>'}
+            </button>
+          )}
         </div>
       )
     }

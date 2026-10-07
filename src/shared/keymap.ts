@@ -47,6 +47,9 @@ export type CommandId =
   | 'journal.calendar'
   | 'view.focus'
   | 'view.theme'
+  | 'view.modeRich'
+  | 'view.modeMarkdown'
+  | 'view.modeSplit'
   | 'update.check'
   | 'help.whatsNew'
 
@@ -80,6 +83,19 @@ export const COMMANDS: CommandDef[] = [
   { id: 'page.outline', label: 'cmd.outline', accelerator: 'Control+CmdOrCtrl+O', menu: 'view' },
   { id: 'view.focus', label: 'cmd.focus', accelerator: 'CmdOrCtrl+Shift+Enter', menu: 'view' },
   { id: 'view.theme', label: 'cmd.toggleTheme', menu: 'view' },
+  { id: 'view.modeRich', label: 'cmd.modeRich', accelerator: 'Control+CmdOrCtrl+1', menu: 'view' },
+  {
+    id: 'view.modeMarkdown',
+    label: 'cmd.modeMarkdown',
+    accelerator: 'Control+CmdOrCtrl+2',
+    menu: 'view'
+  },
+  {
+    id: 'view.modeSplit',
+    label: 'cmd.modeSplit',
+    accelerator: 'Control+CmdOrCtrl+3',
+    menu: 'view'
+  },
   { id: 'journal.today', label: 'cmd.journalToday', accelerator: 'CmdOrCtrl+Alt+J', menu: 'go' },
   {
     id: 'journal.previous',

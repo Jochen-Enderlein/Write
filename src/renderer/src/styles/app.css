@@ -3064,3 +3064,104 @@ kbd {
   color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
 }
+
+/* ── Editing modes: formatted, Markdown, Markdown with preview ───────────── */
+
+.mode-switch {
+  display: inline-flex;
+  gap: 1px;
+  margin-right: 4px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--fill-2);
+}
+
+.mode-switch button {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--label-2);
+}
+
+.mode-switch button:hover {
+  color: var(--label);
+}
+
+.mode-switch button[aria-checked='true'] {
+  background: var(--editor-bg);
+  color: var(--label);
+  box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.18);
+}
+
+/* Markdown: the text lines up with the title, like the rich editor's blocks */
+.markdown-pane {
+  padding: 4px 54px 0;
+}
+
+.markdown-pane .split-preview[hidden] {
+  display: none;
+}
+
+.markdown-editor .cm-editor {
+  min-height: 40vh;
+}
+
+/* Split: the page uses the full width; both panes scroll on their own below the title */
+.page.mode-split {
+  max-width: none;
+  padding: calc(var(--toolbar-h) + 24px) 0 30vh;
+}
+
+.page.mode-split > :not(.split-panes, .backlinks) {
+  max-width: calc(var(--column) + 120px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 60px;
+  padding-right: 60px;
+}
+
+.split-panes {
+  position: sticky;
+  top: var(--toolbar-h);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  height: calc(100vh - var(--toolbar-h));
+  margin-top: 12px;
+  border-top: 0.5px solid var(--separator);
+}
+
+.split-panes .split-source,
+.split-panes .split-preview {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.split-panes .split-source {
+  padding-left: 32px;
+}
+
+.split-panes .markdown-editor,
+.split-panes .markdown-editor .cm-editor {
+  height: 100%;
+}
+
+.split-panes .markdown-editor .cm-scroller {
+  overflow: auto;
+  padding-top: 16px;
+}
+
+.split-panes .split-preview {
+  overflow-y: auto;
+  padding: 16px 8px 30vh;
+  border-left: 0.5px solid var(--separator);
+}
+
+.page.mode-split .backlinks {
+  max-width: var(--column);
+  margin-left: auto;
+  margin-right: auto;
+}

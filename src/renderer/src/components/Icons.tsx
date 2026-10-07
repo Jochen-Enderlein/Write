@@ -187,6 +187,25 @@ export const CalloutIcon = (p: P) => (
     <path d="M7.5 6.5h4M7.5 9.5h3" />
   </Icon>
 )
+/** Editing modes: formatted text, plain Markdown, Markdown next to its preview. */
+export const ModeRichIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3 4.25h10" strokeWidth={2} />
+    <path d="M3 8h10M3 11.5h6.5" />
+  </Icon>
+)
+export const ModeMarkdownIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="1.75" y="3.75" width="12.5" height="8.5" rx="1.75" />
+    <path d="M4.25 10V6l1.75 2 1.75-2v4M11 6v4M9.5 8.5 11 10l1.5-1.5" />
+  </Icon>
+)
+export const ModeSplitIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="1.75" />
+    <path d="M8 2.75v10.5M3.75 6h2.5M3.75 8.5h2" />
+  </Icon>
+)
 /** A sun with two planets on their orbits. */
 export const GraphIcon = (p: P) => (
   <Icon {...p}>

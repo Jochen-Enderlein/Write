@@ -550,6 +550,33 @@ test('fügt Markdown aus einem Chat (HTML und Text) formatiert ein', async () =>
   )
 })
 
+test('bearbeitet Seiten auch als Markdown und mit Vorschau daneben', async () => {
+  const original = '# Modi\n\nText mit **fett**.\n'
+  writeFileSync(path.join(vault, 'Modi.md'), original)
+  await win.locator('.tree-row .name', { hasText: 'Modi' }).click()
+  await expect(win.locator('.bn-editor h1')).toHaveText('Modi')
+
+  await win.getByRole('radio', { name: /Als Markdown/ }).click()
+  const source = win.locator('.cm-content')
+  await expect(source).toContainText('Text mit **fett**.')
+  await win.waitForTimeout(800)
+  expect(read('Modi.md')).toBe(original)
+  await source.click()
+  await win.keyboard.press('Meta+ArrowDown')
+  await win.keyboard.type('\n## Zweiter Teil')
+  await eventually(() => expect(read('Modi.md')).toContain('Text mit **fett**.\n\n## Zweiter Teil'))
+
+  await win.getByRole('radio', { name: /Markdown mit Vorschau/ }).click()
+  await expect(win.locator('.split-preview h2')).toHaveText('Zweiter Teil')
+  await win.locator('.cm-content').click()
+  await win.keyboard.press('Meta+ArrowDown')
+  await win.keyboard.type(' live')
+  await expect(win.locator('.split-preview h2')).toHaveText('Zweiter Teil live')
+
+  await win.getByRole('radio', { name: /Formatiert/ }).click()
+  await expect(win.locator('.bn-editor h2')).toHaveText('Zweiter Teil live')
+})
+
 test('speichert eben Getipptes auch beim sofortigen Schließen des Fensters', async () => {
   await win.locator('.tree-row .name', { hasText: 'Quelle' }).click()
   await expect(win.locator('.page-title')).toHaveValue('Quelle')

@@ -1,15 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  clearHighlight,
-  findMatches,
-  highlight,
-  replaceAll,
-  replaceMatch,
-  revealMatch,
-  selectMatch,
-  type Match
-} from '../editor/find'
+import type { Match } from '../editor/find'
 import { usePresence } from '../lib/hooks'
 import { useStore } from '../store'
 import { ArrowRightIcon, ChevronDownIcon, ChevronUpIcon, CloseIcon } from './Icons'
@@ -44,24 +35,24 @@ function FindBarBody({ closing }: { closing: boolean }): React.JSX.Element {
   const input = useRef<HTMLInputElement>(null)
   const lastStep = useRef(find.step)
 
-  const view = useCallback(() => editor?.view() ?? null, [editor])
+  const view = useCallback(() => editor?.findTarget() ?? null, [editor])
 
   // Search again whenever the query or the document changes
   useEffect(() => {
     const v = view()
     if (!v) return
-    const found = findMatches(v, query, matchCase)
+    const found = v.find(query, matchCase)
     setMatches(found)
     setCurrent((c) => Math.min(c, Math.max(0, found.length - 1)))
   }, [query, matchCase, docVersion, view])
 
   useEffect(() => {
     const v = view()
-    if (closing) clearHighlight()
-    else if (v) highlight(v, matches, current)
+    if (closing) v?.clear()
+    else if (v) v.highlight(matches, current)
   }, [matches, current, view, closing])
 
-  useEffect(() => clearHighlight, [])
+  useEffect(() => () => view()?.clear(), [view])
 
   // Focus the field whenever ⌘F is pressed again
   useLayoutEffect(() => {
@@ -76,7 +67,7 @@ function FindBarBody({ closing }: { closing: boolean }): React.JSX.Element {
       const next = (current + dir + matches.length) % matches.length
       setCurrent(next)
       const v = view()
-      if (v) revealMatch(v, matches[next])
+      if (v) v.reveal(matches[next])
     },
     [matches, current, view]
   )
@@ -92,14 +83,14 @@ function FindBarBody({ closing }: { closing: boolean }): React.JSX.Element {
   // First match comes into view as you type
   useEffect(() => {
     const v = view()
-    if (v && matches[current]) revealMatch(v, matches[current])
+    if (v && matches[current]) v.reveal(matches[current])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, matchCase])
 
   const close = (select: boolean): void => {
     const v = view()
-    if (select && v) selectMatch(v, matches[current])
-    clearHighlight()
+    if (select && v) v.select(matches[current])
+    v?.clear()
     closeFind()
   }
 
@@ -107,13 +98,13 @@ function FindBarBody({ closing }: { closing: boolean }): React.JSX.Element {
     const v = view()
     const m = matches[current]
     if (!v || !m) return
-    replaceMatch(v, m, replacement)
+    v.replace(m, replacement)
   }
 
   const replaceEvery = (): void => {
     const v = view()
     if (!v) return
-    const n = replaceAll(v, matches, replacement)
+    const n = v.replaceAll(matches, replacement)
     if (n) notify(t('find.replaced', { count: n }))
   }
 

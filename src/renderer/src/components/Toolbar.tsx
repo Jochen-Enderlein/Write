@@ -8,6 +8,9 @@ import {
   ArrowRightIcon,
   ClockIcon,
   GraphIcon,
+  ModeMarkdownIcon,
+  ModeRichIcon,
+  ModeSplitIcon,
   InfoIcon,
   OutlineIcon,
   SearchIcon,
@@ -63,6 +66,7 @@ export function Toolbar({ status }: { status: SaveStatus }): React.JSX.Element {
   const outlineOpen = useStore((s) => s.outlineOpen)
   const infoOpen = useStore((s) => s.infoOpen)
   const focusMode = useStore((s) => s.focusMode)
+  const editorMode = useStore((s) => s.editorMode)
   const s = useStore.getState
   const page = view.kind === 'page' ? view.path : null
   const trail =
@@ -143,6 +147,25 @@ export function Toolbar({ status }: { status: SaveStatus }): React.JSX.Element {
           >
             <StarIcon filled={favorites.includes(page)} />
           </button>
+          <div className="mode-switch" role="radiogroup" aria-label={t('page.mode')}>
+            {(
+              [
+                ['rich', ModeRichIcon, 'cmd.modeRich', 'view.modeRich'],
+                ['markdown', ModeMarkdownIcon, 'cmd.modeMarkdown', 'view.modeMarkdown'],
+                ['split', ModeSplitIcon, 'cmd.modeSplit', 'view.modeSplit']
+              ] as const
+            ).map(([m, ModeIcon, label, cmd]) => (
+              <button
+                key={m}
+                role="radio"
+                aria-checked={editorMode === m}
+                title={`${t(label)} ${glyph(cmd)}`}
+                onClick={() => s().setEditorMode(m)}
+              >
+                <ModeIcon />
+              </button>
+            ))}
+          </div>
           <button
             className="icon-button"
             title={t('graph.pageButton')}
