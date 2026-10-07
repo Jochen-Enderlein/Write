@@ -6,6 +6,7 @@ import {
   ipcMain,
   net,
   nativeTheme,
+  powerMonitor,
   protocol,
   shell,
   systemPreferences
@@ -515,6 +516,15 @@ app.whenReady().then(async () => {
   })
   await saveSettings((s) => (s.launches = (s.launches ?? 0) + 1))
   scheduleUpdateChecks(settings.settings.autoUpdates)
+
+  // Shutting down or logging out quits every app. Holding that quit back in before-quit makes
+  // macOS cancel the shutdown ("Write interrupted shutdown"); claiming it here instead tells
+  // Electron to keep the system waiting until we quit on our own.
+  powerMonitor.on('shutdown', ((e: Electron.Event) => {
+    if (quitting) return
+    e.preventDefault()
+    void shutdown().finally(() => app.quit())
+  }) as () => void)
 
   app.on('activate', () => {
     const win = mainWindow()
