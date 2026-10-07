@@ -23,7 +23,8 @@ let vault: string
 
 const read = (rel: string): string => readFileSync(path.join(vault, rel), 'utf8')
 
-async function eventually(fn: () => void, timeout = 8000): Promise<void> {
+// Slower on shared CI runners: file system events and renames can take a while there
+async function eventually(fn: () => void, timeout = process.env.CI ? 20000 : 8000): Promise<void> {
   await expect
     .poll(
       () => {
@@ -89,6 +90,14 @@ test.beforeAll(async () => {
   })
   win = await mainWindow(app)
   await win.waitForSelector('.tree-row')
+})
+
+// A screenshot of the app window for every failure, kept with the CI artifacts
+// Playwright requires the fixtures argument to be a destructuring pattern
+// eslint-disable-next-line no-empty-pattern
+test.afterEach(async ({}, info) => {
+  if (info.status !== info.expectedStatus && win && !win.isClosed())
+    await win.screenshot({ path: info.outputPath('app.png') }).catch(() => undefined)
 })
 
 test.afterAll(async () => {
