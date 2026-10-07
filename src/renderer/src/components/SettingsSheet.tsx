@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { AppSettings } from '@shared/types'
+import type { AppSettings, McpLaunch } from '@shared/types'
 import { acceleratorGlyphs, DEFAULT_CAPTURE_SHORTCUT } from '@shared/keymap'
 import { invoke } from '../api'
 import { LINKS } from '@shared/links'
@@ -361,6 +361,33 @@ export function SettingsSheet({ onClose }: { onClose(): void }): React.JSX.Eleme
 
         {/* Rarely needed: tuning and maintenance */}
         <section>
+          <h3>{t('mcp.title')}</h3>
+          <div className="group">
+            <div className="row">
+              <div className="row-main">
+                <div className="row-title">{t('mcp.access')}</div>
+                <div className="row-sub">{t('mcp.accessHint')}</div>
+              </div>
+              {settings && (
+                <select
+                  value={settings.mcpAccess}
+                  onChange={(e) =>
+                    void update({ mcpAccess: e.target.value as AppSettings['mcpAccess'] })
+                  }
+                  aria-label={t('mcp.access')}
+                >
+                  <option value="off">{t('mcp.off')}</option>
+                  <option value="read">{t('mcp.read')}</option>
+                  <option value="write">{t('mcp.write')}</option>
+                </select>
+              )}
+            </div>
+            {settings && settings.mcpAccess !== 'off' && <McpSetup />}
+          </div>
+          <p className="settings-note">{t('mcp.note')}</p>
+        </section>
+
+        <section>
           <h3>{t('settings.advanced')}</h3>
           <div className="group">
             <div className="row">
@@ -556,4 +583,73 @@ function codeToKey(code: string): string | null {
     Backquote: '`'
   }
   return map[code] ?? null
+}
+
+/** Ready-to-paste setup for the common AI assistants, with this installation's paths. */
+function McpSetup(): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const [launch, setLaunch] = useState<McpLaunch | null>(null)
+  const [copied, setCopied] = useState<string | null>(null)
+  useEffect(() => {
+    void invoke('mcp:launch').then(setLaunch, () => setLaunch(null))
+  }, [])
+  if (!launch) return null
+  const server = { command: launch.command, args: launch.args, env: launch.env }
+  const quote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`
+  const snippets: { id: string; label: string; hint: string; text: string }[] = [
+    {
+      id: 'claude-code',
+      label: 'Claude Code',
+      hint: t('mcp.hintTerminal'),
+      text: `claude mcp add write --scope user ${Object.entries(launch.env)
+        .map(([k, v]) => `-e ${k}=${quote(v)}`)
+        .join(' ')} -- ${[launch.command, ...launch.args].map(quote).join(' ')}`
+    },
+    {
+      id: 'claude-desktop',
+      label: 'Claude Desktop',
+      hint: t('mcp.hintClaudeDesktop'),
+      text: JSON.stringify({ mcpServers: { write: server } }, null, 2)
+    },
+    {
+      id: 'opencode',
+      label: 'OpenCode',
+      hint: t('mcp.hintOpenCode'),
+      text: JSON.stringify(
+        {
+          mcp: {
+            write: {
+              type: 'local',
+              command: [launch.command, ...launch.args],
+              environment: launch.env
+            }
+          }
+        },
+        null,
+        2
+      )
+    }
+  ]
+  const copy = (id: string, text: string): void => {
+    void invoke('clipboard:write', text).then(() => {
+      setCopied(id)
+      setTimeout(() => setCopied((c) => (c === id ? null : c)), 1600)
+    })
+  }
+  return (
+    <>
+      {snippets.map((sn) => (
+        <div key={sn.id} className="row mcp-snippet">
+          <div className="row-main">
+            <div className="row-title">{sn.label}</div>
+            <div className="row-sub">{sn.hint}</div>
+            <pre>{sn.text}</pre>
+          </div>
+          <button className="button" onClick={() => copy(sn.id, sn.text)}>
+            {copied === sn.id ? t('mcp.copied') : t('mcp.copy')}
+          </button>
+        </div>
+      ))}
+    </>
+  )
 }

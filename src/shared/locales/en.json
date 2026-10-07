@@ -51,7 +51,8 @@
     "pageGraph": "Show Local Graph of Page",
     "modeRich": "Edit Formatted",
     "modeMarkdown": "Edit as Markdown",
-    "modeSplit": "Markdown with Preview"
+    "modeSplit": "Markdown with Preview",
+    "pageShare": "Share …"
   },
   "menu": {
     "about": "About {{name}}",
@@ -204,7 +205,15 @@
     "missingPage": "Page does not exist yet – click to create it",
     "embedMissing": "Embed not found: {{target}}",
     "embedOpen": "Open page",
-    "highlight": "Highlight"
+    "highlight": "Highlight",
+    "mathError": "Formula has an error",
+    "footnoteJump": "Jump to footnote",
+    "math": "Formula",
+    "mathHint": "LaTeX as a block of its own",
+    "inlineMath": "Inline formula",
+    "inlineMathHint": "LaTeX within a sentence",
+    "footnote": "Footnote",
+    "footnoteHint": "Reference here, note at the end of the page"
   },
   "palette": {
     "placeholder": "Search pages or type a command …",
@@ -240,7 +249,14 @@
     "title": "Tags",
     "empty": "No tags yet. Write #tag on a page or add tags to the frontmatter.",
     "pages_one": "{{count}} page",
-    "pages_other": "{{count}} pages"
+    "pages_other": "{{count}} pages",
+    "lead": "Use / to nest tags, e.g. #project/write. A tag also finds the pages of its nested tags.",
+    "rename": "Rename",
+    "renamed_one": "#{{from}} → #{{to}} on {{count}} page",
+    "renamed_other": "#{{from}} → #{{to}} on {{count}} pages",
+    "invalid": "A tag starts with a letter and has no spaces.",
+    "expand": "Expand",
+    "collapse": "Collapse"
   },
   "trash": {
     "title": "Trash",
@@ -534,5 +550,31 @@
     "notIndexed": "This page is not indexed yet.",
     "hint": "Drag to rotate · Scroll to zoom · Click to select · Double-click to open",
     "pageButton": "Local graph"
+  },
+  "mcp": {
+    "title": "AI assistants",
+    "access": "Access for AI assistants (MCP)",
+    "accessHint": "Claude, OpenCode and others can search and read your open vault and – if allowed – create and change pages.",
+    "off": "Off",
+    "read": "Read only",
+    "write": "Read and write",
+    "copy": "Copy",
+    "copied": "Copied",
+    "hintTerminal": "Run in Terminal.",
+    "hintClaudeDesktop": "Paste in Claude → Settings → Developer → Edit Config.",
+    "hintOpenCode": "Paste into opencode.json (global in ~/.config/opencode/).",
+    "note": "The assistant starts Write in the background itself; the app does not need to be open. Every change is kept in the version history and can be undone there. What the assistant reads is sent to its provider."
+  },
+  "share": {
+    "button": "Share",
+    "headingPage": "Share page",
+    "headingSelection": "Share selection",
+    "markdown": "Share as Markdown …",
+    "pdf": "Share as PDF …",
+    "html": "Share as HTML …",
+    "copyMarkdown": "Copy as Markdown",
+    "copiedPage": "Page copied as Markdown",
+    "copiedSelection": "Selection copied as Markdown",
+    "selectionTitle": "{{title}} (excerpt)"
   }
 }

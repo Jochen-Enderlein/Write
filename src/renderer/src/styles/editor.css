@@ -255,6 +255,194 @@
   color: var(--accent-text);
 }
 
+/* Display formulas share the folding source panel with Mermaid */
+.math-block {
+  position: relative;
+  width: 100%;
+  margin: 6px 0;
+  border-radius: 12px;
+  background: var(--fill-2);
+  box-shadow: inset 0 0 0 0.5px var(--separator);
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+/* The code folds out to the right of the graph; side by side while there is room */
+.math-block.open {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@container (max-width: 560px) {
+  .math-block.open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .math-block.open .math-code {
+    border-left: 0;
+    border-top: 0.5px solid var(--separator);
+  }
+}
+
+.math-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 12px;
+  font-family: var(--font-ui);
+  white-space: normal;
+  user-select: none;
+}
+
+.math-svg {
+  display: contents;
+}
+
+.math-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.math-preview.error,
+.math-error {
+  color: var(--red);
+  font-size: 12px;
+}
+
+.math-empty {
+  color: var(--label-3);
+  font-size: 12px;
+}
+
+.math-code {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-left: 0.5px solid var(--separator);
+  background: var(--fill-2);
+}
+
+.math-label {
+  padding: 8px 14px 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  user-select: none;
+}
+
+.math-input {
+  flex: 1;
+  min-height: 120px;
+  margin: 0;
+  padding: 6px 14px 12px;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--label);
+  font: 13px/1.55 var(--font-mono);
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+.math-error {
+  padding: 0 14px 10px;
+}
+
+.math-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--fill);
+  color: var(--label-2);
+  font: 600 11px/1.2 var(--font-mono);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.math-block:hover .math-toggle,
+.math-toggle:focus-visible,
+.math-toggle[aria-pressed='true'] {
+  opacity: 1;
+}
+
+.math-toggle[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* Inline formula and footnotes */
+.inline-math {
+  padding: 0 1px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.inline-math:hover {
+  background: var(--fill-2);
+}
+
+.inline-math.error {
+  color: var(--red);
+  font: 0.9em var(--font-mono);
+}
+
+.inline-math-input {
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  outline: none;
+  background: var(--fill-2);
+  box-shadow: 0 0 0 2px var(--accent);
+  color: var(--label);
+  font: 0.9em var(--font-mono);
+}
+
+.math-preview .katex-display {
+  margin: 0;
+}
+
+.footnote-ref {
+  margin: 0 1px;
+  color: var(--accent);
+  font-size: 0.72em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.footnote {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  font-size: 0.88em;
+  color: var(--label-2);
+}
+
+.footnote-label {
+  flex: none;
+  min-width: 1.2em;
+  color: var(--accent);
+  font-weight: 600;
+  user-select: none;
+}
+
+.footnote-label::after {
+  content: '.';
+}
+
+.footnote-text {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Tables */
 .page .bn-block-content[data-content-type='table'] table {
   border-collapse: collapse;

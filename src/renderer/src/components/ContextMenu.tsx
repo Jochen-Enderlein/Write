@@ -12,11 +12,14 @@ export function ContextMenu({
   x,
   y,
   items,
+  heading,
   onClose
 }: {
   x: number
   y: number
   items: MenuItem[]
+  /** Small caption above the items, like a macOS menu section title */
+  heading?: string
   onClose(): void
 }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
@@ -66,6 +69,7 @@ export function ContextMenu({
       className="context-menu glass"
       style={{ left: pos.x, top: pos.y, transformOrigin: `${x - pos.x}px ${y - pos.y}px` }}
     >
+      {heading && <div className="context-menu-heading">{heading}</div>}
       {items.map((it, i) => (
         <div key={i}>
           {it.separatorBefore && <hr />}

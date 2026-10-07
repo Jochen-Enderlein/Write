@@ -16,6 +16,7 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/indexer/**/*",
+    "src/mcp/**/*",
     "src/shared/**/*",
     "scripts/**/*"
   ]

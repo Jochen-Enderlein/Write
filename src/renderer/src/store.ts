@@ -66,6 +66,10 @@ export interface EditorHandle {
   exportHtml(): string
   /** Find and replace in whichever editor shows the page. */
   findTarget(): FindTarget | null
+  /** The selected part as Markdown, or null when nothing is selected. */
+  selectionMarkdown(): string | null
+  /** The page body (without frontmatter) as Markdown. */
+  bodyMarkdown(): string
 }
 
 const RECENT_MAX = 12
@@ -118,6 +122,8 @@ interface State {
   calendarOpen: boolean
   /** Bumped to open the icon picker of the open page. */
   iconPickerToken: number
+  /** Bumped by the menu command to open the share menu */
+  shareToken: number
   /** Bumped on every editor change (outline, word count). */
   docVersion: number
 
@@ -199,6 +205,7 @@ export const useStore = create<State>((set, get) => ({
   wordCount: 0,
   calendarOpen: false,
   iconPickerToken: 0,
+  shareToken: 0,
   docVersion: 0,
 
   async init() {

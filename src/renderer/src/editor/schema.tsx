@@ -15,6 +15,7 @@ import { CALLOUT_KINDS } from '@shared/markdown'
 import { IMAGE_EXT_RE, linkLabel, parseLinkTarget } from '@shared/wikilinks'
 import { t } from '../i18n'
 import { renderMermaid } from './mermaid'
+import { renderTex } from './katex'
 import { editForKey } from './codeIndent'
 import { editorBridge } from './bridge'
 
@@ -235,6 +236,108 @@ export const RawInline = createReactInlineContentSpec(
   }
 )
 
+/** Inline formula `$…$`: rendered with KaTeX; a click opens its LaTeX for editing. */
+export const InlineMath = createReactInlineContentSpec(
+  { type: 'inlineMath', propSchema: { latex: { default: '' } }, content: 'none' },
+  {
+    render: function Render({ inlineContent, updateInlineContent, editor }) {
+      const latex = String(inlineContent.props.latex)
+      const [html, setHtml] = useState<string | null>(null)
+      const [error, setError] = useState('')
+      const [editing, setEditing] = useState(false)
+      const [draft, setDraft] = useState(latex)
+      useEffect(() => {
+        let stale = false
+        void renderTex(latex, false).then((r) => {
+          if (stale) return
+          if ('html' in r) {
+            setHtml(r.html)
+            setError('')
+          } else {
+            setHtml(null)
+            setError(r.error)
+          }
+        })
+        return () => {
+          stale = true
+        }
+      }, [latex])
+      const commit = (): void => {
+        setEditing(false)
+        const next = draft.trim()
+        if (next && next !== latex)
+          updateInlineContent({ type: 'inlineMath', props: { latex: next } } as never)
+        else setDraft(latex)
+      }
+      if (editing)
+        return (
+          <input
+            className="inline-math-input"
+            autoFocus
+            value={draft}
+            size={Math.max(4, draft.length + 1)}
+            spellCheck={false}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+              if (e.key === 'Escape') {
+                setDraft(latex)
+                setEditing(false)
+              }
+            }}
+          />
+        )
+      return (
+        <span
+          className={`inline-math ${error ? 'error' : ''}`}
+          title={error || latex}
+          onClick={() => editor.isEditable && setEditing(true)}
+          {...(html ? { dangerouslySetInnerHTML: { __html: html } } : { children: `$${latex}$` })}
+        />
+      )
+    }
+  }
+)
+
+/** Footnote reference `[^1]`: a superscript label; a click scrolls to the note. */
+export const FootnoteRef = createReactInlineContentSpec(
+  { type: 'footnoteRef', propSchema: { label: { default: '1' } }, content: 'none' },
+  {
+    render: ({ inlineContent, editor }) => {
+      const label = String(inlineContent.props.label)
+      return (
+        <sup
+          className="footnote-ref"
+          title={t('editor.footnoteJump')}
+          onClick={() =>
+            editor.domElement
+              ?.querySelector(`[data-footnote="${CSS.escape(label)}"]`)
+              ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+          }
+        >
+          {label}
+        </sup>
+      )
+    }
+  }
+)
+
+/** The note of a footnote, `[^1]: Text`, editable like a paragraph. */
+export const Footnote = createReactBlockSpec(
+  { type: 'footnote', propSchema: { label: { default: '1' } }, content: 'inline' },
+  {
+    render: ({ block, contentRef }) => (
+      <div className="footnote" data-footnote={String(block.props.label)}>
+        <span className="footnote-label" contentEditable={false}>
+          {String(block.props.label)}
+        </span>
+        <div className="footnote-text" ref={contentRef} />
+      </div>
+    )
+  }
+)
+
 /** Languages without bundled highlighting that still deserve a real code block. */
 const PLAIN_LANGUAGES: Record<string, { name: string; aliases?: string[] }> = {
   toml: { name: 'TOML' },
@@ -256,166 +359,198 @@ export const SUPPORTED_LANGUAGES = {
   ...codeBlockOptions.supportedLanguages
 } as Record<string, { name: string; aliases?: string[] }>
 
-/** Mermaid blocks whose code panel should open once they render (freshly inserted ones). */
+/** Diagram and formula blocks whose code panel should open once they render (fresh ones). */
 const openOnMount = new Set<string>()
-export function openMermaidEditor(id: string): void {
+export function openSourceEditor(id: string): void {
   openOnMount.add(id)
 }
 
+type SourceKind = 'mermaid' | 'math'
+
+const RENDERERS: Record<SourceKind, (src: string) => Promise<{ svg: string } | { error: string }>> =
+  {
+    mermaid: renderMermaid,
+    math: (src) => renderTex(src, true).then((r) => ('html' in r ? { svg: r.html } : r))
+  }
+const LABELS: Record<SourceKind, string> = { mermaid: 'Mermaid', math: 'LaTeX' }
+
+interface SourceEditor {
+  isEditable: boolean
+  getBlock(id: string): unknown
+  updateBlock(id: string, update: never): unknown
+}
+
 /**
- * Mermaid diagram: the page shows only the rendered graph. The source lives in a prop and is
- * edited in a plain text field that folds out beside the graph, so typing never runs through
- * the rich-text editor (which would split lines into new blocks and swallow indentation).
+ * A block shown rendered (diagram, formula) whose source lives in a prop and is edited in a plain
+ * text field that folds out beside it, so typing never runs through the rich-text editor (which
+ * would split lines into new blocks and swallow indentation).
  */
+function SourceBlockView({
+  block,
+  editor,
+  kind
+}: {
+  block: { id: string; props: { source: unknown } }
+  editor: SourceEditor
+  kind: SourceKind
+}): React.JSX.Element {
+  const source = String(block.props.source)
+  const [open, setOpen] = useState(() => openOnMount.delete(block.id))
+  const [draft, setDraft] = useState(source)
+  const [svg, setSvg] = useState('')
+  const [error, setError] = useState('')
+  const field = useRef<HTMLTextAreaElement>(null)
+  const commitTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const caret = useRef<[number, number] | null>(null)
+
+  // Changes from outside (undo, a reload from disk) replace the draft unless it is ahead
+  const committed = useRef(source)
+  useEffect(() => {
+    if (source !== committed.current) {
+      committed.current = source
+      setDraft(source)
+    }
+  }, [source])
+
+  useEffect(() => {
+    let stale = false
+    const id = setTimeout(() => {
+      if (!draft.trim()) {
+        setSvg('')
+        setError('')
+        return
+      }
+      void RENDERERS[kind](draft).then((res) => {
+        if (stale) return
+        // While typing, a half-written graph keeps the last good drawing
+        if ('svg' in res) {
+          setSvg(res.svg)
+          setError('')
+        } else setError(res.error)
+      })
+    }, 250)
+    return () => {
+      stale = true
+      clearTimeout(id)
+    }
+  }, [draft, kind])
+
+  const commit = (text: string): void => {
+    clearTimeout(commitTimer.current)
+    commitTimer.current = setTimeout(() => {
+      if (text === committed.current || !editor.getBlock(block.id)) return
+      committed.current = text
+      editor.updateBlock(block.id, { props: { source: text } } as never)
+    }, 300)
+  }
+  useEffect(() => () => clearTimeout(commitTimer.current), [])
+
+  const change = (text: string): void => {
+    setDraft(text)
+    commit(text)
+  }
+
+  // Keep the caret where an indentation edit put it once React has rendered the new text
+  useEffect(() => {
+    const el = field.current
+    if (el && caret.current) {
+      el.setSelectionRange(...caret.current)
+      caret.current = null
+    }
+    if (el) {
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
+  }, [draft, open])
+
+  useEffect(() => {
+    if (open) field.current?.focus()
+  }, [open])
+
+  return (
+    <div className={`${kind}-block ${open ? 'open' : ''}`} contentEditable={false}>
+      <div
+        className={`${kind}-preview ${error && !svg ? 'error' : ''}`}
+        onDoubleClick={() => editor.isEditable && setOpen(true)}
+      >
+        {svg ? (
+          <div className={`${kind}-svg`} dangerouslySetInnerHTML={{ __html: svg }} />
+        ) : (
+          error || (!draft.trim() && <span className={`${kind}-empty`}>{LABELS[kind]}</span>)
+        )}
+      </div>
+      {open && (
+        <div className={`${kind}-code`}>
+          <div className={`${kind}-label`}>{LABELS[kind]}</div>
+          <textarea
+            ref={field}
+            className={`${kind}-input`}
+            value={draft}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            onChange={(e) => change(e.target.value)}
+            onBlur={() => {
+              clearTimeout(commitTimer.current)
+              if (draft !== committed.current) {
+                committed.current = draft
+                editor.updateBlock(block.id, { props: { source: draft } } as never)
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                setOpen(false)
+                return
+              }
+              const key =
+                e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.altKey
+                  ? 'Enter'
+                  : e.key === 'Tab'
+                    ? e.shiftKey
+                      ? 'Shift-Tab'
+                      : 'Tab'
+                    : null
+              if (!key || (key === 'Enter' && e.shiftKey)) return
+              const el = e.currentTarget
+              const edit = editForKey(key, el.value, el.selectionStart, el.selectionEnd)
+              if (!edit) return
+              e.preventDefault()
+              caret.current = [edit.start, edit.end]
+              change(edit.text)
+            }}
+          />
+          {error && svg && <div className={`${kind}-error`}>{error}</div>}
+        </div>
+      )}
+      {editor.isEditable && (
+        <button
+          type="button"
+          className={`${kind}-toggle`}
+          title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
+          aria-pressed={open}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {'</>'}
+        </button>
+      )}
+    </div>
+  )
+}
+
+/** Mermaid diagram: the page shows only the rendered graph; the code folds out beside it. */
 export const Mermaid = createReactBlockSpec(
   { type: 'mermaid', propSchema: { source: { default: '' } }, content: 'none' },
   {
-    render: function Render({ block, editor }) {
-      const source = String(block.props.source)
-      const [open, setOpen] = useState(() => openOnMount.delete(block.id))
-      const [draft, setDraft] = useState(source)
-      const [svg, setSvg] = useState('')
-      const [error, setError] = useState('')
-      const field = useRef<HTMLTextAreaElement>(null)
-      const commitTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-      const caret = useRef<[number, number] | null>(null)
-
-      // Changes from outside (undo, a reload from disk) replace the draft unless it is ahead
-      const committed = useRef(source)
-      useEffect(() => {
-        if (source !== committed.current) {
-          committed.current = source
-          setDraft(source)
-        }
-      }, [source])
-
-      useEffect(() => {
-        let stale = false
-        const id = setTimeout(() => {
-          if (!draft.trim()) {
-            setSvg('')
-            setError('')
-            return
-          }
-          void renderMermaid(draft).then((res) => {
-            if (stale) return
-            // While typing, a half-written graph keeps the last good drawing
-            if ('svg' in res) {
-              setSvg(res.svg)
-              setError('')
-            } else setError(res.error)
-          })
-        }, 250)
-        return () => {
-          stale = true
-          clearTimeout(id)
-        }
-      }, [draft])
-
-      const commit = (text: string): void => {
-        clearTimeout(commitTimer.current)
-        commitTimer.current = setTimeout(() => {
-          if (text === committed.current || !editor.getBlock(block.id)) return
-          committed.current = text
-          editor.updateBlock(block.id, { props: { source: text } } as never)
-        }, 300)
-      }
-      useEffect(() => () => clearTimeout(commitTimer.current), [])
-
-      const change = (text: string): void => {
-        setDraft(text)
-        commit(text)
-      }
-
-      // Keep the caret where an indentation edit put it once React has rendered the new text
-      useEffect(() => {
-        const el = field.current
-        if (el && caret.current) {
-          el.setSelectionRange(...caret.current)
-          caret.current = null
-        }
-        if (el) {
-          el.style.height = 'auto'
-          el.style.height = `${el.scrollHeight}px`
-        }
-      }, [draft, open])
-
-      useEffect(() => {
-        if (open) field.current?.focus()
-      }, [open])
-
-      return (
-        <div className={`mermaid-block ${open ? 'open' : ''}`} contentEditable={false}>
-          <div
-            className={`mermaid-preview ${error && !svg ? 'error' : ''}`}
-            onDoubleClick={() => editor.isEditable && setOpen(true)}
-          >
-            {svg ? (
-              <div className="mermaid-svg" dangerouslySetInnerHTML={{ __html: svg }} />
-            ) : (
-              error || (!draft.trim() && <span className="mermaid-empty">Mermaid</span>)
-            )}
-          </div>
-          {open && (
-            <div className="mermaid-code">
-              <div className="mermaid-label">Mermaid</div>
-              <textarea
-                ref={field}
-                className="mermaid-input"
-                value={draft}
-                spellCheck={false}
-                autoCapitalize="off"
-                autoCorrect="off"
-                onChange={(e) => change(e.target.value)}
-                onBlur={() => {
-                  clearTimeout(commitTimer.current)
-                  if (draft !== committed.current) {
-                    committed.current = draft
-                    editor.updateBlock(block.id, { props: { source: draft } } as never)
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    e.preventDefault()
-                    setOpen(false)
-                    return
-                  }
-                  const key =
-                    e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.altKey
-                      ? 'Enter'
-                      : e.key === 'Tab'
-                        ? e.shiftKey
-                          ? 'Shift-Tab'
-                          : 'Tab'
-                        : null
-                  if (!key || (key === 'Enter' && e.shiftKey)) return
-                  const el = e.currentTarget
-                  const edit = editForKey(key, el.value, el.selectionStart, el.selectionEnd)
-                  if (!edit) return
-                  e.preventDefault()
-                  caret.current = [edit.start, edit.end]
-                  change(edit.text)
-                }}
-              />
-              {error && svg && <div className="mermaid-error">{error}</div>}
-            </div>
-          )}
-          {editor.isEditable && (
-            <button
-              type="button"
-              className="mermaid-toggle"
-              title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
-              aria-pressed={open}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => setOpen((o) => !o)}
-            >
-              {'</>'}
-            </button>
-          )}
-        </div>
-      )
-    }
+    render: ({ block, editor }) => <SourceBlockView block={block} editor={editor} kind="mermaid" />
   }
+)
+
+/** Display formula `$$…$$` (LaTeX, rendered with KaTeX). */
+export const MathBlock = createReactBlockSpec(
+  { type: 'math', propSchema: { source: { default: '' } }, content: 'none' },
+  { render: ({ block, editor }) => <SourceBlockView block={block} editor={editor} kind="math" /> }
 )
 
 const codeBlock = createCodeBlockSpec({
@@ -479,13 +614,17 @@ export const schema = BlockNoteSchema.create({
     divider,
     callout: Callout(),
     rawMarkdown: RawMarkdown(),
-    mermaid: Mermaid()
+    mermaid: Mermaid(),
+    math: MathBlock(),
+    footnote: Footnote()
   },
   inlineContentSpecs: {
     text: defaultInlineContentSpecs.text,
     link: defaultInlineContentSpecs.link,
     wikilink: WikiLink,
-    rawInline: RawInline
+    rawInline: RawInline,
+    inlineMath: InlineMath,
+    footnoteRef: FootnoteRef
   },
   styleSpecs: {
     bold: defaultStyleSpecs.bold,

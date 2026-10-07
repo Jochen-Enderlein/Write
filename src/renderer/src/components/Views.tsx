@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SearchHit, TrashEntry } from '@shared/types'
+import { tagTree, type TagNode } from '@shared/tags'
 import { invoke } from '../api'
 import { formatDate, useIpcEvent } from '../lib/hooks'
 import { useStore } from '../store'
-import { SearchIcon } from './Icons'
+import { ChevronIcon, SearchIcon } from './Icons'
 import { Snippet } from './Snippet'
 
 export function SearchView({
@@ -142,24 +143,95 @@ export function SearchView({
 export function TagsView(): React.JSX.Element {
   const { t } = useTranslation()
   const tags = useStore((s) => s.tags)
-  const navigate = useStore((s) => s.navigate)
+  const tree = useMemo(() => tagTree(tags), [tags])
   return (
     <div className="view">
       <h1>{t('tags.title')}</h1>
       {tags.length === 0 && <p className="lead">{t('tags.empty')}</p>}
-      <div className="tag-grid">
-        {tags.map((tg) => (
-          <button
-            key={tg.tag}
-            className="chip"
-            onClick={() => navigate({ kind: 'search', query: '', tag: tg.tag })}
-          >
-            #{tg.tag}
-            <span className="count">{t('tags.pages', { count: tg.count })}</span>
-          </button>
+      {tree.length > 0 && <p className="lead">{t('tags.lead')}</p>}
+      <ul className="tag-tree" role="tree">
+        {tree.map((n) => (
+          <TagRow key={n.tag} node={n} depth={0} />
         ))}
-      </div>
+      </ul>
     </div>
+  )
+}
+
+function TagRow({ node, depth }: { node: TagNode; depth: number }): React.JSX.Element {
+  const { t } = useTranslation()
+  const navigate = useStore((s) => s.navigate)
+  const [open, setOpen] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(node.tag)
+  const s = useStore.getState
+
+  const rename = async (): Promise<void> => {
+    const next = value.trim().replace(/^#/, '')
+    setEditing(false)
+    if (!next || next === node.tag) return setValue(node.tag)
+    try {
+      const count = await invoke('tag:rename', node.tag, next)
+      s().notify(t('tags.renamed', { from: node.tag, to: next, count }))
+    } catch (err) {
+      setValue(node.tag)
+      s().fail(err)
+    }
+  }
+
+  return (
+    <li role="treeitem" aria-expanded={node.children.length ? open : undefined}>
+      <div className="tag-row" style={{ paddingLeft: depth * 20 }}>
+        {node.children.length > 0 ? (
+          <button
+            className="tag-toggle"
+            aria-label={open ? t('tags.collapse') : t('tags.expand')}
+            onClick={() => setOpen((o) => !o)}
+          >
+            <ChevronIcon size={12} style={{ transform: open ? 'rotate(90deg)' : undefined }} />
+          </button>
+        ) : (
+          <span className="tag-toggle" />
+        )}
+        {editing ? (
+          <input
+            className="tag-rename"
+            autoFocus
+            value={value}
+            aria-label={t('tags.rename')}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={() => void rename()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+              if (e.key === 'Escape') {
+                setValue(node.tag)
+                setEditing(false)
+              }
+            }}
+          />
+        ) : (
+          <button
+            className="chip"
+            onClick={() => navigate({ kind: 'search', query: '', tag: node.tag })}
+          >
+            #{depth ? node.name : node.tag}
+            <span className="count">{t('tags.pages', { count: node.count })}</span>
+          </button>
+        )}
+        {!editing && (
+          <button className="tag-edit button small" onClick={() => setEditing(true)}>
+            {t('tags.rename')}
+          </button>
+        )}
+      </div>
+      {open && node.children.length > 0 && (
+        <ul role="group">
+          {node.children.map((c) => (
+            <TagRow key={c.tag} node={c} depth={depth + 1} />
+          ))}
+        </ul>
+      )}
+    </li>
   )
 }
 

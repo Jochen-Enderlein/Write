@@ -18,6 +18,7 @@ import {
   StarIcon
 } from './Icons'
 import type { SaveStatus } from './PageView'
+import { ShareButton } from './ShareButton'
 
 const glyph = (id: string): string =>
   acceleratorGlyphs(COMMANDS.find((c) => c.id === id)?.accelerator)
@@ -166,6 +167,7 @@ export function Toolbar({ status }: { status: SaveStatus }): React.JSX.Element {
               </button>
             ))}
           </div>
+          <ShareButton path={page} />
           <button
             className="icon-button"
             title={t('graph.pageButton')}

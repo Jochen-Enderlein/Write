@@ -31,7 +31,22 @@ export interface RawInline {
   content?: undefined
 }
 
-export type Inline = StyledText | LinkInline | WikiLinkInline | RawInline
+/** A footnote reference `[^label]`; the note itself is a `footnote` block. */
+export interface FootnoteRefInline {
+  type: 'footnoteRef'
+  props: { label: string }
+  content?: undefined
+}
+
+/** Inline math `$…$` (LaTeX). */
+export interface InlineMathInline {
+  type: 'inlineMath'
+  props: { latex: string }
+  content?: undefined
+}
+
+export type Inline =
+  StyledText | LinkInline | WikiLinkInline | RawInline | FootnoteRefInline | InlineMathInline
 
 export type Alignment = 'left' | 'center' | 'right' | 'justify'
 
@@ -91,6 +106,8 @@ export function plainText(content: Block['content']): string {
       if (n.type === 'text') return n.text
       if (n.type === 'link') return n.content.map((c) => c.text).join('')
       if (n.type === 'wikilink') return n.props.alias || n.props.target
+      if (n.type === 'footnoteRef') return ''
+      if (n.type === 'inlineMath') return n.props.latex
       return n.props.markdown
     })
     .join('')

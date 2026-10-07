@@ -3,6 +3,7 @@ import type {
   AppSettings,
   ConflictInfo,
   GraphData,
+  McpLaunch,
   HistoryEntry,
   IndexStatus,
   PageFile,
@@ -54,6 +55,13 @@ export const ipcSchemas = {
   'page:openLink': z.tuple([z.string().url()]),
   'page:linkMentions': z.tuple([relPath, title]),
   'page:resolveEmbed': z.tuple([relPath, z.string().min(1).max(500)]),
+  'page:share': z.tuple([
+    z.object({
+      format: z.enum(['md', 'html', 'pdf']),
+      title: z.string().max(500),
+      content: z.string().max(50_000_000)
+    })
+  ]),
   'page:export': z.tuple([
     z.object({
       format: z.enum(['pdf', 'html', 'print']),
@@ -111,11 +119,15 @@ export const ipcSchemas = {
         editorWidth: z.enum(['narrow', 'normal', 'wide', 'full']),
         language: z.enum(['system', 'de', 'en']),
         theme: z.enum(['system', 'light', 'dark']),
-        autoUpdates: z.enum(['ask', 'on', 'off'])
+        autoUpdates: z.enum(['ask', 'on', 'off']),
+        mcpAccess: z.enum(['off', 'read', 'write'])
       })
       .partial()
   ]),
   'app:paths': z.tuple([]),
+  'mcp:launch': z.tuple([]),
+  'tag:rename': z.tuple([z.string().min(1).max(200), z.string().min(1).max(200)]),
+  'clipboard:write': z.tuple([z.string().max(50_000_000)]),
   'app:whatsNew': z.tuple([]),
   'app:licenses': z.tuple([]),
   'update:status': z.tuple([]),
@@ -158,6 +170,7 @@ export interface IpcResults {
   'page:linkMentions': { count: number; before: string; hash: string }
   'page:resolveEmbed': string | null
   'page:export': string | null
+  'page:share': string
   'folder:move': string
   'tree:setOrder': void
   'window:open': void
@@ -198,6 +211,9 @@ export interface IpcResults {
   'settings:get': AppSettings
   'settings:set': AppSettings
   'app:paths': { vault: string | null; data: string | null; version: string }
+  'mcp:launch': McpLaunch
+  'tag:rename': number
+  'clipboard:write': void
   /** Current version, and the one used last time if the app was updated since (else null). */
   'app:whatsNew': { version: string; since: string | null }
   /** Notices of the bundled open-source libraries (null in development builds). */

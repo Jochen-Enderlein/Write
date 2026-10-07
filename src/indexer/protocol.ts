@@ -15,6 +15,7 @@ export type QueryName =
   | 'mentions'
   | 'tags'
   | 'graph'
+  | 'tagPaths'
   | 'resolve'
   | 'linkSources'
   | 'summaries'

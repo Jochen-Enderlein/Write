@@ -85,6 +85,9 @@ export async function runCommand(id: CommandId): Promise<void> {
         return s.setEditorMode('split')
       case 'graph.show':
         return s.navigate({ kind: 'graph', center: null })
+      case 'page.share':
+        if (page) useStore.setState({ shareToken: s.shareToken + 1 })
+        return
       case 'page.graph':
         if (page) s.navigate({ kind: 'graph', center: page })
         return

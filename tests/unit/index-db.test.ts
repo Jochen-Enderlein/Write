@@ -84,4 +84,26 @@ describe('Index', () => {
       { title: 'neu', from: [g.pages.findIndex((p) => p.path === 'A.md')] }
     ])
   })
+
+  it('zählt Seiten je Tag einschließlich verschachtelter Tags, jede Seite einmal', () => {
+    const d = db()
+    d.upsert('a.md', stamp, extractPage('a.md', '#projekt/write #projekt/app'))
+    d.upsert('b.md', stamp, extractPage('b.md', '#projekt'))
+    d.upsert('c.md', stamp, extractPage('c.md', '#idee/neu'))
+    const counts = Object.fromEntries(d.tags().map((t) => [t.tag, t.count]))
+    expect(counts).toEqual({
+      projekt: 2,
+      'projekt/write': 1,
+      'projekt/app': 1,
+      idee: 1,
+      'idee/neu': 1
+    })
+    expect(d.tagPaths('projekt')).toEqual(['a.md', 'b.md'])
+    expect(
+      d
+        .search('', 'projekt')
+        .map((h) => h.path)
+        .sort()
+    ).toEqual(['a.md', 'b.md'])
+  })
 })

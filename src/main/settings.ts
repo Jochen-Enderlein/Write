@@ -29,7 +29,8 @@ const defaults: SettingsFile = {
     editorWidth: 'normal',
     language: 'system',
     theme: 'system',
-    autoUpdates: 'ask'
+    autoUpdates: 'ask',
+    mcpAccess: 'off'
   }
 }
 

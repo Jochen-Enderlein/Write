@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  statSync,
   writeFileSync
 } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -81,7 +82,9 @@ test.beforeAll(async () => {
       ...process.env,
       WRITE_VAULT: vault,
       WRITE_USER_DATA: path.join(root, 'userdata'),
-      WRITE_NO_UPDATES: '1'
+      WRITE_NO_UPDATES: '1',
+      // Sharing writes the file but opens no native menu that would wait for a click
+      WRITE_SHARE_DRY_RUN: '1'
     }
   })
   win = await mainWindow(app)
@@ -575,6 +578,102 @@ test('bearbeitet Seiten auch als Markdown und mit Vorschau daneben', async () =>
 
   await win.getByRole('radio', { name: /Formatiert/ }).click()
   await expect(win.locator('.bn-editor h2')).toHaveText('Zweiter Teil live')
+})
+
+test('gibt KI-Assistenten Zugriff und zeigt die Einrichtung dafür', async () => {
+  await win.locator('.sidebar-item', { hasText: 'Einstellungen' }).click()
+  const access = win.getByLabel('Zugriff für KI-Assistenten (MCP)')
+  await expect(access).toHaveValue('off')
+  await expect(win.locator('.mcp-snippet')).toHaveCount(0)
+  await access.selectOption('read')
+  await expect(win.locator('.mcp-snippet')).toHaveCount(3)
+  await expect(
+    win.locator('.mcp-snippet', { hasText: 'Claude Code' }).locator('pre')
+  ).toContainText('ELECTRON_RUN_AS_NODE')
+  await win.locator('.mcp-snippet', { hasText: 'Claude Code' }).scrollIntoViewIfNeeded()
+  await win.screenshot({
+    path: '/private/tmp/claude-501/-Users-jochenenderlein-dev-Write/1094e846-c304-4cbe-8aac-2eb9a9a83b7e/scratchpad/mcp-settings.png'
+  })
+  await access.selectOption('off')
+  await win.keyboard.press('Escape')
+})
+
+test('teilt eine Seite oder nur die Auswahl als Markdown und PDF', async () => {
+  const shareDir = path.join(tmpdir(), 'write-share')
+  const newest = (ext: string): string => {
+    const files = readdirSync(shareDir, { recursive: true })
+      .map((f) => path.join(shareDir, String(f)))
+      .filter((f) => f.endsWith(ext))
+    return files.sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0] ?? ''
+  }
+  writeFileSync(path.join(vault, 'Teilen.md'), '# Teilen\n\nErster Absatz.\n\nZweiter Absatz.\n')
+  await win.locator('.tree-row .name', { hasText: 'Teilen' }).click()
+  await expect(win.locator('.bn-editor p', { hasText: 'Zweiter Absatz' })).toBeVisible()
+  const share = async (item: string): Promise<void> => {
+    await win.locator('button[title="Teilen"]').click()
+    await win.getByRole('menuitem', { name: item }).click()
+  }
+
+  await share('Als Markdown teilen …')
+  await eventually(() =>
+    expect(readFileSync(newest('Teilen.md'), 'utf8')).toBe(
+      '# Teilen\n\nErster Absatz.\n\nZweiter Absatz.\n'
+    )
+  )
+  await share('Als PDF teilen …')
+  await eventually(() => expect(statSync(newest('Teilen.pdf')).size).toBeGreaterThan(5000), 15000)
+
+  await win.locator('.bn-editor p', { hasText: 'Zweiter Absatz' }).click({ clickCount: 3 })
+  await win.locator('button[title="Teilen"]').click()
+  await expect(win.locator('.context-menu-heading')).toHaveText('Auswahl teilen')
+  await win.getByRole('menuitem', { name: 'Als Markdown kopieren' }).click()
+  await expect
+    .poll(() => app.evaluate(({ clipboard }) => clipboard.readText()))
+    .toBe('Zweiter Absatz.\n')
+})
+
+test('zeigt Formeln und Fußnoten und speichert Änderungen verlustfrei', async () => {
+  const original =
+    '# Formeln\n\nEnergie $E = mc^2$, Preise $5 und $10.\n\n$$\n\\frac{1}{3}\n$$\n\nSatz[^1].\n\n[^1]: Die Notiz.\n'
+  writeFileSync(path.join(vault, 'Formeln.md'), original)
+  await win.locator('.tree-row .name', { hasText: 'Formeln' }).click()
+  await expect(win.locator('.inline-math .katex')).toHaveCount(1)
+  await expect(win.locator('.math-preview .katex-display')).toBeVisible()
+  await expect(win.locator('.footnote-ref')).toHaveText('1')
+  await expect(win.locator('.footnote')).toContainText('Die Notiz.')
+  await win.locator('.inline-math').click()
+  await win.locator('.inline-math-input').fill('E = mc^3')
+  await win.locator('.inline-math-input').press('Enter')
+  // The first save adds Write's frontmatter; the text itself changes only in the formula
+  await eventually(() =>
+    expect(read('Formeln.md').replace(/^---\n[\s\S]*?\n---\n/, '')).toBe(
+      original.replace('mc^2', 'mc^3')
+    )
+  )
+})
+
+test('benennt verschachtelte Tags um und vervollständigt Links im Markdown-Modus', async () => {
+  writeFileSync(path.join(vault, 'Getaggt.md'), '# Getaggt\n\n#thema/eins und #thema\n')
+  writeFileSync(path.join(vault, 'Linkziel.md'), '# Linkziel\n')
+  await expect(win.locator('.tree-row .name', { hasText: 'Linkziel' })).toBeVisible()
+  await win.locator('.sidebar-item', { hasText: 'Tags' }).click()
+  const row = win.locator('.tag-row', { has: win.locator('.chip', { hasText: /^#thema/ }) }).first()
+  await expect(row).toContainText('1 Seite')
+  await row.hover()
+  await row.locator('.tag-edit').click()
+  await win.locator('.tag-rename').fill('gebiet')
+  await win.locator('.tag-rename').press('Enter')
+  await eventually(() => expect(read('Getaggt.md')).toBe('# Getaggt\n\n#gebiet/eins und #gebiet\n'))
+
+  await win.locator('.tree-row .name', { hasText: 'Getaggt' }).click()
+  await win.getByRole('radio', { name: /Als Markdown/ }).click()
+  await win.locator('.cm-content').click()
+  await win.keyboard.press('Meta+ArrowDown')
+  await win.keyboard.type('\nSiehe [[Linkz')
+  await expect(win.locator('.cm-tooltip-autocomplete')).toContainText('Linkziel')
+  await win.keyboard.press('Enter')
+  await eventually(() => expect(read('Getaggt.md')).toContain('Siehe [[Linkziel]]'))
+  await win.getByRole('radio', { name: /Formatiert/ }).click()
 })
 
 test('speichert eben Getipptes auch beim sofortigen Schließen des Fensters', async () => {

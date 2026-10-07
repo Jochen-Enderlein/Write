@@ -29,6 +29,7 @@ export type CommandId =
   | 'tags.show'
   | 'graph.show'
   | 'page.graph'
+  | 'page.share'
   | 'conflicts.show'
   | 'index.rebuild'
   | 'capture.open'
@@ -143,6 +144,7 @@ export const COMMANDS: CommandDef[] = [
   { id: 'tags.show', label: 'cmd.tags', accelerator: 'Control+CmdOrCtrl+T', menu: 'go' },
   { id: 'graph.show', label: 'cmd.graph', accelerator: 'Control+CmdOrCtrl+G', menu: 'go' },
   { id: 'page.graph', label: 'cmd.pageGraph', menu: 'page' },
+  { id: 'page.share', label: 'cmd.pageShare', menu: 'page' },
   { id: 'conflicts.show', label: 'cmd.conflicts', menu: 'go' },
   { id: 'index.rebuild', label: 'cmd.rebuildIndex', menu: 'file' },
   { id: 'capture.open', label: 'cmd.capture', menu: 'file' },

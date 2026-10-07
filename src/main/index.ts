@@ -1,6 +1,7 @@
 import {
   BrowserWindow,
   app,
+  clipboard,
   dialog,
   globalShortcut,
   ipcMain,
@@ -27,7 +28,8 @@ import type { IndexStatus, VaultInfo, VaultState } from '@shared/types'
 import { createI18n, localeOf, resolveLanguage, type Language } from '@shared/i18n'
 import type { CommandId } from '@shared/keymap'
 import { env } from './env'
-import { exportPage } from './export'
+import { cleanShareFiles, exportPage, shareFile } from './export'
+import { isValidTag, normalizeTag } from '@shared/tags'
 import { createGlassService } from './glass'
 import { IndexClient } from './indexClient'
 import { buildMenu } from './menu'
@@ -227,6 +229,10 @@ function registerIpc(): void {
       throw new Error(t('error.exportFailed', { message: (err as Error).message }), { cause: err })
     }
   })
+  // WRITE_SHARE_DRY_RUN: tests check the file without a native menu waiting for a click
+  handle('page:share', (req) =>
+    shareFile(req, mainWindow(), (rel) => vault().abs(rel), !env('SHARE_DRY_RUN'))
+  )
   handle('folder:move', (rel, parent) => vault().moveFolder(rel, parent))
   handle('tree:setOrder', (dir, names) => vault().setOrder(dir, names))
   handle('window:open', (page) => {
@@ -324,6 +330,26 @@ function registerIpc(): void {
     const prev = (await loadSettings()).seenVersion ?? null
     if (prev !== version) await saveSettings((s) => (s.seenVersion = version))
     return { version, since: prev && compareVersions(version, prev) > 0 ? prev : null }
+  })
+  // How an AI assistant starts the MCP server: this very binary in Node mode with the bundled script
+  handle('clipboard:write', (text) => clipboard.writeText(text))
+  handle('tag:rename', async (from, to) => {
+    const source = normalizeTag(from)
+    const target = to.trim().replace(/^#/, '')
+    if (!isValidTag(target)) throw new Error(t('tags.invalid'))
+    const count = await vault().renameTag(await index.tagPaths(source), source, target)
+    index.sync()
+    return count
+  })
+  handle('mcp:launch', () => {
+    const vars: Record<string, string> = { ELECTRON_RUN_AS_NODE: '1' }
+    const userData = env('USER_DATA')
+    if (userData) vars.WRITE_USER_DATA = userData
+    return {
+      command: process.execPath,
+      args: [path.join(app.getAppPath(), 'out', 'main', 'mcp.js')],
+      env: vars
+    }
   })
   handle('app:paths', () => ({
     vault: current?.root ?? null,
@@ -482,6 +508,7 @@ app.whenReady().then(async () => {
   language = resolveLanguage(settings.settings.language, app.getLocale())
   await i18n.changeLanguage(language)
   registerIpc()
+  void cleanShareFiles()
   if (!app.isPackaged && process.platform === 'darwin') {
     // The packaged bundle carries the icon itself; in development show it in the Dock too
     app.dock?.setIcon(path.join(import.meta.dirname, '../../resources/icon.png'))

@@ -14,6 +14,13 @@ import {
   placeholder as placeholderExt
 } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
+import {
+  autocompletion,
+  completionKeymap,
+  type Completion,
+  type CompletionContext,
+  type CompletionResult
+} from '@codemirror/autocomplete'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { tags as tag } from '@lezer/highlight'
@@ -125,6 +132,48 @@ function codeMirrorFind(view: EditorView): FindTarget {
   }
 }
 
+// ── Completion: [[links]] and #tags, like the rich editor ────────────────────
+
+function linkCompletions(self: string) {
+  return (ctx: CompletionContext): CompletionResult | null => {
+    const m = ctx.matchBefore(/\[\[[^\]\n|#]*$/)
+    if (!m) return null
+    const query = normalizeTitle(m.text.slice(2))
+    const after = ctx.state.sliceDoc(ctx.pos, ctx.pos + 2)
+    const close = after === ']]' ? '' : ']]'
+    const options: Completion[] = useStore
+      .getState()
+      .titles.filter((p) => p.path !== self && normalizeTitle(p.title).includes(query))
+      .sort(
+        (a, b) =>
+          Number(!normalizeTitle(a.title).startsWith(query)) -
+            Number(!normalizeTitle(b.title).startsWith(query)) || a.title.localeCompare(b.title)
+      )
+      .slice(0, 30)
+      .map((p) => ({
+        label: p.title,
+        detail: p.path.includes('/') ? p.path.replace(/\/[^/]+$/, '') : undefined,
+        apply: p.title + close,
+        type: 'text'
+      }))
+    return { from: m.from + 2, options, filter: false }
+  }
+}
+
+function tagCompletions(ctx: CompletionContext): CompletionResult | null {
+  const m = ctx.matchBefore(/(?:^|[\s(,;])#[\p{L}\p{N}_\-/]*$/u)
+  if (!m) return null
+  const from = m.from + m.text.indexOf('#') + 1
+  const query = ctx.state.sliceDoc(from, ctx.pos).toLowerCase()
+  if (!query && !ctx.explicit) return null
+  const options: Completion[] = useStore
+    .getState()
+    .tags.filter((tg) => tg.tag.startsWith(query))
+    .slice(0, 30)
+    .map((tg) => ({ label: tg.tag, detail: String(tg.count), type: 'keyword' }))
+  return options.length ? { from, options, filter: false } : null
+}
+
 // ── Look ─────────────────────────────────────────────────────────────────────
 
 /** Plain text with just enough colour to read the structure. */
@@ -156,7 +205,25 @@ const theme = EditorView.theme({
   },
   '.cm-placeholder': { color: 'var(--label-3)' },
   '.cm-find': { backgroundColor: 'rgba(255, 204, 0, 0.35)', borderRadius: '2px' },
-  '.cm-find-current': { backgroundColor: 'rgba(255, 149, 0, 0.75)' }
+  '.cm-find-current': { backgroundColor: 'rgba(255, 149, 0, 0.75)' },
+  '.cm-tooltip': {
+    backgroundColor: 'var(--editor-bg)',
+    border: '0.5px solid var(--separator)',
+    borderRadius: '8px',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18)',
+    overflow: 'hidden'
+  },
+  '.cm-tooltip-autocomplete > ul': {
+    fontFamily: 'var(--font-ui)',
+    fontSize: '13px',
+    padding: '4px'
+  },
+  '.cm-tooltip-autocomplete > ul > li': { borderRadius: '5px', padding: '3px 8px' },
+  '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+    backgroundColor: 'var(--accent)',
+    color: 'var(--accent-text)'
+  },
+  '.cm-completionDetail': { marginLeft: '8px', opacity: 0.6, fontStyle: 'normal' }
 })
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -173,6 +240,8 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
   const view = useRef<EditorView | null>(null)
   const path = file.path
   const initial = useRef(readHeader(path, file.text))
+  // The editor is created once per file; links to the page itself aren't suggested
+  const self = useRef(path)
   // Blank lines between frontmatter and text are kept as they are but not shown
   const lead = useRef(/^\n*/.exec(initial.current.body)![0])
   const startText = useRef(initial.current.body.slice(lead.current.length))
@@ -257,7 +326,11 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
     })
     const extensions: Extension[] = [
       history(),
-      keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
+      autocompletion({
+        override: [linkCompletions(self.current), tagCompletions],
+        icons: false
+      }),
+      keymap.of([...completionKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap]),
       markdown({ base: markdownLanguage }),
       syntaxHighlighting(highlightStyle),
       EditorView.lineWrapping,
@@ -350,6 +423,16 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
         void save()
       },
       exportHtml,
+      selectionMarkdown: () => {
+        const v = view.current
+        if (!v) return null
+        const text = v.state.selection.ranges
+          .filter((r) => !r.empty)
+          .map((r) => v.state.sliceDoc(r.from, r.to))
+          .join('\n\n')
+        return text.trim() ? text : null
+      },
+      bodyMarkdown: () => body(),
       findTarget: () => (view.current ? codeMirrorFind(view.current) : null)
     }),
     [flush, save, path, goToLine, exportHtml]

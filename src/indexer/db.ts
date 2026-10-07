@@ -22,6 +22,8 @@ export class IndexDb {
     this.db = new Database(file)
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('synchronous = NORMAL')
+    // The app and the MCP server may both write; wait for the other instead of failing
+    this.db.pragma('busy_timeout = 5000')
     const version = this.db.prepare(`SELECT name FROM sqlite_master WHERE name = 'meta'`).get()
       ? (
           this.db.prepare(`SELECT value FROM meta WHERE key = 'schema'`).get() as
@@ -145,16 +147,19 @@ export class IndexDb {
       return this.stmt(
         `SELECT p.path, p.title, p.icon, substr(f.body, 1, 160) AS snippet FROM tags t
          JOIN pages p ON p.path = t.path JOIN pages_fts f ON f.rowid = p.docid
-         WHERE t.tag = ? ORDER BY p.title COLLATE NOCASE LIMIT ?`
-      ).all(tag, limit) as SearchHit[]
+         WHERE t.tag = ? OR t.tag LIKE ? ESCAPE '\\' GROUP BY p.path ORDER BY p.title COLLATE NOCASE LIMIT ?`
+      ).all(tag, escapeLike(tag ?? '') + '/%', limit) as SearchHit[]
     }
-    const tagJoin = tag ? `JOIN tags t ON t.path = p.path AND t.tag = @tag` : ''
+    // A tag also finds its nested tags (`projekt` → `projekt/write`)
+    const tagJoin = tag
+      ? `JOIN (SELECT DISTINCT path FROM tags WHERE tag = @tag OR tag LIKE @nested ESCAPE '\\') t ON t.path = p.path`
+      : ''
     return this.stmt(
       `SELECT p.path, p.title, p.icon,
               snippet(pages_fts, 1, '${SNIPPET_OPEN}', '${SNIPPET_CLOSE}', '…', 14) AS snippet
        FROM pages_fts f JOIN pages p ON p.docid = f.rowid ${tagJoin}
        WHERE pages_fts MATCH @q ORDER BY bm25(pages_fts, 8, 1) LIMIT @limit`
-    ).all({ q: fts, tag, limit }) as SearchHit[]
+    ).all({ q: fts, tag, nested: tag ? escapeLike(tag) + '/%' : null, limit }) as SearchHit[]
   }
 
   /** Preview data for the given pages (folder overview); unknown paths are left out. */
@@ -241,10 +246,38 @@ export class IndexDb {
     return row?.path ?? null
   }
 
+  /** Pages carrying a tag or one of its nested tags. */
+  tagPaths(tag: string): string[] {
+    return (
+      this.stmt(
+        `SELECT DISTINCT path FROM tags WHERE tag = ? OR tag LIKE ? ESCAPE '\\' ORDER BY path`
+      ).all(tag, escapeLike(tag) + '/%') as { path: string }[]
+    ).map((r) => r.path)
+  }
+
+  /**
+   * Every tag with the number of pages a search for it finds – nested tags included and each
+   * page counted once (`projekt` counts pages with `projekt` or `projekt/…`). Parents that only
+   * exist through nested tags are listed too.
+   */
   tags(): TagCount[] {
-    return this.stmt(
-      `SELECT tag, count(*) AS count FROM tags GROUP BY tag ORDER BY count DESC, tag`
-    ).all() as TagCount[]
+    const pages = new Map<string, Set<string>>()
+    for (const { path, tag } of this.stmt(`SELECT path, tag FROM tags`).all() as {
+      path: string
+      tag: string
+    }[]) {
+      const parts = tag.split('/')
+      for (let i = 1; i <= parts.length; i++) {
+        const prefix = parts.slice(0, i).join('/')
+        if (!prefix) continue
+        const set = pages.get(prefix) ?? new Set<string>()
+        set.add(path)
+        pages.set(prefix, set)
+      }
+    }
+    return [...pages]
+      .map(([tag, set]) => ({ tag, count: set.size }))
+      .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
   }
 
   /**

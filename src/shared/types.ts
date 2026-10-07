@@ -135,6 +135,15 @@ export interface AppSettings {
    * since every check tells GitHub the IP address; a manual check is always possible.
    */
   autoUpdates: 'ask' | 'on' | 'off'
+  /** What AI assistants may do with the open vault through the MCP server. */
+  mcpAccess: 'off' | 'read' | 'write'
+}
+
+/** How an AI assistant starts Write's MCP server. */
+export interface McpLaunch {
+  command: string
+  args: string[]
+  env: Record<string, string>
 }
 
 export interface VaultNotice {

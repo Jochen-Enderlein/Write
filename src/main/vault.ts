@@ -33,6 +33,7 @@ import { icloudTarget, isConflictCopy, originalOfConflict } from '@shared/confli
 import { buildFrontmatter, splitFrontmatter, updateFrontmatter } from '@shared/frontmatter'
 import { dayKey, isoLocal, timeKey } from '@shared/dates'
 import { newPageFrontmatter, readHeader } from '@shared/page'
+import { renameTagInText } from '@shared/tags'
 import {
   IMAGE_EXT_RE,
   mapOutsideCode,
@@ -52,7 +53,6 @@ import {
   writeJson
 } from './fsutil'
 import { History } from './history'
-import type { IndexClient } from './indexClient'
 import { Trash } from './trash'
 import { VaultWatcher, type WatchBatch } from './watcher'
 import { withTx } from './tx'
@@ -72,15 +72,29 @@ interface VaultConfig {
   order?: Record<string, string[]>
 }
 
+/** What a vault needs from the search index (the app's index process, or the MCP server's). */
+export interface VaultIndex {
+  open(root: string, dbFile: string): void
+  sync(): void
+  changed(paths: string[]): void
+  deleted(paths: string[]): void
+  linkSources(titles: string[]): Promise<string[]>
+}
+
 interface VaultOptions {
   dataDir: string
-  index: IndexClient
+  index: VaultIndex
   emit: Emit
   snapshotDelayMs: () => number
   trashRetentionDays: () => number
   historyRetentionDays?: () => number
   /** Locale for dates written into pages and templates. */
   locale?: () => string
+  /**
+   * False for a second process working on the same vault (the MCP server): no file watcher, no
+   * trash or history cleanup – the app does that.
+   */
+  watch?: boolean
 }
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' })
@@ -140,6 +154,7 @@ export class Vault {
     await fs.mkdir(this.opts.dataDir, { recursive: true })
     this.config = await ensureVaultConfig(this.root, this.info.name)
     this.opts.index.open(this.root, path.join(this.opts.dataDir, 'index.sqlite'))
+    if (this.opts.watch === false) return
     this.watcher.start()
     const purge = (): void => {
       void this.trash.purge(this.opts.trashRetentionDays()).catch(() => undefined)
@@ -872,6 +887,30 @@ export class Vault {
     await this.writeOwn(rel, next)
     this.opts.emit('page:changed', rel)
     return rel
+  }
+
+  /**
+   * Renames a tag (and its nested tags) on the given pages, in frontmatter and text. The state
+   * before is kept in the version history. Returns how many pages changed.
+   */
+  async renameTag(paths: string[], from: string, to: string): Promise<number> {
+    await this.history.snapshot(paths, 'Vor dem Umbenennen eines Tags')
+    let count = 0
+    for (const rel of paths) {
+      let text: string
+      try {
+        text = await fs.readFile(this.abs(rel), 'utf8')
+      } catch {
+        continue
+      }
+      const next = renameTagInText(text, from, to)
+      if (next === text) continue
+      await this.writeOwn(rel, next)
+      this.opts.emit('page:changed', rel)
+      count++
+    }
+    await this.history.flush(paths)
+    return count
   }
 
   // ── Templates ─────────────────────────────────────────────────────────────

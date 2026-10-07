@@ -6,11 +6,13 @@ const EXPORT_CSS = `
 :root { color-scheme: light; }
 html, body { background: #fff; margin: 0; }
 body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* The app's page fade-in starts at opacity 0; a PDF is rendered before it would run */
+*, *::before, *::after { animation: none !important; transition: none !important; }
 .page { max-width: 720px; margin: 0 auto; padding: 48px 40px 64px; cursor: auto; }
 .page .bn-editor { padding-inline: 0; }
 .page-title { font: 700 34px/1.2 var(--font-display); color: var(--label); margin: 0 0 22px; padding: 0; }
 .page-icon { font-size: 46px; line-height: 1; margin: 0 0 10px; padding: 0; }
-.bn-side-menu, .mermaid-code, .mermaid-toggle, .raw-md-label, .bn-trailing-block { display: none !important; }
+.bn-side-menu, .mermaid-code, .mermaid-toggle, .math-code, .math-toggle, .raw-md-label, .bn-trailing-block { display: none !important; }
 .callout-kind select { display: none; }
 .wikilink { text-decoration: none; }
 @media print {
@@ -64,6 +66,11 @@ export function buildExportHtml(
     input.replaceWith(span)
   })
   clone.querySelectorAll('.bn-side-menu, .bn-formatting-toolbar').forEach((el) => el.remove())
+  // A page that starts with its own title as heading doesn't need the title twice
+  const firstHeading = clone.querySelector('[data-content-type]')
+  const repeatsTitle =
+    firstHeading?.getAttribute('data-content-type') === 'heading' &&
+    firstHeading.textContent?.trim() === title.trim()
   const css = lightOnly(loadedCss()) + EXPORT_CSS
   return `<!doctype html>
 <html lang="${lang}">
@@ -77,7 +84,7 @@ export function buildExportHtml(
 <body>
 <div class="page">
 ${icon ? `<div class="page-icon">${escapeHtml(icon)}</div>` : ''}
-<h1 class="page-title">${escapeHtml(title)}</h1>
+${repeatsTitle ? '' : `<h1 class="page-title">${escapeHtml(title)}</h1>`}
 <div class="bn-container write-editor" data-color-scheme="light" data-mantine-color-scheme="light">
 ${clone.outerHTML}
 </div>

@@ -86,6 +86,7 @@ export class IndexClient {
   mentions = (p: string): Promise<SearchHit[]> => this.query('mentions', p)
   tags = (): Promise<TagCount[]> => this.query('tags')
   graph = (): Promise<GraphData> => this.query('graph')
+  tagPaths = (tag: string): Promise<string[]> => this.query('tagPaths', tag)
   resolve = (title: string): Promise<string | null> => this.query('resolve', title)
   linkSources = (titles: string[]): Promise<string[]> => this.query('linkSources', titles)
   summaries = (paths: string[]): Promise<PageSummary[]> => this.query('summaries', paths)

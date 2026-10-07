@@ -1,7 +1,15 @@
 import { unified } from 'unified'
 import remarkStringify, { type Options as StringifyOptions } from 'remark-stringify'
 import remarkGfm from 'remark-gfm'
-import type { BlockContent, ListItem, PhrasingContent, Root, RootContent, TableRow } from 'mdast'
+import type {
+  BlockContent,
+  FootnoteDefinition,
+  ListItem,
+  PhrasingContent,
+  Root,
+  RootContent,
+  TableRow
+} from 'mdast'
 import {
   type Block,
   type Inline,
@@ -328,6 +336,19 @@ function ownFlow(b: Block): BlockContent[] {
       return [table(b)]
     case 'rawMarkdown':
       return [{ type: 'html', value: String(b.props.markdown ?? '') }]
+    case 'math':
+      return [{ type: 'html', value: `$$\n${String(b.props.source ?? '')}\n$$` }]
+    case 'footnote': {
+      const label = String(b.props.label ?? '')
+      // A definition isn't flow content in mdast's types, but remark-gfm prints it in its place
+      const def: FootnoteDefinition = {
+        type: 'footnoteDefinition',
+        identifier: label.toLowerCase(),
+        label,
+        children: [{ type: 'paragraph', children: inline() }]
+      }
+      return [def as unknown as BlockContent]
+    }
     default:
       return [{ type: 'paragraph', children: inline() }]
   }
@@ -409,6 +430,12 @@ export function inlineToPhrasing(content: Inline[], inTable = false): PhrasingCo
       items.push({
         styles: markedAround(content, i) ? { highlight: true } : {},
         node: [{ type: 'html', value: n.props.markdown }]
+      })
+    } else if (n.type === 'footnoteRef' || n.type === 'inlineMath') {
+      const value = n.type === 'footnoteRef' ? `[^${n.props.label}]` : `$${n.props.latex}$`
+      items.push({
+        styles: markedAround(content, i) ? { highlight: true } : {},
+        node: [{ type: 'html', value }]
       })
     }
   })

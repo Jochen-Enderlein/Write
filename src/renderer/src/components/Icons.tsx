@@ -206,6 +206,13 @@ export const ModeSplitIcon = (p: P) => (
     <path d="M8 2.75v10.5M3.75 6h2.5M3.75 8.5h2" />
   </Icon>
 )
+/** Square with an arrow leaving it upwards, like the macOS share button. */
+export const ShareIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5.5 6.5H4.25a1 1 0 0 0-1 1v5.75a1 1 0 0 0 1 1h7.5a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H10.5" />
+    <path d="M8 10V1.75M5.5 4.25 8 1.75l2.5 2.5" />
+  </Icon>
+)
 /** A sun with two planets on their orbits. */
 export const GraphIcon = (p: P) => (
   <Icon {...p}>
@@ -213,6 +220,18 @@ export const GraphIcon = (p: P) => (
     <ellipse cx="8" cy="8" rx="6.25" ry="3.25" transform="rotate(-25 8 8)" />
     <circle cx="13.4" cy="5.3" r="1.1" fill="currentColor" stroke="none" />
     <circle cx="3.1" cy="10.9" r="0.9" fill="currentColor" stroke="none" />
+  </Icon>
+)
+export const SigmaIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 3.25H4l4.25 4.75L4 12.75h8" />
+  </Icon>
+)
+/** Text with a raised small number, like a footnote reference. */
+export const FootnoteIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M2 11.5h7M2 8h7M2 4.5h4.5" />
+    <path d="M11.5 3.5l1.25-1v4.25" />
   </Icon>
 )
 export const DiagramIcon = (p: P) => (

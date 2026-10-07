@@ -140,7 +140,9 @@ export function PageView({
       scrollToHeading: (text) => ed()?.scrollToHeading(text) ?? false,
       updateFrontmatter: (changes) => ed()?.updateFrontmatter(changes),
       exportHtml: () => ed()?.exportHtml() ?? '',
-      findTarget: () => ed()?.findTarget() ?? null
+      findTarget: () => ed()?.findTarget() ?? null,
+      selectionMarkdown: () => ed()?.selectionMarkdown() ?? null,
+      bodyMarkdown: () => ed()?.bodyMarkdown() ?? ''
     })
     // Coming from full-text search: show the hits on the page
     const query = useStore.getState().pendingFind

@@ -1,9 +1,11 @@
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import type {
   Blockquote,
   Code,
+  FootnoteDefinition,
   Heading,
   List,
   ListItem,
@@ -17,7 +19,7 @@ import type {
 import { WIKILINK_RE } from '../wikilinks'
 import type { Alignment, Block, Inline, StyledText, Styles, TableCell } from './blocks'
 
-const processor = unified().use(remarkParse).use(remarkGfm)
+const processor = unified().use(remarkParse).use(remarkGfm).use(remarkMath)
 
 export interface Origin {
   id: string
@@ -129,6 +131,13 @@ class Ctx {
       case 'list':
         // Only reached for nested contexts that want a single block; callers normally expand lists.
         return node.children[0] ? this.listItem(node, node.children[0], 0) : this.raw(node)
+      case 'math':
+        // Only the plain fenced form; `$$ meta` or unusual fences stay verbatim
+        return !node.meta && /^\$\$[ \t]*\n[\s\S]*\n[ \t]*\$\$$/.test(this.slice(node))
+          ? this.block('math', { source: node.value })
+          : this.raw(node)
+      case 'footnoteDefinition':
+        return this.footnote(node)
       default:
         // html, definitions, footnotes, math … are kept exactly as written
         return this.raw(node)
@@ -153,6 +162,17 @@ class Ctx {
       return this.block('file', { url: only.url, name })
     }
     return this.block('paragraph', {}, this.inline(node.children))
+  }
+
+  /** `[^1]: Text` with a single paragraph becomes an editable note; anything longer stays verbatim. */
+  footnote(node: FootnoteDefinition): Block {
+    const [only, ...rest] = node.children
+    if (!only || rest.length || only.type !== 'paragraph') return this.raw(node)
+    return this.block(
+      'footnote',
+      { label: node.label ?? node.identifier },
+      this.inline(only.children)
+    )
   }
 
   heading(node: Heading): Block {
@@ -277,6 +297,19 @@ class Ctx {
             (c): c is StyledText => c.type === 'text'
           )
           out.push({ type: 'link', href: n.url, content })
+          break
+        }
+        case 'footnoteReference':
+          out.push({ type: 'footnoteRef', props: { label: n.label ?? n.identifier } })
+          break
+        case 'inlineMath': {
+          const source = this.slice(n)
+          const next = this.src[n.position?.end.offset ?? 0] ?? ''
+          // Obsidian's rule: `$x$` without spaces inside the dollars and no digit right after,
+          // so prices like "$5 and $10" stay text
+          if (/^\$(?!\$)\S(?:[\s\S]*\S)?\$$/.test(source) && !/\d/.test(next))
+            out.push({ type: 'inlineMath', props: { latex: n.value } })
+          else pushText(out, source, styles)
           break
         }
         default:
@@ -463,7 +496,11 @@ function splitFirstLine(content: Inline[]): { title: string; body: Inline[] } {
           ? n.content.map((c) => c.text).join('')
           : n.type === 'wikilink'
             ? `${n.props.embed ? '!' : ''}[[${n.props.target}${n.props.alias ? '|' + n.props.alias : ''}]]`
-            : n.props.markdown
+            : n.type === 'footnoteRef'
+              ? `[^${n.props.label}]`
+              : n.type === 'inlineMath'
+                ? `$${n.props.latex}$`
+                : n.props.markdown
     const nl = n.type === 'text' ? n.text.indexOf('\n') : -1
     if (nl === -1) {
       title += text

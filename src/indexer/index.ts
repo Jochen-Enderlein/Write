@@ -105,6 +105,8 @@ function query(name: string, args: unknown[]): unknown {
       return db.tags()
     case 'graph':
       return db.graph()
+    case 'tagPaths':
+      return db.tagPaths(String(args[0]))
     case 'resolve':
       return db.resolve(String(args[0]))
     case 'linkSources':

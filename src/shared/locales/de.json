@@ -51,7 +51,8 @@
     "pageGraph": "Lokalen Graphen der Seite zeigen",
     "modeRich": "Formatiert bearbeiten",
     "modeMarkdown": "Als Markdown bearbeiten",
-    "modeSplit": "Markdown mit Vorschau"
+    "modeSplit": "Markdown mit Vorschau",
+    "pageShare": "Teilen …"
   },
   "menu": {
     "about": "Über {{name}}",
@@ -204,7 +205,15 @@
     "missingPage": "Seite existiert noch nicht – Klick legt sie an",
     "embedMissing": "Einbettung nicht gefunden: {{target}}",
     "embedOpen": "Seite öffnen",
-    "highlight": "Markieren"
+    "highlight": "Markieren",
+    "mathError": "Formel fehlerhaft",
+    "footnoteJump": "Zur Fußnote springen",
+    "math": "Formel",
+    "mathHint": "LaTeX als eigener Block",
+    "inlineMath": "Formel im Text",
+    "inlineMathHint": "LaTeX mitten im Satz",
+    "footnote": "Fußnote",
+    "footnoteHint": "Verweis hier, Text am Ende der Seite"
   },
   "palette": {
     "placeholder": "Seite suchen oder Befehl eingeben …",
@@ -240,7 +249,14 @@
     "title": "Tags",
     "empty": "Noch keine Tags. Schreibe #tag in eine Seite oder ergänze tags im Frontmatter.",
     "pages_one": "{{count}} Seite",
-    "pages_other": "{{count}} Seiten"
+    "pages_other": "{{count}} Seiten",
+    "lead": "Mit / verschachtelst du Tags, z. B. #projekt/write. Ein Tag findet auch die Seiten seiner Unter-Tags.",
+    "rename": "Umbenennen",
+    "renamed_one": "#{{from}} → #{{to}} in {{count}} Seite",
+    "renamed_other": "#{{from}} → #{{to}} in {{count}} Seiten",
+    "invalid": "Ein Tag beginnt mit einem Buchstaben und enthält keine Leerzeichen.",
+    "expand": "Aufklappen",
+    "collapse": "Zuklappen"
   },
   "trash": {
     "title": "Papierkorb",
@@ -534,5 +550,31 @@
     "notIndexed": "Diese Seite ist noch nicht im Index.",
     "hint": "Ziehen dreht · Scrollen zoomt · Klick wählt · Doppelklick öffnet",
     "pageButton": "Lokaler Graph"
+  },
+  "mcp": {
+    "title": "KI-Assistenten",
+    "access": "Zugriff für KI-Assistenten (MCP)",
+    "accessHint": "Claude, OpenCode und andere können deinen geöffneten Vault durchsuchen, lesen und – wenn erlaubt – Seiten anlegen und ändern.",
+    "off": "Aus",
+    "read": "Nur lesen",
+    "write": "Lesen und schreiben",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "hintTerminal": "Im Terminal ausführen.",
+    "hintClaudeDesktop": "In Claude → Einstellungen → Entwickler → Konfiguration bearbeiten einfügen.",
+    "hintOpenCode": "In opencode.json einfügen (global unter ~/.config/opencode/).",
+    "note": "Der Assistent startet Write dafür im Hintergrund selbst; die App muss nicht geöffnet sein. Jede Änderung landet in der Versionsgeschichte und lässt sich dort rückgängig machen. Was der Assistent liest, geht an seinen Anbieter."
+  },
+  "share": {
+    "button": "Teilen",
+    "headingPage": "Seite teilen",
+    "headingSelection": "Auswahl teilen",
+    "markdown": "Als Markdown teilen …",
+    "pdf": "Als PDF teilen …",
+    "html": "Als HTML teilen …",
+    "copyMarkdown": "Als Markdown kopieren",
+    "copiedPage": "Seite als Markdown kopiert",
+    "copiedSelection": "Auswahl als Markdown kopiert",
+    "selectionTitle": "{{title}} (Auszug)"
   }
 }

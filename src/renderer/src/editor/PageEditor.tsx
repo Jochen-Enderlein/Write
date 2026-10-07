@@ -38,7 +38,8 @@ import {
   markdownToBlocks,
   parseMarkdownBody,
   plainText,
-  serializeBody
+  serializeBody,
+  blocksToMarkdown
 } from '@shared/markdown'
 import { buildFrontmatter, splitFrontmatter, updateFrontmatter } from '@shared/frontmatter'
 import { composePage, readHeader } from '@shared/page'
@@ -50,9 +51,17 @@ import i18next, { t } from '../i18n'
 import { useStore, type HeadingInfo } from '../store'
 import { useColorScheme, useIpcEvent } from '../lib/hooks'
 import { scrollBehavior } from '../lib/motion'
-import { CalloutIcon, DiagramIcon, DocIcon, HighlighterIcon, PlusIcon } from '../components/Icons'
+import {
+  CalloutIcon,
+  DiagramIcon,
+  DocIcon,
+  FootnoteIcon,
+  HighlighterIcon,
+  PlusIcon,
+  SigmaIcon
+} from '../components/Icons'
 import { buildExportHtml } from './exportHtml'
-import { openMermaidEditor, prepareBlocks, schema, type WriteEditor } from './schema'
+import { openSourceEditor, prepareBlocks, schema, type WriteEditor } from './schema'
 
 export interface PageEditorHandle {
   flush(): Promise<void>
@@ -68,6 +77,10 @@ export interface PageEditorHandle {
   updateFrontmatter(changes: Record<string, unknown>): void
   exportHtml(): string
   findTarget(): FindTarget | null
+  /** The selected part as Markdown, or null when nothing is selected. */
+  selectionMarkdown(): string | null
+  /** The page body (without frontmatter) as Markdown. */
+  bodyMarkdown(): string
 }
 
 interface Props {
@@ -368,6 +381,17 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
           state.current.header.icon,
           i18next.language
         ),
+      selectionMarkdown: () => {
+        try {
+          if (editor.prosemirrorState.selection.empty) return null
+          const md = blocksToMarkdown(editor.getSelectionCutBlocks().blocks as unknown as Block[])
+          return md.trim() ? md : null
+        } catch {
+          return null
+        }
+      },
+      bodyMarkdown: () =>
+        serializeBody(editor.document as unknown as Block[], state.current.baseline),
       findTarget: () => {
         try {
           return editor.prosemirrorView ? proseMirrorFind(editor.prosemirrorView) : null
@@ -423,11 +447,61 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
               type: 'mermaid',
               props: { source: 'graph TD\n  A[Start] --> B[Ziel]' }
             } as const
-            openMermaidEditor(block.id)
+            openSourceEditor(block.id)
             const cur = editor.getTextCursorPosition().block
             if (Array.isArray(cur.content) && cur.content.length === 0)
               editor.replaceBlocks([cur], [block])
             else editor.insertBlocks([block], cur, 'after')
+          }
+        },
+        {
+          title: t('editor.math'),
+          subtext: t('editor.mathHint'),
+          aliases: ['formel', 'math', 'latex', 'katex', 'gleichung', 'equation'],
+          group: t('editor.groupMarkdown'),
+          icon: <SigmaIcon size={18} />,
+          onItemClick: () => {
+            const block = { id: makeId(), type: 'math', props: { source: 'E = mc^2' } } as const
+            openSourceEditor(block.id)
+            const cur = editor.getTextCursorPosition().block
+            if (Array.isArray(cur.content) && cur.content.length === 0)
+              editor.replaceBlocks([cur], [block])
+            else editor.insertBlocks([block], cur, 'after')
+          }
+        },
+        {
+          title: t('editor.inlineMath'),
+          subtext: t('editor.inlineMathHint'),
+          aliases: ['formel', 'math', 'latex', 'inline'],
+          group: t('editor.groupMarkdown'),
+          icon: <SigmaIcon size={18} />,
+          onItemClick: () =>
+            editor.insertInlineContent([
+              { type: 'inlineMath', props: { latex: 'x^2' } },
+              ' '
+            ] as never)
+        },
+        {
+          title: t('editor.footnote'),
+          subtext: t('editor.footnoteHint'),
+          aliases: ['fußnote', 'fussnote', 'footnote', 'anmerkung'],
+          group: t('editor.groupMarkdown'),
+          icon: <FootnoteIcon size={18} />,
+          onItemClick: () => {
+            // Next free number; the note goes to the end of the page, where the caret follows
+            const used = (editor.document as unknown as Block[])
+              .filter((b) => b.type === 'footnote')
+              .map((b) => Number(b.props.label))
+              .filter((n) => Number.isInteger(n))
+            const label = String(Math.max(0, ...used) + 1)
+            editor.insertInlineContent([{ type: 'footnoteRef', props: { label } }] as never)
+            const last = editor.document[editor.document.length - 1]!
+            const [note] = editor.insertBlocks(
+              [{ type: 'footnote', props: { label } }] as never,
+              last,
+              'after'
+            )
+            if (note) editor.setTextCursorPosition(note, 'end')
           }
         },
         ...templates.map((tpl) => ({

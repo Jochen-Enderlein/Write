@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog } from 'electron'
+import { BrowserWindow, ShareMenu, dialog } from 'electron'
 import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -48,7 +48,25 @@ export async function exportPage(
     return target
   }
 
-  // PDF and print render the page in a hidden window, always in light appearance
+  if (req.format === 'print') {
+    await inWindow(
+      html,
+      (win) =>
+        new Promise<void>((resolve) =>
+          win.webContents.print({ printBackground: true }, () => resolve())
+        )
+    )
+    return null
+  }
+  const pdf = await renderPdf(html)
+  const target = await askTarget(parent, labels.pdfTitle, `${name}.pdf`, 'PDF', ['pdf'])
+  if (!target) return null
+  await fs.writeFile(target, pdf)
+  return target
+}
+
+/** Loads the page into a hidden window, always in light appearance, and runs `fn` on it. */
+async function inWindow<T>(html: string, fn: (win: BrowserWindow) => Promise<T>): Promise<T> {
   const tmp = path.join(os.tmpdir(), `write-export-${ulid()}.html`)
   await fs.writeFile(tmp, html)
   const win = new BrowserWindow({
@@ -67,26 +85,58 @@ export async function exportPage(
     } catch {
       // Emulation is cosmetic; the export CSS already prefers light colors
     }
-    if (req.format === 'print') {
-      await new Promise<void>((resolve) =>
-        win.webContents.print({ printBackground: true }, () => resolve())
-      )
-      return null
-    }
-    const pdf = await win.webContents.printToPDF({
+    return await fn(win)
+  } finally {
+    win.destroy()
+    void fs.rm(tmp, { force: true })
+  }
+}
+
+function renderPdf(html: string): Promise<Buffer> {
+  return inWindow(html, (win) =>
+    win.webContents.printToPDF({
       printBackground: true,
       pageSize: 'A4',
       margins: { top: 0.6, bottom: 0.6, left: 0.6, right: 0.6 },
       displayHeaderFooter: false
     })
-    const target = await askTarget(parent, labels.pdfTitle, `${name}.pdf`, 'PDF', ['pdf'])
-    if (!target) return null
-    await fs.writeFile(target, pdf)
-    return target
-  } finally {
-    win.destroy()
-    void fs.rm(tmp, { force: true })
+  )
+}
+
+export interface ShareRequest {
+  format: 'md' | 'html' | 'pdf'
+  title: string
+  /** Markdown for `md`, the rendered HTML document otherwise */
+  content: string
+}
+
+const SHARE_DIR = path.join(os.tmpdir(), 'write-share')
+
+/**
+ * Writes the page (or a selection of it) as a file and opens the macOS share menu for it –
+ * Mail, Messages, AirDrop, Notes and whatever else is installed.
+ */
+export async function shareFile(
+  req: ShareRequest,
+  parent: BrowserWindow | null,
+  absOf: (rel: string) => string,
+  showMenu = true
+): Promise<string> {
+  const dir = path.join(SHARE_DIR, ulid())
+  await fs.mkdir(dir, { recursive: true })
+  const file = path.join(dir, `${sanitizeTitle(req.title) || 'Write'}.${req.format}`)
+  if (req.format === 'md') await fs.writeFile(file, req.content)
+  else {
+    const html = await inlineAssets(req.content, absOf)
+    await fs.writeFile(file, req.format === 'pdf' ? await renderPdf(html) : html)
   }
+  if (showMenu) new ShareMenu({ filePaths: [file] }).popup(parent ? { window: parent } : {})
+  return file
+}
+
+/** Shared files only need to live until the receiving app has read them; clean up at start. */
+export async function cleanShareFiles(): Promise<void> {
+  await fs.rm(SHARE_DIR, { recursive: true, force: true }).catch(() => undefined)
 }
 
 async function askTarget(
