@@ -6,10 +6,13 @@ import { CloseIcon, PlusIcon } from './Icons'
 /** Frontmatter tags as chips below the title, with autocomplete from all tags in the vault. */
 export function TagEditor({
   tags,
-  onChange
+  onChange,
+  after
 }: {
   tags: string[]
   onChange(tags: string[]): void
+  /** More quiet header actions in the same row (e.g. „+ Eigenschaft“). */
+  after?: React.ReactNode
 }): React.JSX.Element {
   const { t } = useTranslation()
   const all = useStore((s) => s.tags)
@@ -91,6 +94,7 @@ export function TagEditor({
           {t('page.addTag')}
         </button>
       )}
+      {after}
     </div>
   )
 }

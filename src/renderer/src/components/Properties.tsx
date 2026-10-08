@@ -189,16 +189,20 @@ function initialValue(type: PropType): PropValue {
 export function PropertyEditor({
   path,
   props,
+  adding,
+  setAdding,
   onChange
 }: {
   path: string
   props: Record<string, PropValue>
+  /** The add field is open; its button sits in the tags row while there are no properties. */
+  adding: boolean
+  setAdding(on: boolean): void
   /** `undefined` removes the property. */
   onChange(changes: Record<string, PropValue | undefined>): void
-}): React.JSX.Element {
+}): React.JSX.Element | null {
   const { t } = useTranslation()
   const [keys, setKeys] = useState<PropKey[]>([])
-  const [adding, setAdding] = useState(false)
   // A new property waits here until it gets a value (an empty one would be written as `""`)
   const [pending, setPending] = useState<{ key: string; type: PropType } | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null)
@@ -218,6 +222,7 @@ export function PropertyEditor({
 
   const byKey = useMemo(() => new Map(keys.map((k) => [k.key, k])), [keys])
   const entries = Object.entries(props)
+  const empty = !entries.length && !pending && !adding
 
   const rename = (from: string, to: string): void => {
     setRenaming(null)
@@ -238,8 +243,9 @@ export function PropertyEditor({
     })
   }
 
+  if (empty) return null
   return (
-    <div className={`page-props ${entries.length || pending ? 'has-props' : ''}`}>
+    <div className="page-props">
       {entries.map(([key, value]) => {
         const type = typeOf(value, byKey.get(key))
         return (
@@ -306,14 +312,21 @@ export function PropertyEditor({
             else setPending({ key, type })
           }}
         />
-      ) : (
-        <button className="page-add-tag page-add-prop" onClick={() => setAdding(true)}>
-          <PlusIcon size={12} />
-          {t('props.add')}
-        </button>
-      )}
+      ) : entries.length > 0 || pending ? (
+        <AddPropertyButton onClick={() => setAdding(true)} />
+      ) : null}
       {menu && <ContextMenu {...menu} onClose={() => setMenu(null)} />}
     </div>
+  )
+}
+
+export function AddPropertyButton({ onClick }: { onClick(): void }): React.JSX.Element {
+  const { t } = useTranslation()
+  return (
+    <button className="page-add-tag page-add-prop" onClick={onClick}>
+      <PlusIcon size={12} />
+      {t('props.add')}
+    </button>
   )
 }
 

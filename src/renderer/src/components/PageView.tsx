@@ -16,7 +16,7 @@ import { IconPicker } from './IconPicker'
 import { JournalBar } from './JournalBar'
 import { Snippet } from './Snippet'
 import { TagEditor } from './TagEditor'
-import { PropertyEditor } from './Properties'
+import { AddPropertyButton, PropertyEditor } from './Properties'
 import { Subpages } from './FolderView'
 
 type Banner = null | { kind: 'external' } | { kind: 'conflict'; diskText: string }
@@ -174,6 +174,8 @@ export function PageView({
     editorRef.current?.updateFrontmatter({ tags: tags.length ? tags : undefined })
   }
 
+  const [addingProp, setAddingProp] = useState(false)
+  useEffect(() => setAddingProp(false), [path])
   const setProps = (changes: Record<string, PropValue | undefined>): void => {
     setMeta((m) => {
       const props = { ...m.props }
@@ -255,8 +257,21 @@ export function PageView({
         title={header.title}
         onEnter={() => editorRef.current?.focusStart()}
       />
-      <TagEditor tags={meta.tags} onChange={setTags} />
-      <PropertyEditor path={file.path} props={meta.props} onChange={setProps} />
+      <TagEditor
+        tags={meta.tags}
+        onChange={setTags}
+        after={
+          Object.keys(meta.props).length === 0 &&
+          !addingProp && <AddPropertyButton onClick={() => setAddingProp(true)} />
+        }
+      />
+      <PropertyEditor
+        path={file.path}
+        props={meta.props}
+        adding={addingProp}
+        setAdding={setAddingProp}
+        onChange={setProps}
+      />
       {shownMode === 'rich' ? (
         <PageEditor ref={editorRef} file={file} onStatus={status} onConflict={conflict} />
       ) : (

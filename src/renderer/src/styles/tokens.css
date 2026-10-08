@@ -37,6 +37,8 @@
   /* CSS glass for floating elements (palette, popovers, menus, toolbar) */
   --glass-bg: rgba(255, 255, 255, 0.68);
   --glass-bg-strong: rgba(250, 250, 252, 0.84);
+  /* Menus: over the native sidebar glass the CSS blur has nothing to blur, so nearly solid */
+  --glass-bg-menu: rgba(246, 246, 248, 0.95);
   --glass-edge: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(0, 0, 0, 0.1);
   --glass-shadow:
@@ -100,6 +102,7 @@
 
     --glass-bg: rgba(44, 44, 46, 0.62);
     --glass-bg-strong: rgba(38, 38, 40, 0.84);
+    --glass-bg-menu: rgba(40, 40, 42, 0.95);
     --glass-edge: rgba(255, 255, 255, 0.16);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-shadow:
@@ -130,6 +133,7 @@
   :root {
     --glass-bg: var(--surface-raised);
     --glass-bg-strong: var(--surface-raised);
+    --glass-bg-menu: var(--surface-raised);
   }
 }
 
@@ -138,6 +142,7 @@
   :root {
     --glass-bg: var(--surface-raised);
     --glass-bg-strong: var(--surface-raised);
+    --glass-bg-menu: var(--surface-raised);
     --glass-border: var(--label-2);
     --separator: var(--label-3);
     --label-2: var(--label);

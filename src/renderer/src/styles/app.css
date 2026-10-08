@@ -876,11 +876,6 @@ textarea {
   font-size: 13px;
 }
 
-.page-props:not(.has-props) {
-  margin-top: -14px;
-  margin-bottom: 4px;
-}
-
 .page-props > .page-add-prop,
 .page-props > .prop-add {
   grid-column: 1 / -1;
@@ -2191,6 +2186,7 @@ mark {
 .context-menu {
   position: fixed;
   z-index: 120;
+  background: var(--glass-bg-menu);
   min-width: 210px;
   padding: 5px;
   border-radius: 12px;
