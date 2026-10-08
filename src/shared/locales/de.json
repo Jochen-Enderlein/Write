@@ -635,6 +635,7 @@
       "notEmpty": "ist nicht leer",
       "before": "vor / kleiner als",
       "after": "nach / größer als"
-    }
+    },
+    "relativeHint": "z. B. heute, heute+7 oder 2026-10-20"
   }
 }

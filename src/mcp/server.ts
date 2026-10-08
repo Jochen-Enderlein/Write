@@ -209,7 +209,7 @@ server.registerTool(
   {
     title: 'Query pages by properties',
     description:
-      'The pages directly inside a folder with their properties (frontmatter fields), like Write’s table view. Optionally filtered and sorted.',
+      'The pages directly inside a folder with their properties (frontmatter fields), like Write’s table view. Optionally filtered and sorted. Date filter values may be relative: "today", "tomorrow", "today+7", "today-3".',
     inputSchema: {
       folder: z
         .string()

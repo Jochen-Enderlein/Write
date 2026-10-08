@@ -1,3 +1,5 @@
+import { dayKey } from './dates'
+
 /**
  * Page properties: every frontmatter field except the ones the app manages itself. There is no
  * schema – a property's type is read from its values, so files edited elsewhere just work.
@@ -13,8 +15,9 @@ export type PropType = 'checkbox' | 'number' | 'date' | 'link' | 'list' | 'text'
 export const PROP_TYPE_LIST: PropType[] = ['text', 'number', 'date', 'checkbox', 'link', 'list']
 export type PropValue = string | number | boolean | string[] | null
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?$/
+const DATE_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?$/i
 const LINK_RE = /^\[\[[^\]]+\]\]$/
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/
 
 /** The frontmatter fields shown as properties, with values reduced to what a cell can hold. */
 export function propertiesOf(data: Record<string, unknown>): Record<string, PropValue> {
@@ -114,10 +117,44 @@ export interface TableConfig {
   filter?: TableFilter[]
 }
 
-/** Case-insensitive comparison; `is` on a list means "contains this entry". */
-export function matchesFilter(v: PropValue | undefined, f: TableFilter): boolean {
-  const want = (f.value ?? '').trim().toLowerCase()
-  const text = valueText(v).toLowerCase()
+const RELATIVE_RE = /^(heute|today|morgen|tomorrow|gestern|yesterday)\s*(?:([+-])\s*(\d{1,4}))?$/i
+const BASE_OFFSET: Record<string, number> = {
+  heute: 0,
+  today: 0,
+  morgen: 1,
+  tomorrow: 1,
+  gestern: -1,
+  yesterday: -1
+}
+
+/**
+ * Resolves a relative date in a filter value (`heute`, `morgen`, `heute+7`, `today-3` …) to
+ * `YYYY-MM-DD` for the given day; anything else comes back unchanged.
+ */
+export function resolveDateValue(value: string, today: string = dayKey()): string {
+  const m = RELATIVE_RE.exec(value.trim())
+  if (!m) return value
+  const offset = BASE_OFFSET[m[1]!.toLowerCase()]! + (m[2] === '-' ? -1 : 1) * Number(m[3] ?? 0)
+  const [y, mo, d] = today.split('-').map(Number) as [number, number, number]
+  // Noon avoids landing on the wrong day around daylight-saving changes
+  return dayKey(new Date(y, mo - 1, d + offset, 12))
+}
+
+/**
+ * Case-insensitive comparison; `is` on a list means "contains this entry". Relative dates in
+ * the value (`heute+7`) are resolved against `today`; a date compares by day, so a value with
+ * a time of day counts as that day.
+ */
+export function matchesFilter(
+  v: PropValue | undefined,
+  f: TableFilter,
+  today: string = dayKey()
+): boolean {
+  const want = resolveDateValue(f.value ?? '', today)
+    .trim()
+    .toLowerCase()
+  let text = valueText(v).toLowerCase()
+  if (DAY_RE.test(want) && DATE_RE.test(text)) text = text.slice(0, 10)
   const equal = Array.isArray(v) ? v.some((x) => x.toLowerCase() === want) : text === want
   switch (f.op) {
     case 'empty':
@@ -133,10 +170,10 @@ export function matchesFilter(v: PropValue | undefined, f: TableFilter): boolean
     case 'before':
     case 'after': {
       if (isEmpty(v) || !want) return false
-      const c =
-        typeof v === 'number' && !Number.isNaN(Number(want))
-          ? v - Number(want)
-          : collator.compare(text, want)
+      let c: number
+      if (typeof v === 'number' && !Number.isNaN(Number(want))) c = v - Number(want)
+      else if (DATE_RE.test(text) && DATE_RE.test(want)) c = text < want ? -1 : text > want ? 1 : 0
+      else c = collator.compare(text, want)
       return f.op === 'before' ? c < 0 : c > 0
     }
   }
@@ -153,9 +190,13 @@ export function cellValue(row: Row, key: string): PropValue | undefined {
   return key === 'title' ? row.title : row.props[key]
 }
 
-export function applyTable<R extends Row>(rows: R[], cfg: TableConfig): R[] {
+export function applyTable<R extends Row>(
+  rows: R[],
+  cfg: TableConfig,
+  today: string = dayKey()
+): R[] {
   const filters = cfg.filter ?? []
-  const out = rows.filter((r) => filters.every((f) => matchesFilter(cellValue(r, f.key), f)))
+  const out = rows.filter((r) => filters.every((f) => matchesFilter(cellValue(r, f.key), f, today)))
   const sorts = cfg.sort?.length ? cfg.sort : [{ key: 'title', dir: 'asc' as const }]
   return out.sort((a, b) => {
     for (const s of sorts) {

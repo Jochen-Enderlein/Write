@@ -71,6 +71,8 @@ filter: [{ key: status, op: isNot, value: erledigt }]
 ```
 ````
 
+Datumsfilter dürfen relativ sein: `heute`, `morgen`, `gestern`, `heute+7`, `heute-3` (englisch `today` …). Sie werden bei jeder Anzeige auf den aktuellen Tag umgerechnet; ein Wert mit Uhrzeit zählt als sein Tag.
+
 Callouts im Obsidian-Format (`> [!note] Titel`), Wiki-Links `[[Titel]]` / `[[Titel|Text]]` / `[[Titel#Abschnitt]]` / `[[Ordner/Titel]]`, Einbettungen `![[Bild.png]]` und `![[Seite#Abschnitt]]`, Seitensymbol (`icon:`) und Tags im Frontmatter, Tags auch als `#tag`.
 
 ## Stand Version 0.1

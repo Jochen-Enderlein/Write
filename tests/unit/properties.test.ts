@@ -6,6 +6,7 @@ import {
   inferType,
   matchesFilter,
   parseInput,
+  resolveDateValue,
   propertiesOf,
   sanitizeConfig,
   type Row
@@ -104,5 +105,43 @@ describe('Eigenschaften', () => {
       filter: [{ key: 's', op: 'is', value: '1' }]
     })
     expect(sanitizeConfig('kaputt')).toEqual({})
+  })
+
+  it('rechnet relative Daten in Filtern auf den Tag um', () => {
+    const today = '2026-10-08'
+    expect(resolveDateValue('heute', today)).toBe('2026-10-08')
+    expect(resolveDateValue('Heute + 7', today)).toBe('2026-10-15')
+    expect(resolveDateValue('morgen', today)).toBe('2026-10-09')
+    expect(resolveDateValue('gestern-1', today)).toBe('2026-10-06')
+    expect(resolveDateValue('today+30', today)).toBe('2026-11-07')
+    // Across the daylight-saving change and the year end
+    expect(resolveDateValue('heute+20', '2026-10-20')).toBe('2026-11-09')
+    expect(resolveDateValue('heute+1', '2026-12-31')).toBe('2027-01-01')
+    expect(resolveDateValue('offen', today)).toBe('offen')
+
+    const overdue = { key: 'f', op: 'before' as const, value: 'heute' }
+    expect(matchesFilter('2026-10-07', overdue, today)).toBe(true)
+    expect(matchesFilter('2026-10-08', overdue, today)).toBe(false)
+    expect(matchesFilter('2026-10-08T09:00', overdue, today)).toBe(false)
+    expect(matchesFilter('2026-10-08T09:00', { key: 'f', op: 'is', value: 'heute' }, today)).toBe(
+      true
+    )
+    expect(
+      matchesFilter('2026-10-08T09:00', { key: 'f', op: 'after', value: 'heute' }, today)
+    ).toBe(false)
+    const thisWeek = [
+      { key: 'f', op: 'after' as const, value: 'gestern' },
+      { key: 'f', op: 'before' as const, value: 'heute+7' }
+    ]
+    const rows = [
+      row('Überfällig', { f: '2026-10-01' }),
+      row('Heute', { f: '2026-10-08' }),
+      row('Bald', { f: '2026-10-14' }),
+      row('Später', { f: '2026-10-15' })
+    ]
+    expect(applyTable(rows, { filter: thisWeek }, today).map((r) => r.title)).toEqual([
+      'Bald',
+      'Heute'
+    ])
   })
 })

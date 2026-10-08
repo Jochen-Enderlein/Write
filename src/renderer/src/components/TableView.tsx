@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TableRow } from '@shared/types'
 import {
@@ -214,6 +214,7 @@ export function TableView({
         <FilterForm
           draft={filterDraft}
           keys={['title', ...columns]}
+          types={types}
           colName={(k) => (k === 'title' ? t('table.title') : colName(k))}
           onCancel={() => setFilterDraft(null)}
           onSubmit={(f) => {
@@ -327,15 +328,20 @@ export function TableView({
   )
 }
 
+/** Relative dates offered for date columns; resolved against today whenever the table shows. */
+const RELATIVE_DATES = ['heute', 'morgen', 'gestern', 'heute+7', 'heute-7', 'heute+30']
+
 function FilterForm({
   draft,
   keys,
+  types,
   colName,
   onSubmit,
   onCancel
 }: {
   draft: TableFilter
   keys: string[]
+  types: Map<string, PropType>
   colName(k: string): string
   onSubmit(f: TableFilter): void
   onCancel(): void
@@ -343,6 +349,8 @@ function FilterForm({
   const { t } = useTranslation()
   const [f, setF] = useState(draft)
   const needsValue = f.op !== 'empty' && f.op !== 'notEmpty'
+  const isDate = types.get(f.key) === 'date'
+  const listId = useId()
   return (
     <form
       className="db-form"
@@ -379,9 +387,18 @@ function FilterForm({
           autoFocus
           className="prop-input"
           aria-label={t('table.filterValue')}
+          placeholder={isDate ? t('table.relativeHint') : undefined}
+          list={isDate ? listId : undefined}
           value={f.value ?? ''}
           onChange={(e) => setF({ ...f, value: e.target.value })}
         />
+      )}
+      {needsValue && isDate && (
+        <datalist id={listId}>
+          {RELATIVE_DATES.map((d) => (
+            <option key={d} value={d} />
+          ))}
+        </datalist>
       )}
       <button className="button small primary" type="submit">
         {t('table.apply')}
