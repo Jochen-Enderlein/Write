@@ -13,7 +13,8 @@ die Write benutzen – nicht für Entwickler.
 - **Tabellen:** Ein Ordner zeigt seine Seiten auf Wunsch als Tabelle (Umschalter _Karten | Tabelle_ oben rechts). Zellen bearbeiten, nach Spalten sortieren, filtern, Spalten ein- und ausblenden und neue Seiten direkt in der Tabelle anlegen.
 - **Datenbank in einer Seite:** Mit _/Datenbank_ erscheint eine solche Tabelle mitten in einer Seite – zum Beispiel die Unterseiten von „Projekte“ auf der Seite „Projekte“ selbst. Über `</>` lässt sich einstellen, welcher Ordner gezeigt wird.
 - **Filter relativ zu heute:** Datumsfilter verstehen `heute`, `morgen`, `gestern` und Abstände wie `heute+7` – so zeigt eine Tabelle immer, was überfällig oder diese Woche fällig ist.
-- **KI-Assistenten** können Eigenschaften lesen, Seiten danach filtern und Eigenschaften ändern.
+- **Aufgaben aus allen Seiten:** Mit _/Aufgaben_ erscheint eine Tabelle aller offenen To-dos aus deinen Notizen – sortiert nach Fälligkeit, Überfälliges in Rot. Abhaken in der Tabelle hakt in der Notiz ab. Ein Fälligkeitsdatum schreibst du als `📅 2026-10-20` hinter das To-do, wie in Obsidian.
+- **KI-Assistenten** können Eigenschaften lesen, Seiten danach filtern, Eigenschaften ändern und offene To-dos auflisten.
 
 ## 0.3.0 – 2026-10-07
 

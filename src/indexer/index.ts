@@ -115,6 +115,8 @@ function query(name: string, args: unknown[]): unknown {
       return db.summaries(args[0] as string[])
     case 'table':
       return db.table(String(args[0] ?? ''))
+    case 'tasks':
+      return db.tasks()
     case 'propKeys':
       return db.propKeys((args[0] as string | null) ?? null)
     default:

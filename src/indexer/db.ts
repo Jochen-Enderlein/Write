@@ -6,14 +6,15 @@ import type {
   PropKey,
   SearchHit,
   TableRow,
-  TagCount
+  TagCount,
+  TaskRow
 } from '@shared/types'
 import type { PropValue } from '@shared/properties'
 import { normalizeTitle, parseLinkTarget } from '@shared/wikilinks'
 import { stemOf } from '@shared/paths'
 import type { ExtractedPage } from './extract'
 
-const SCHEMA_VERSION = '5'
+const SCHEMA_VERSION = '6'
 
 export const SNIPPET_OPEN = '\u0001'
 export const SNIPPET_CLOSE = '\u0002'
@@ -45,7 +46,7 @@ export class IndexDb {
   reset(): void {
     this.db.exec(`
       DROP TABLE IF EXISTS pages; DROP TABLE IF EXISTS links; DROP TABLE IF EXISTS tags;
-      DROP TABLE IF EXISTS pages_fts; DROP TABLE IF EXISTS meta; DROP TABLE IF EXISTS props;
+      DROP TABLE IF EXISTS pages_fts; DROP TABLE IF EXISTS meta; DROP TABLE IF EXISTS props; DROP TABLE IF EXISTS tasks;
       CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
       CREATE TABLE pages (
         docid INTEGER PRIMARY KEY, path TEXT NOT NULL UNIQUE, id TEXT, title TEXT NOT NULL, title_norm TEXT NOT NULL,
@@ -63,6 +64,11 @@ export class IndexDb {
       CREATE TABLE props (path TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL);
       CREATE INDEX props_path ON props(path);
       CREATE INDEX props_key ON props(key);
+      -- To-dos in page text; line is 0-based in the whole file
+      CREATE TABLE tasks (
+        path TEXT NOT NULL, line INTEGER NOT NULL, text TEXT NOT NULL, done INTEGER NOT NULL, due TEXT
+      );
+      CREATE INDEX tasks_path ON tasks(path);
       -- rowid = pages.docid, so updates and deletes never scan the FTS table
       CREATE VIRTUAL TABLE pages_fts USING fts5(
         title, body, tokenize = 'unicode61 remove_diacritics 2'
@@ -107,6 +113,8 @@ export class IndexDb {
     for (const t of p.tags) tag.run(path, t)
     const prop = this.stmt(`INSERT INTO props (path, key, value) VALUES (?, ?, ?)`)
     for (const [k, v] of Object.entries(p.props)) prop.run(path, k, JSON.stringify(v))
+    const task = this.stmt(`INSERT INTO tasks (path, line, text, done, due) VALUES (?, ?, ?, ?, ?)`)
+    for (const t of p.tasks) task.run(path, t.line, t.text, t.done ? 1 : 0, t.due)
     this.stmt(`INSERT INTO pages_fts (rowid, title, body) VALUES (?, ?, ?)`).run(
       lastInsertRowid,
       p.title,
@@ -130,6 +138,7 @@ export class IndexDb {
     this.stmt(`DELETE FROM links WHERE source = ?`).run(path)
     this.stmt(`DELETE FROM tags WHERE path = ?`).run(path)
     this.stmt(`DELETE FROM props WHERE path = ?`).run(path)
+    this.stmt(`DELETE FROM tasks WHERE path = ?`).run(path)
   }
 
   transaction(fn: () => void): void {
@@ -223,6 +232,31 @@ export class IndexDb {
     ).all([...prefix].length, prefix, [...prefix].length) as { path: string; tag: string }[]
     for (const t of tags) byPath.get(t.path)?.tags.push(t.tag)
     return [...byPath.values()]
+  }
+
+  /** Every to-do in the vault with the page it is on, in page then line order. */
+  tasks(): TaskRow[] {
+    const rows = this.stmt(
+      `SELECT t.path, t.line, t.text, t.done, t.due, p.title, p.icon
+       FROM tasks t JOIN pages p ON p.path = t.path ORDER BY t.path, t.line`
+    ).all() as {
+      path: string
+      line: number
+      text: string
+      done: number
+      due: string | null
+      title: string
+      icon: string | null
+    }[]
+    return rows.map((r) => ({
+      path: r.path,
+      line: r.line,
+      text: r.text,
+      done: r.done === 1,
+      due: r.due,
+      pageTitle: r.title,
+      pageIcon: r.icon
+    }))
   }
 
   /**

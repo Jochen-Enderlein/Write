@@ -21,6 +21,7 @@ export type QueryName =
   | 'summaries'
   | 'table'
   | 'propKeys'
+  | 'tasks'
   | 'status'
 
 export type IndexMessage =

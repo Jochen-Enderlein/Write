@@ -35,6 +35,7 @@ import { buildFrontmatter, splitFrontmatter, updateFrontmatter } from '@shared/f
 import { dayKey, isoLocal, timeKey } from '@shared/dates'
 import { newPageFrontmatter, readHeader } from '@shared/page'
 import { RESERVED_KEYS } from '@shared/properties'
+import { updateTaskInText, type TaskChange } from '@shared/tasks'
 import { renameTagInText } from '@shared/tags'
 import {
   IMAGE_EXT_RE,
@@ -551,6 +552,20 @@ export class Vault {
       ? updateFrontmatter(header.raw, fields)
       : newPageFrontmatter(header.title, fields)
     const next = fm + header.body
+    if (next === text) return
+    await this.writeOwn(rel, next)
+    this.opts.emit('page:changed', rel)
+  }
+
+  /**
+   * Changes one to-do in a page's text (checked, due date, text). Refuses when the line no
+   * longer holds the task the caller saw, so a concurrent edit is never overwritten.
+   */
+  async updateTask(rel: string, line: number, expected: string, change: TaskChange): Promise<void> {
+    if (!isMarkdown(rel)) throw new Error('Nur Markdown-Seiten haben Aufgaben')
+    const text = await fs.readFile(this.abs(rel), 'utf8')
+    const next = updateTaskInText(text, line, expected, change)
+    if (next === null) throw new Error('error.taskChanged')
     if (next === text) return
     await this.writeOwn(rel, next)
     this.opts.emit('page:changed', rel)

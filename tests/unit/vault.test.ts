@@ -174,6 +174,16 @@ describe('Vault', () => {
     expect(h.body).toBe('Nur Text\n')
   })
 
+  it('hakt To-dos in der Datei ab und verweigert veraltete Änderungen', async () => {
+    write('Notiz.md', '---\ntitle: Notiz\n---\nText\n- [ ] Angebot 📅 2026-10-20\n')
+    await vault.updateTask('Notiz.md', 4, 'Angebot', { done: true })
+    expect(file('Notiz.md')).toBe('---\ntitle: Notiz\n---\nText\n- [x] Angebot 📅 2026-10-20\n')
+    await expect(vault.updateTask('Notiz.md', 4, 'Anderes', { done: false })).rejects.toThrow(
+      'error.taskChanged'
+    )
+    expect(file('Notiz.md')).toContain('- [x] Angebot')
+  })
+
   it('zieht Ordner-Layouts beim Umbenennen mit', async () => {
     const dir = await vault.createFolder('', 'Archiv')
     await vault.createFolder(dir, 'Alt')

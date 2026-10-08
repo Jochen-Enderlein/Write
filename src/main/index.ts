@@ -236,6 +236,9 @@ function registerIpc(): void {
   handle('folder:move', (rel, parent) => vault().moveFolder(rel, parent))
   handle('tree:setOrder', (dir, names) => vault().setOrder(dir, names))
   handle('page:setProps', (rel, changes) => vault().setProps(rel, changes))
+  handle('page:updateTask', (rel, line, expected, change) =>
+    vault().updateTask(rel, line, expected, change)
+  )
   handle('folder:layout', (dir) => vault().folderLayout(dir))
   handle('folder:setLayout', (dir, layout) => vault().setFolderLayout(dir, layout))
   handle('window:open', (page) => {
@@ -254,6 +257,7 @@ function registerIpc(): void {
   handle('index:summaries', (paths) => (current ? index.summaries(paths) : []))
   handle('index:table', (dir) => (current ? index.table(dir) : []))
   handle('index:propKeys', (dir) => (current ? index.propKeys(dir) : []))
+  handle('index:tasks', () => (current ? index.tasks() : []))
   handle('index:resolve', (title) => index.resolve(title))
   handle('index:rebuild', () => index.rebuild())
   handle('index:status', () => indexStatus)

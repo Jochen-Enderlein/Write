@@ -215,7 +215,9 @@
     "footnote": "Fußnote",
     "footnoteHint": "Verweis hier, Text am Ende der Seite",
     "table": "Datenbank",
-    "tableHint": "Unterseiten als Tabelle mit Eigenschaften"
+    "tableHint": "Unterseiten als Tabelle mit Eigenschaften",
+    "tasks": "Aufgaben",
+    "tasksHint": "Offene To-dos aus allen Seiten als Tabelle"
   },
   "palette": {
     "placeholder": "Seite suchen oder Befehl eingeben …",
@@ -328,7 +330,8 @@
     "pageFailed": "Diese Seite konnte nicht angezeigt werden. Die Datei bleibt unverändert.",
     "notAFolder": "Das ist kein Ordner, sondern eine Seite.",
     "shortcutTaken": "Dieser Kurzbefehl ist bereits von macOS oder einer anderen App belegt.",
-    "exportFailed": "Export fehlgeschlagen: {{message}}"
+    "exportFailed": "Export fehlgeschlagen: {{message}}",
+    "taskChanged": "Die Aufgabe hat sich inzwischen geändert. Die Tabelle zeigt jetzt den neuen Stand."
   },
   "settings": {
     "title": "Einstellungen",
@@ -636,6 +639,18 @@
       "before": "vor / kleiner als",
       "after": "nach / größer als"
     },
-    "relativeHint": "z. B. heute, heute+7 oder 2026-10-20"
+    "relativeHint": "z. B. heute, heute+7 oder 2026-10-20",
+    "yes": "ja",
+    "no": "nein"
+  },
+  "tasks": {
+    "task": "Aufgabe",
+    "done": "Erledigt",
+    "due": "Fällig",
+    "page": "Seite",
+    "all": "Aufgaben aus allen Seiten",
+    "empty": "Keine To-dos gefunden. Schreibe irgendwo „- [ ] …“, optional mit „📅 2026-10-20“.",
+    "count_one": "{{count}} Aufgabe",
+    "count_other": "{{count}} Aufgaben"
   }
 }

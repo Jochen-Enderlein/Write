@@ -134,7 +134,7 @@ function FolderContents({
   if (layout.mode === 'table')
     return (
       <TableView
-        folder={folder}
+        source={{ kind: 'folder', folder }}
         config={layout.table}
         onConfig={(table) => onLayout({ ...layout, table })}
       />

@@ -1,14 +1,14 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import YAML from 'yaml'
-import { sanitizeConfig, type TableConfig } from '@shared/properties'
+import { sanitizeConfig, type BlockConfig } from '@shared/properties'
 import { childFolderOf } from '@shared/paths'
 import type { TableBlockProps } from '../editor/bridge'
 import { useStore } from '../store'
 import { TableView } from './TableView'
 
 /** Writes a table config back as the block's YAML, leaving out what is unset. */
-export function configToYaml(cfg: TableConfig & { from?: string }): string {
+export function configToYaml(cfg: BlockConfig): string {
   const clean = Object.fromEntries(
     Object.entries(cfg).filter(([, v]) => v !== undefined && !(Array.isArray(v) && !v.length))
   )
@@ -48,20 +48,22 @@ export function EmbeddedTable({ source, editable, onSource }: TableBlockProps): 
   }, [tree, folder])
 
   if (broken) return <div className="db-missing">{t('table.brokenConfig')}</div>
-  if (!exists && cfg.from)
+  if (!exists && cfg.from && !cfg.source)
     return <div className="db-missing">{t('table.folderMissing', { folder: cfg.from })}</div>
 
-  const { from, ...table } = cfg
+  const { from, source: kind, ...table } = cfg
   return (
     <div className="db-embed">
       <div className="db-embed-head">
-        <span className="db-embed-source">{from ?? t('table.subpages')}</span>
+        <span className="db-embed-source">
+          {kind === 'tasks' ? t('tasks.all') : (from ?? t('table.subpages'))}
+        </span>
       </div>
       <TableView
-        folder={folder}
+        source={kind === 'tasks' ? { kind: 'tasks' } : { kind: 'folder', folder }}
         config={table}
         compact
-        onConfig={(next) => editable && onSource(configToYaml({ from, ...next }))}
+        onConfig={(next) => editable && onSource(configToYaml({ source: kind, from, ...next }))}
       />
     </div>
   )

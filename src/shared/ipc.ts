@@ -12,6 +12,7 @@ import type {
   PageSummary,
   PropKey,
   TableRow,
+  TaskRow,
   FolderLayout,
   TagCount,
   UpdateStatus,
@@ -102,6 +103,20 @@ export const ipcSchemas = {
   'folder:move': z.tuple([relPath, optRelPath]),
   'tree:setOrder': z.tuple([optRelPath, z.array(z.string().min(1).max(300)).max(10_000)]),
   'page:setProps': z.tuple([relPath, z.record(z.string().min(1).max(100), propValue)]),
+  'page:updateTask': z.tuple([
+    relPath,
+    z.number().int().min(0).max(10_000_000),
+    z.string().max(10_000),
+    z.object({
+      done: z.boolean().optional(),
+      due: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .nullable()
+        .optional(),
+      text: z.string().min(1).max(10_000).optional()
+    })
+  ]),
   'folder:layout': z.tuple([optRelPath]),
   'folder:setLayout': z.tuple([
     optRelPath,
@@ -119,6 +134,7 @@ export const ipcSchemas = {
   'index:summaries': z.tuple([z.array(relPath).max(5000)]),
   'index:table': z.tuple([optRelPath]),
   'index:propKeys': z.tuple([optRelPath.nullable()]),
+  'index:tasks': z.tuple([]),
   'index:resolve': z.tuple([z.string().min(1).max(300)]),
   'index:rebuild': z.tuple([]),
   'index:status': z.tuple([]),
@@ -212,6 +228,7 @@ export interface IpcResults {
   'folder:move': string
   'tree:setOrder': void
   'page:setProps': void
+  'page:updateTask': void
   'folder:layout': FolderLayout | null
   'folder:setLayout': void
   'window:open': void
@@ -226,6 +243,7 @@ export interface IpcResults {
   'index:summaries': PageSummary[]
   'index:table': TableRow[]
   'index:propKeys': PropKey[]
+  'index:tasks': TaskRow[]
   'index:resolve': string | null
   'index:rebuild': void
   'index:status': IndexStatus

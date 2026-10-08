@@ -71,6 +71,18 @@ export interface TableRow {
   props: Record<string, PropValue>
 }
 
+/** A to-do in page text, as a row of the tasks table. */
+export interface TaskRow {
+  path: string
+  /** 0-based line in the file; with `text` it identifies the task when changing it. */
+  line: number
+  text: string
+  done: boolean
+  due: string | null
+  pageTitle: string
+  pageIcon: string | null
+}
+
 /** A property key in use, with common values for suggestions. */
 export interface PropKey {
   key: string

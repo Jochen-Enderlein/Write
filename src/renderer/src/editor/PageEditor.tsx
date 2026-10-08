@@ -486,6 +486,23 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
           }
         },
         {
+          title: t('editor.tasks'),
+          subtext: t('editor.tasksHint'),
+          aliases: ['aufgaben', 'tasks', 'todos', 'to-dos', 'fällig', 'due'],
+          group: t('editor.groupMarkdown'),
+          icon: <TableIcon size={18} />,
+          onItemClick: () => {
+            // Open to-dos of the whole vault, soonest due first
+            const source =
+              'source: tasks\nsort: [{ key: due, dir: asc }]\nfilter: [{ key: done, op: is, value: "false" }]'
+            const block = { id: makeId(), type: 'dbTable', props: { source } } as const
+            const cur = editor.getTextCursorPosition().block
+            if (Array.isArray(cur.content) && cur.content.length === 0)
+              editor.replaceBlocks([cur], [block])
+            else editor.insertBlocks([block], cur, 'after')
+          }
+        },
+        {
           title: t('editor.inlineMath'),
           subtext: t('editor.inlineMathHint'),
           aliases: ['formel', 'math', 'latex', 'inline'],

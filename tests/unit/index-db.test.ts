@@ -50,6 +50,47 @@ describe('Index', () => {
     expect(d.propKeys('Projekte').map((k) => k.key)).not.toContain('prio')
   })
 
+  it('sammelt To-dos aus allen Seiten', () => {
+    const d = db()
+    d.upsert(
+      'A.md',
+      stamp,
+      extractPage('A.md', '---\ntitle: Seite A\n---\n- [ ] Eins 📅 2026-10-20\n- [x] Zwei\n')
+    )
+    d.upsert('B.md', stamp, extractPage('B.md', '```\n- [ ] Code\n```\n- [ ] Drei\n'))
+    expect(d.tasks()).toEqual([
+      {
+        path: 'A.md',
+        line: 3,
+        text: 'Eins',
+        done: false,
+        due: '2026-10-20',
+        pageTitle: 'Seite A',
+        pageIcon: null
+      },
+      {
+        path: 'A.md',
+        line: 4,
+        text: 'Zwei',
+        done: true,
+        due: null,
+        pageTitle: 'Seite A',
+        pageIcon: null
+      },
+      {
+        path: 'B.md',
+        line: 3,
+        text: 'Drei',
+        done: false,
+        due: null,
+        pageTitle: 'B',
+        pageIcon: null
+      }
+    ])
+    d.remove('A.md')
+    expect(d.tasks().map((t) => t.text)).toEqual(['Drei'])
+  })
+
   it('findet Volltext mit Umlauten und Präfixen und markiert Treffer', () => {
     const d = db()
     d.upsert('a.md', stamp, extractPage('a.md', '# Größenordnung\n\nDie Übersicht über Äpfel.'))

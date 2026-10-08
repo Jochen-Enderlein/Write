@@ -215,7 +215,9 @@
     "footnote": "Footnote",
     "footnoteHint": "Reference here, note at the end of the page",
     "table": "Database",
-    "tableHint": "Subpages as a table with properties"
+    "tableHint": "Subpages as a table with properties",
+    "tasks": "Tasks",
+    "tasksHint": "Open to-dos from all pages as a table"
   },
   "palette": {
     "placeholder": "Search pages or type a command …",
@@ -328,7 +330,8 @@
     "pageFailed": "This page could not be shown. The file stays unchanged.",
     "notAFolder": "This is a page, not a folder.",
     "shortcutTaken": "This shortcut is already used by macOS or another app.",
-    "exportFailed": "Export failed: {{message}}"
+    "exportFailed": "Export failed: {{message}}",
+    "taskChanged": "The task changed in the meantime. The table now shows the current state."
   },
   "settings": {
     "title": "Settings",
@@ -636,6 +639,18 @@
       "before": "before / less than",
       "after": "after / greater than"
     },
-    "relativeHint": "e.g. today, today+7 or 2026-10-20"
+    "relativeHint": "e.g. today, today+7 or 2026-10-20",
+    "yes": "yes",
+    "no": "no"
+  },
+  "tasks": {
+    "task": "Task",
+    "done": "Done",
+    "due": "Due",
+    "page": "Page",
+    "all": "Tasks from all pages",
+    "empty": "No to-dos found. Write “- [ ] …” anywhere, optionally with “📅 2026-10-20”.",
+    "count_one": "{{count}} task",
+    "count_other": "{{count}} tasks"
   }
 }

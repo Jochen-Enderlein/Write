@@ -14,7 +14,13 @@ import type { AppSettings, TreeNode, VaultInfo } from '@shared/types'
 import { composePage, readHeader } from '@shared/page'
 import { localeOf, resolveLanguage } from '@shared/i18n'
 import { tagsField } from '@shared/frontmatter'
-import { FILTER_OPS, applyTable, propertiesOf, type FilterOp } from '@shared/properties'
+import {
+  FILTER_OPS,
+  applyTable,
+  propertiesOf,
+  resolveDateValue,
+  type FilterOp
+} from '@shared/properties'
 import { JOURNAL_DIR, join } from '@shared/paths'
 import { SNIPPET_CLOSE, SNIPPET_OPEN } from '../indexer/db'
 import { Vault } from '../main/vault'
@@ -233,6 +239,35 @@ server.registerTool(
     if (!rows.length) return text('No pages in that folder.')
     const shown = applyTable(rows, { filter, sort })
     return json(shown.map((r) => ({ path: r.path, title: r.title, tags: r.tags, ...r.props })))
+  })
+)
+
+server.registerTool(
+  'list_tasks',
+  {
+    title: 'List to-dos',
+    description:
+      'To-dos ("- [ ] …" lines) from all pages, with their page, line and due date (the "📅 YYYY-MM-DD" marker). By default only open ones.',
+    inputSchema: {
+      include_done: z.boolean().optional(),
+      due_before: z
+        .string()
+        .optional()
+        .describe('Only tasks due before this day: YYYY-MM-DD or relative like "today+7"')
+    },
+    annotations: readOnly
+  },
+  tool(async ({ include_done, due_before }) => {
+    const { index } = await vault(false)
+    const limit = due_before ? resolveDateValue(due_before) : null
+    const tasks = index.db
+      .tasks()
+      .filter((t) => include_done || !t.done)
+      .filter((t) => !limit || (t.due !== null && t.due < limit))
+    if (!tasks.length) return text('No matching to-dos.')
+    return json(
+      tasks.map((t) => ({ text: t.text, done: t.done, due: t.due, path: t.path, line: t.line + 1 }))
+    )
   })
 )
 

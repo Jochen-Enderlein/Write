@@ -71,6 +71,8 @@ filter: [{ key: status, op: isNot, value: erledigt }]
 ```
 ````
 
+Mit `source: tasks` statt `from:` zeigt der Block alle To-dos des Vaults (`- [ ] …`, außerhalb von Codeblöcken) mit den Spalten `done`, `due` und `page`. Die Fälligkeit steht wie bei Obsidian Tasks als `📅 2026-10-20` in der Zeile. Abhaken oder ein neues Datum ändert genau diese Zeile; hat sie sich inzwischen geändert, bricht Write ab, statt zu überschreiben (`src/shared/tasks.ts`).
+
 Datumsfilter dürfen relativ sein: `heute`, `morgen`, `gestern`, `heute+7`, `heute-3` (englisch `today` …). Sie werden bei jeder Anzeige auf den aktuellen Tag umgerechnet; ein Wert mit Uhrzeit zählt als sein Tag.
 
 Callouts im Obsidian-Format (`> [!note] Titel`), Wiki-Links `[[Titel]]` / `[[Titel|Text]]` / `[[Titel#Abschnitt]]` / `[[Ordner/Titel]]`, Einbettungen `![[Bild.png]]` und `![[Seite#Abschnitt]]`, Seitensymbol (`icon:`) und Tags im Frontmatter, Tags auch als `#tag`.

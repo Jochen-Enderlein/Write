@@ -8,6 +8,7 @@ import type {
   PropKey,
   SearchHit,
   TableRow,
+  TaskRow,
   TagCount
 } from '@shared/types'
 import type { IndexCommand, IndexMessage, QueryName } from '../indexer/protocol'
@@ -94,6 +95,7 @@ export class IndexClient {
   summaries = (paths: string[]): Promise<PageSummary[]> => this.query('summaries', paths)
   table = (folder: string): Promise<TableRow[]> => this.query('table', folder)
   propKeys = (folder: string | null): Promise<PropKey[]> => this.query('propKeys', folder)
+  tasks = (): Promise<TaskRow[]> => this.query('tasks')
   status = (): Promise<IndexStatus> => this.query('status')
 
   close(): void {

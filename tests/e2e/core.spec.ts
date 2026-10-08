@@ -760,6 +760,28 @@ test('bearbeitet Eigenschaften auf der Seite, in der Tabelle und im eingebettete
   await expect(win.locator('.tree-row .name', { hasText: 'Aufgaben' })).toHaveCount(0)
 })
 
+test('sammelt To-dos aus allen Seiten und hakt sie in der Notiz ab', async () => {
+  writeFileSync(
+    path.join(vault, 'Protokoll.md'),
+    '---\ntitle: Protokoll\n---\n\n- [ ] Angebot schicken 📅 2026-01-02\n- [x] Schon erledigt\n'
+  )
+  writeFileSync(
+    path.join(vault, 'Aufgabenliste.md'),
+    '---\ntitle: Aufgabenliste\n---\n\n```write-table\nsource: tasks\nfilter: [{ key: done, op: is, value: nein }]\n```\n'
+  )
+  await win.locator('.tree-row .name', { hasText: 'Aufgabenliste' }).click()
+  const block = win.locator('.db-block')
+  await expect(block.locator('.db-title', { hasText: 'Angebot schicken' })).toBeVisible()
+  await expect(block.locator('.db-title', { hasText: 'Schon erledigt' })).toHaveCount(0)
+  await block.getByRole('checkbox', { name: 'Angebot schicken: Erledigt' }).click()
+  await eventually(() =>
+    expect(read('Protokoll.md')).toContain('\n- [x] Angebot schicken 📅 2026-01-02\n- [x] Schon')
+  )
+  await expect(block.locator('.db-title', { hasText: 'Angebot schicken' })).toHaveCount(0)
+  for (const p of ['Protokoll.md', 'Aufgabenliste.md']) rmSync(path.join(vault, p), { force: true })
+  await expect(win.locator('.tree-row .name', { hasText: 'Aufgabenliste' })).toHaveCount(0)
+})
+
 test('benennt verschachtelte Tags um und vervollständigt Links im Markdown-Modus', async () => {
   writeFileSync(path.join(vault, 'Getaggt.md'), '# Getaggt\n\n#thema/eins und #thema\n')
   writeFileSync(path.join(vault, 'Linkziel.md'), '# Linkziel\n')

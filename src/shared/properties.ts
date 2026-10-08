@@ -18,6 +18,18 @@ export type PropValue = string | number | boolean | string[] | null
 const DATE_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?$/i
 const LINK_RE = /^\[\[[^\]]+\]\]$/
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/
+/** How a checkbox filter value may be written. */
+const BOOL_WORDS = new Map<string, boolean>([
+  ['true', true],
+  ['ja', true],
+  ['yes', true],
+  ['x', true],
+  ['erledigt', true],
+  ['false', false],
+  ['nein', false],
+  ['no', false],
+  ['offen', false]
+])
 
 /** The frontmatter fields shown as properties, with values reduced to what a cell can hold. */
 export function propertiesOf(data: Record<string, unknown>): Record<string, PropValue> {
@@ -155,7 +167,11 @@ export function matchesFilter(
     .toLowerCase()
   let text = valueText(v).toLowerCase()
   if (DAY_RE.test(want) && DATE_RE.test(text)) text = text.slice(0, 10)
-  const equal = Array.isArray(v) ? v.some((x) => x.toLowerCase() === want) : text === want
+  const equal = Array.isArray(v)
+    ? v.some((x) => x.toLowerCase() === want)
+    : typeof v === 'boolean' && BOOL_WORDS.has(want)
+      ? v === BOOL_WORDS.get(want)
+      : text === want
   switch (f.op) {
     case 'empty':
       return isEmpty(v)
@@ -245,10 +261,19 @@ export function parseInput(input: string, type: PropType): PropValue {
 }
 
 /** Parses the YAML-like config of a `write-table` block; unknown or broken parts are dropped. */
-export function sanitizeConfig(raw: unknown): TableConfig & { from?: string } {
+export interface BlockConfig extends TableConfig {
+  /** Folder whose pages are the rows; unset = the page's own subpages. */
+  from?: string
+  /** `tasks`: the to-dos of the whole vault instead of a folder's pages. */
+  source?: 'tasks'
+}
+
+export function sanitizeConfig(raw: unknown): BlockConfig {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
   const r = raw as Record<string, unknown>
-  const out: TableConfig & { from?: string } = {}
+  const out: BlockConfig = {}
+  if (typeof r.source === 'string' && /^(tasks|aufgaben)$/i.test(r.source.trim()))
+    out.source = 'tasks'
   if (typeof r.from === 'string' && r.from.trim())
     out.from = r.from.trim().replace(/^\/+|\/+$/g, '')
   if (Array.isArray(r.columns)) out.columns = r.columns.filter((c) => typeof c === 'string')

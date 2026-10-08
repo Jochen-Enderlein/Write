@@ -1134,6 +1134,30 @@ button.prop-key:hover {
   color: var(--accent);
 }
 
+.db-table tr.done .db-title {
+  color: var(--label-3);
+  text-decoration: line-through;
+}
+
+.db-table tbody th {
+  /* Checkbox and text of a to-do side by side */
+  white-space: nowrap;
+}
+
+.db-table tbody th > .prop-check {
+  margin-right: 8px;
+  vertical-align: -2px;
+}
+
+.db-table td.overdue .prop-value {
+  color: var(--red);
+}
+
+.db-page {
+  font-weight: 400;
+  color: var(--label-2);
+}
+
 .db-icon {
   display: inline-grid;
   place-items: center;
