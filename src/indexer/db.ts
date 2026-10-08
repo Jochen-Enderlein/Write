@@ -1,10 +1,19 @@
 import Database from 'better-sqlite3'
-import type { GraphData, PageMeta, PageSummary, SearchHit, TagCount } from '@shared/types'
+import type {
+  GraphData,
+  PageMeta,
+  PageSummary,
+  PropKey,
+  SearchHit,
+  TableRow,
+  TagCount
+} from '@shared/types'
+import type { PropValue } from '@shared/properties'
 import { normalizeTitle, parseLinkTarget } from '@shared/wikilinks'
 import { stemOf } from '@shared/paths'
 import type { ExtractedPage } from './extract'
 
-const SCHEMA_VERSION = '4'
+const SCHEMA_VERSION = '5'
 
 export const SNIPPET_OPEN = '\u0001'
 export const SNIPPET_CLOSE = '\u0002'
@@ -36,7 +45,7 @@ export class IndexDb {
   reset(): void {
     this.db.exec(`
       DROP TABLE IF EXISTS pages; DROP TABLE IF EXISTS links; DROP TABLE IF EXISTS tags;
-      DROP TABLE IF EXISTS pages_fts; DROP TABLE IF EXISTS meta;
+      DROP TABLE IF EXISTS pages_fts; DROP TABLE IF EXISTS meta; DROP TABLE IF EXISTS props;
       CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
       CREATE TABLE pages (
         docid INTEGER PRIMARY KEY, path TEXT NOT NULL UNIQUE, id TEXT, title TEXT NOT NULL, title_norm TEXT NOT NULL,
@@ -50,6 +59,10 @@ export class IndexDb {
       CREATE TABLE tags (path TEXT NOT NULL, tag TEXT NOT NULL);
       CREATE INDEX tags_tag ON tags(tag);
       CREATE INDEX tags_path ON tags(path);
+      -- Frontmatter properties; value is JSON so numbers, booleans and lists keep their type
+      CREATE TABLE props (path TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL);
+      CREATE INDEX props_path ON props(path);
+      CREATE INDEX props_key ON props(key);
       -- rowid = pages.docid, so updates and deletes never scan the FTS table
       CREATE VIRTUAL TABLE pages_fts USING fts5(
         title, body, tokenize = 'unicode61 remove_diacritics 2'
@@ -92,6 +105,8 @@ export class IndexDb {
     for (const l of p.links) link.run(path, l)
     const tag = this.stmt(`INSERT INTO tags (path, tag) VALUES (?, ?)`)
     for (const t of p.tags) tag.run(path, t)
+    const prop = this.stmt(`INSERT INTO props (path, key, value) VALUES (?, ?, ?)`)
+    for (const [k, v] of Object.entries(p.props)) prop.run(path, k, JSON.stringify(v))
     this.stmt(`INSERT INTO pages_fts (rowid, title, body) VALUES (?, ?, ?)`).run(
       lastInsertRowid,
       p.title,
@@ -114,6 +129,7 @@ export class IndexDb {
     this.stmt(`DELETE FROM pages WHERE path = ?`).run(path)
     this.stmt(`DELETE FROM links WHERE source = ?`).run(path)
     this.stmt(`DELETE FROM tags WHERE path = ?`).run(path)
+    this.stmt(`DELETE FROM props WHERE path = ?`).run(path)
   }
 
   transaction(fn: () => void): void {
@@ -175,6 +191,68 @@ export class IndexDb {
       if (row) rows.push(row)
     }
     return rows
+  }
+
+  /**
+   * The pages directly inside `folder` ('' = vault root) with their properties and tags: the
+   * rows of a table. Pages in subfolders are not included.
+   */
+  table(folder: string): TableRow[] {
+    // substr counts characters, so the length is in code points, not UTF-16 units
+    const prefix = folder ? folder + '/' : ''
+    const rows = this.stmt(
+      `SELECT path, title, icon, mtime AS mtimeMs FROM pages
+       WHERE substr(path, 1, ?) = ? AND instr(substr(path, ? + 1), '/') = 0`
+    ).all([...prefix].length, prefix, [...prefix].length) as Omit<TableRow, 'props' | 'tags'>[]
+    if (!rows.length) return []
+    const byPath = new Map<string, TableRow>()
+    for (const r of rows) byPath.set(r.path, { ...r, props: {}, tags: [] })
+    const props = this.stmt(
+      `SELECT path, key, value FROM props WHERE substr(path, 1, ?) = ? AND instr(substr(path, ? + 1), '/') = 0`
+    ).all([...prefix].length, prefix, [...prefix].length) as {
+      path: string
+      key: string
+      value: string
+    }[]
+    for (const p of props) {
+      const row = byPath.get(p.path)
+      if (row) row.props[p.key] = JSON.parse(p.value) as PropValue
+    }
+    const tags = this.stmt(
+      `SELECT path, tag FROM tags WHERE substr(path, 1, ?) = ? AND instr(substr(path, ? + 1), '/') = 0 ORDER BY tag`
+    ).all([...prefix].length, prefix, [...prefix].length) as { path: string; tag: string }[]
+    for (const t of tags) byPath.get(t.path)?.tags.push(t.tag)
+    return [...byPath.values()]
+  }
+
+  /**
+   * Property keys used by the pages in `folder` (or the whole vault for null), most used first,
+   * with up to 20 of their most common values for suggestions.
+   */
+  propKeys(folder: string | null): PropKey[] {
+    const prefix = folder ? folder + '/' : ''
+    const where =
+      folder === null
+        ? ''
+        : `WHERE substr(path, 1, @len) = @prefix AND instr(substr(path, @len + 1), '/') = 0`
+    const rows = this.stmt(
+      `SELECT key, value, count(*) AS n FROM props ${where} GROUP BY key, value ORDER BY n DESC`
+    ).all(folder === null ? {} : { len: [...prefix].length, prefix }) as {
+      key: string
+      value: string
+      n: number
+    }[]
+    const keys = new Map<string, PropKey>()
+    for (const r of rows) {
+      const k = keys.get(r.key) ?? { key: r.key, count: 0, values: [] }
+      k.count += r.n
+      const v = JSON.parse(r.value) as PropValue
+      const items = Array.isArray(v) ? v : v === null || v === '' ? [] : [v]
+      for (const item of items)
+        if (k.values.length < 20 && !k.values.includes(item)) k.values.push(item)
+      keys.set(r.key, k)
+    }
+    return [...keys.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
   }
 
   /** Pages linking to the page at `path` (by title, file name or vault path like `Ordner/Seite`). */

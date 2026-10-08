@@ -5,7 +5,9 @@ import type {
   IndexStatus,
   PageMeta,
   PageSummary,
+  PropKey,
   SearchHit,
+  TableRow,
   TagCount
 } from '@shared/types'
 import type { IndexCommand, IndexMessage, QueryName } from '../indexer/protocol'
@@ -90,6 +92,8 @@ export class IndexClient {
   resolve = (title: string): Promise<string | null> => this.query('resolve', title)
   linkSources = (titles: string[]): Promise<string[]> => this.query('linkSources', titles)
   summaries = (paths: string[]): Promise<PageSummary[]> => this.query('summaries', paths)
+  table = (folder: string): Promise<TableRow[]> => this.query('table', folder)
+  propKeys = (folder: string | null): Promise<PropKey[]> => this.query('propKeys', folder)
   status = (): Promise<IndexStatus> => this.query('status')
 
   close(): void {

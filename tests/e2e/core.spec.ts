@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  rmSync,
   statSync,
   writeFileSync
 } from 'node:fs'
@@ -659,6 +660,104 @@ test('zeigt Formeln und Fußnoten und speichert Änderungen verlustfrei', async 
       original.replace('mc^2', 'mc^3')
     )
   )
+})
+
+test('bearbeitet Eigenschaften auf der Seite, in der Tabelle und im eingebetteten Block', async () => {
+  mkdirSync(path.join(vault, 'Projekte'), { recursive: true })
+  writeFileSync(
+    path.join(vault, 'Projekte.md'),
+    '---\ntitle: Projekte\n---\n\n# Projekte\n\n```write-table\n```\n'
+  )
+  writeFileSync(
+    path.join(vault, 'Projekte', 'Alpha.md'),
+    '---\ntitle: Alpha\nstatus: offen\nfällig: 2026-11-01\n---\n\nText Alpha.\n'
+  )
+  writeFileSync(
+    path.join(vault, 'Projekte', 'Beta.md'),
+    '---\ntitle: Beta\nstatus: erledigt\nfällig: 2026-10-15\n---\n\nText Beta.\n'
+  )
+
+  // Properties below the title
+  await win.locator('.tree-row .name', { hasText: 'Projekte' }).click()
+  await win.locator('.tree-row .name', { hasText: 'Alpha' }).click()
+  await expect(win.locator('.page-title')).toHaveValue('Alpha')
+  const props = win.locator('.page-props')
+  await expect(props.locator('.prop-key', { hasText: 'status' })).toBeVisible()
+  await props.getByRole('button', { name: 'status', exact: true }).last().click()
+  await props.getByLabel('status').fill('in Arbeit')
+  await props.getByLabel('status').press('Enter')
+  await eventually(() => expect(read('Projekte/Alpha.md')).toContain('\nstatus: in Arbeit\n'))
+
+  await props.getByRole('button', { name: 'Eigenschaft' }).click()
+  await props.getByLabel('Eigenschaft').fill('prio')
+  await props.getByLabel('Typ').selectOption('number')
+  await props.getByLabel('Eigenschaft').press('Enter')
+  await props.getByLabel('prio').fill('3')
+  await props.getByLabel('prio').press('Enter')
+  await eventually(() => expect(read('Projekte/Alpha.md')).toContain('\nprio: 3\n'))
+  expect(read('Projekte/Alpha.md')).toContain('\n\nText Alpha.\n')
+
+  // The page embeds the table of its own subpages
+  await win.locator('.tree-row .name', { hasText: /^Projekte$/ }).click()
+  const block = win.locator('.db-block')
+  await expect(block.locator('.db-title')).toHaveCount(2)
+  const beta = block.locator('tr', { has: win.locator('.db-title', { hasText: 'Beta' }) })
+  await beta.getByRole('button', { name: 'Beta: status' }).click()
+  await beta.getByLabel('Beta: status').fill('offen')
+  await beta.getByLabel('Beta: status').press('Enter')
+  await eventually(() => expect(read('Projekte/Beta.md')).toContain('\nstatus: offen\n'))
+
+  // Sorting is stored in the block's YAML
+  await block.locator('thead th', { hasText: 'fällig' }).click()
+  await win.getByRole('menuitem', { name: 'Aufsteigend sortieren' }).click()
+  await expect(block.locator('.db-title').first()).toHaveText(/Beta/)
+  await eventually(() =>
+    expect(read('Projekte.md')).toMatch(
+      /```write-table\nsort:\n {2}- key: fällig\n {4}dir: asc\n```/
+    )
+  )
+
+  // Below the page, its subpages appear like a folder overview, with the same switch
+  const sub = win.locator('.subpages')
+  await expect(sub.locator('.folder-card')).toHaveCount(2)
+  await sub.getByRole('radio', { name: 'Tabelle' }).click()
+  await expect(sub.locator('.db-title')).toHaveCount(2)
+  await eventually(() =>
+    expect(JSON.parse(read('.docuapp/vault.json')).folders.Projekte.mode).toBe('table')
+  )
+  await sub.getByRole('radio', { name: 'Karten' }).click()
+  await expect(sub.locator('.folder-card')).toHaveCount(2)
+  expect(read('Projekte.md')).not.toContain('Alpha')
+
+  // A plain folder switches to a table, remembered in vault.json
+  mkdirSync(path.join(vault, 'Aufgaben'))
+  writeFileSync(
+    path.join(vault, 'Aufgaben', 'Einkaufen.md'),
+    '---\ntitle: Einkaufen\nerledigt: false\n---\n'
+  )
+  await win.locator('.tree-row .name', { hasText: 'Aufgaben' }).click()
+  const view = win.locator('.folder-view')
+  await view.getByRole('radio', { name: 'Tabelle' }).click()
+  await expect(view.locator('.db-title', { hasText: 'Einkaufen' })).toBeVisible()
+  await view.getByRole('checkbox', { name: 'Einkaufen: erledigt' }).check()
+  await eventually(() => expect(read('Aufgaben/Einkaufen.md')).toContain('\nerledigt: true\n'))
+  await eventually(() =>
+    expect(JSON.parse(read('.docuapp/vault.json')).folders.Aufgaben.mode).toBe('table')
+  )
+
+  // And back to cards
+  await view.getByRole('radio', { name: 'Karten' }).click()
+  await expect(view.locator('.folder-card', { hasText: 'Einkaufen' })).toBeVisible()
+  await expect(view.locator('.db-table')).toHaveCount(0)
+  await eventually(() =>
+    expect(JSON.parse(read('.docuapp/vault.json')).folders?.Aufgaben?.mode ?? 'cards').toBe('cards')
+  )
+
+  // Leave the tree as the later tests expect it
+  for (const p of ['Projekte', 'Projekte.md', 'Aufgaben'])
+    rmSync(path.join(vault, p), { recursive: true, force: true })
+  await expect(win.locator('.tree-row .name', { hasText: 'Alpha' })).toHaveCount(0)
+  await expect(win.locator('.tree-row .name', { hasText: 'Aufgaben' })).toHaveCount(0)
 })
 
 test('benennt verschachtelte Tags um und vervollständigt Links im Markdown-Modus', async () => {

@@ -19,6 +19,8 @@ export type QueryName =
   | 'resolve'
   | 'linkSources'
   | 'summaries'
+  | 'table'
+  | 'propKeys'
   | 'status'
 
 export type IndexMessage =

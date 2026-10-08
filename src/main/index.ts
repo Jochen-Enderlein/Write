@@ -235,6 +235,9 @@ function registerIpc(): void {
   )
   handle('folder:move', (rel, parent) => vault().moveFolder(rel, parent))
   handle('tree:setOrder', (dir, names) => vault().setOrder(dir, names))
+  handle('page:setProps', (rel, changes) => vault().setProps(rel, changes))
+  handle('folder:layout', (dir) => vault().folderLayout(dir))
+  handle('folder:setLayout', (dir, layout) => vault().setFolderLayout(dir, layout))
   handle('window:open', (page) => {
     const from = mainWindow()?.getBounds()
     createWindow(from && { ...from, x: from.x + 28, y: from.y + 28 }, page)
@@ -249,6 +252,8 @@ function registerIpc(): void {
     current ? index.graph() : Promise.resolve({ pages: [], links: [], ghosts: [] })
   )
   handle('index:summaries', (paths) => (current ? index.summaries(paths) : []))
+  handle('index:table', (dir) => (current ? index.table(dir) : []))
+  handle('index:propKeys', (dir) => (current ? index.propKeys(dir) : []))
   handle('index:resolve', (title) => index.resolve(title))
   handle('index:rebuild', () => index.rebuild())
   handle('index:status', () => indexStatus)

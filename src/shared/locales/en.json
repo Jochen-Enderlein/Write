@@ -213,7 +213,9 @@
     "inlineMath": "Inline formula",
     "inlineMathHint": "LaTeX within a sentence",
     "footnote": "Footnote",
-    "footnoteHint": "Reference here, note at the end of the page"
+    "footnoteHint": "Reference here, note at the end of the page",
+    "table": "Database",
+    "tableHint": "Subpages as a table with properties"
   },
   "palette": {
     "placeholder": "Search pages or type a command …",
@@ -485,7 +487,12 @@
     "items_one": "{{count}} item",
     "items_other": "{{count}} items",
     "subpages_one": "{{count}} subpage",
-    "subpages_other": "{{count}} subpages"
+    "subpages_other": "{{count}} subpages",
+    "layout": "Layout",
+    "cards": "Cards",
+    "table": "Table",
+    "subpagesTitle": "Subpages",
+    "newSubpage": "New subpage"
   },
   "update": {
     "checking": "Checking for updates …",
@@ -576,5 +583,58 @@
     "copiedPage": "Page copied as Markdown",
     "copiedSelection": "Selection copied as Markdown",
     "selectionTitle": "{{title}} (excerpt)"
+  },
+  "props": {
+    "add": "Property",
+    "namePlaceholder": "Name, e.g. status",
+    "rename": "Rename",
+    "remove": "Remove",
+    "typeLabel": "Type",
+    "type": {
+      "text": "Text",
+      "number": "Number",
+      "date": "Date",
+      "checkbox": "Checkbox",
+      "link": "Page link",
+      "list": "List"
+    }
+  },
+  "table": {
+    "title": "Title",
+    "tags": "Tags",
+    "columns": "Columns",
+    "addFilter": "+ Filter",
+    "filter": "Filter …",
+    "apply": "Apply",
+    "sortAsc": "Sort ascending",
+    "sortDesc": "Sort descending",
+    "hide": "Hide column",
+    "show": "Show “{{name}}”",
+    "showAll": "Show all properties",
+    "newColumn": "New property …",
+    "removeFilter": "Remove filter",
+    "removeSort": "Remove sorting",
+    "filterColumn": "Column",
+    "filterOp": "Condition",
+    "filterValue": "Value",
+    "count_one": "{{count}} page",
+    "count_other": "{{count}} pages",
+    "empty": "No pages yet. Add the first one below.",
+    "noMatch": "No page matches the filters.",
+    "more": "Show {{count}} more",
+    "new": "New page",
+    "newPlaceholder": "Title of the new page",
+    "subpages": "Subpages",
+    "brokenConfig": "This table’s settings are not valid YAML. Fix them via </>.",
+    "folderMissing": "There is no folder “{{folder}}”. Enter another one via </>.",
+    "op": {
+      "is": "is",
+      "isNot": "is not",
+      "contains": "contains",
+      "empty": "is empty",
+      "notEmpty": "is not empty",
+      "before": "before / less than",
+      "after": "after / greater than"
+    }
   }
 }

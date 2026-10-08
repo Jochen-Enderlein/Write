@@ -5,6 +5,15 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.4.0 – 2026-10-08
+
+### Neu
+
+- **Eigenschaften:** Unter dem Titel stehen jetzt alle Eigenschaften einer Seite – Status, Fälligkeit, Kunde, Budget … – und lassen sich direkt bearbeiten: als Text, Zahl, Datum, Checkbox, Link auf eine Seite oder Liste. Über _+ Eigenschaft_ kommen neue dazu, Namen von Nachbarseiten werden vorgeschlagen. Gespeichert wird alles ganz normal im Frontmatter der Datei.
+- **Tabellen:** Ein Ordner zeigt seine Seiten auf Wunsch als Tabelle (Umschalter _Karten | Tabelle_ oben rechts). Zellen bearbeiten, nach Spalten sortieren, filtern, Spalten ein- und ausblenden und neue Seiten direkt in der Tabelle anlegen.
+- **Datenbank in einer Seite:** Mit _/Datenbank_ erscheint eine solche Tabelle mitten in einer Seite – zum Beispiel die Unterseiten von „Projekte“ auf der Seite „Projekte“ selbst. Über `</>` lässt sich einstellen, welcher Ordner gezeigt wird.
+- **KI-Assistenten** können Eigenschaften lesen, Seiten danach filtern und Eigenschaften ändern.
+
 ## 0.3.0 – 2026-10-07
 
 ### Neu

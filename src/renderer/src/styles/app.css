@@ -864,6 +864,338 @@ textarea {
   font-size: 12.5px;
 }
 
+/* ── Properties below the tags ─────────────────────────────────────────── */
+
+.page-props {
+  display: grid;
+  grid-template-columns: minmax(90px, max-content) 1fr;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  margin: -6px 54px 14px;
+  font-size: 13px;
+}
+
+.page-props:not(.has-props) {
+  margin-top: -14px;
+  margin-bottom: 4px;
+}
+
+.page-props > .page-add-prop,
+.page-props > .prop-add {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.prop-row {
+  display: contents;
+}
+
+.prop-key {
+  justify-self: start;
+  max-width: 180px;
+  height: 26px;
+  padding: 0 8px;
+  margin-left: -8px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--label-3);
+  font-size: 13px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.prop-key:hover {
+  background: var(--fill-2);
+  color: var(--label-2);
+}
+
+.prop-value {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 26px;
+  width: 100%;
+  padding: 2px 8px;
+  margin-left: -8px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--label);
+  font-size: inherit;
+  text-align: left;
+}
+
+.prop-value:not(:disabled):hover {
+  background: var(--fill-2);
+}
+
+.prop-value > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prop-empty {
+  color: var(--label-4);
+}
+
+.prop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.prop-pill {
+  padding: 1px 7px;
+  border-radius: 9px;
+  background: var(--fill);
+  color: var(--label-2);
+  font-size: 12px;
+}
+
+.prop-check {
+  width: 15px;
+  height: 15px;
+  margin: 5px 0;
+  accent-color: var(--accent);
+}
+
+.prop-input {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px;
+  margin-left: -8px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill);
+  color: var(--label);
+  font: inherit;
+  outline: none;
+}
+
+.prop-input:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.prop-add {
+  display: flex;
+  gap: 8px;
+  width: min(100%, 360px);
+}
+
+.prop-add .prop-input {
+  margin-left: 0;
+}
+
+.prop-type,
+.db-form select {
+  height: 26px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill);
+  color: var(--label);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+/* ── Tables (folder view and embedded) ─────────────────────────────────── */
+
+.db-table {
+  min-width: 0;
+  font-size: 13px;
+}
+
+.db-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.db-table.compact .db-toolbar {
+  margin-bottom: 6px;
+}
+
+.db-table.compact .db-toolbar .chip {
+  height: 22px;
+  font-size: 11.5px;
+}
+
+.db-count {
+  margin-left: auto;
+  color: var(--label-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.db-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: var(--radius-m);
+  background: var(--fill-2);
+}
+
+.db-form .prop-input {
+  width: 180px;
+  margin-left: 0;
+}
+
+.db-scroll {
+  overflow-x: auto;
+  border-radius: var(--radius-m);
+  box-shadow: inset 0 0 0 0.5px var(--separator);
+}
+
+.db-table table {
+  /* Natural width; wide tables scroll sideways instead of cutting off titles */
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.db-table th,
+.db-table td {
+  height: 32px;
+  padding: 0 10px;
+  border-bottom: 0.5px solid var(--separator);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.db-table td + td,
+.db-table th + td,
+.db-table thead th + th {
+  border-left: 0.5px solid var(--separator);
+}
+
+.db-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.db-table thead th {
+  background: var(--fill-2);
+  color: var(--label-3);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.db-table thead th:hover {
+  color: var(--label);
+}
+
+.db-table tbody th {
+  min-width: 180px;
+  font-weight: 500;
+}
+
+.db-table td {
+  min-width: 120px;
+  max-width: 320px;
+}
+
+.db-table td .prop-value,
+.db-table td .prop-input {
+  margin-left: -6px;
+  padding: 0 6px;
+}
+
+/* Cells size to their content; a percentage width would leave the column no natural width */
+.db-table td .prop-value {
+  width: auto;
+  min-width: calc(100% + 12px);
+  white-space: nowrap;
+}
+
+.db-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--label);
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.db-title:hover {
+  color: var(--accent);
+}
+
+.db-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  color: var(--label-3);
+}
+
+.db-empty {
+  margin: 0;
+  padding: 18px 12px;
+  color: var(--label-3);
+  text-align: center;
+}
+
+.db-more {
+  margin-top: 8px;
+}
+
+.db-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  margin-top: 6px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--label-3);
+  font-size: 12.5px;
+}
+
+.db-new:hover {
+  background: var(--fill-2);
+  color: var(--label-2);
+}
+
+.db-new-input {
+  width: min(100%, 320px);
+  margin: 6px 0 0;
+}
+
+.db-missing {
+  padding: 14px 16px;
+  color: var(--label-3);
+  font-size: 13px;
+}
+
+.db-embed-head {
+  margin-bottom: 6px;
+  color: var(--label-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 /* ── Journal ───────────────────────────────────────────────────────────── */
 
 .journal-bar {
@@ -1008,6 +1340,39 @@ textarea {
 .button:disabled {
   opacity: 0.45;
   pointer-events: none;
+}
+
+/* Subpages below a page: the folder overview in small */
+.subpages {
+  margin: 48px 54px 0;
+  padding-top: 18px;
+  border-top: 0.5px solid var(--separator);
+}
+
+.subpages-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.subpages-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--label-3);
+}
+
+.subpages + .backlinks {
+  margin-top: 40px;
+}
+
+.page.mode-split .subpages {
+  max-width: var(--column);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .backlinks {

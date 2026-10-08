@@ -1,3 +1,5 @@
+import type { PropValue, TableConfig } from './properties'
+
 export interface VaultInfo {
   id: string
   name: string
@@ -57,6 +59,29 @@ export interface PageSummary {
   /** Start of the text, for a two-line preview. */
   snippet: string
   mtimeMs: number
+}
+
+/** A page as a row of a table: its properties come from the frontmatter. */
+export interface TableRow {
+  path: string
+  title: string
+  icon: string | null
+  mtimeMs: number
+  tags: string[]
+  props: Record<string, PropValue>
+}
+
+/** A property key in use, with common values for suggestions. */
+export interface PropKey {
+  key: string
+  count: number
+  values: (string | number | boolean)[]
+}
+
+/** How a folder overview shows its pages; synced in vault.json. */
+export interface FolderLayout {
+  mode: 'cards' | 'table'
+  table: TableConfig
 }
 
 /** Where the app is with updates; drives the sidebar notice and manual checks. */

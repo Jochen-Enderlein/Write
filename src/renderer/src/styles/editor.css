@@ -255,6 +255,30 @@
   color: var(--accent-text);
 }
 
+/* Embedded table: rendered like the folder table; YAML folds out below */
+.db-block {
+  position: relative;
+  width: 100%;
+  margin: 6px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--fill-2);
+  box-shadow: inset 0 0 0 0.5px var(--separator);
+  font-family: var(--font-ui);
+  white-space: normal;
+}
+
+.db-code {
+  margin: 10px -14px -12px;
+  border-top: 0.5px solid var(--separator);
+}
+
+.db-block:hover .db-toggle,
+.db-toggle:focus-visible,
+.db-toggle[aria-pressed='true'] {
+  opacity: 1;
+}
+
 /* Display formulas share the folding source panel with Mermaid */
 .math-block {
   position: relative;

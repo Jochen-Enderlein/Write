@@ -234,6 +234,13 @@ export const FootnoteIcon = (p: P) => (
     <path d="M11.5 3.5l1.25-1v4.25" />
   </Icon>
 )
+export const TableIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="2" y="3" width="12" height="10" rx="2" />
+    <path d="M2 6.5h12M6.5 6.5V13" />
+  </Icon>
+)
+
 export const DiagramIcon = (p: P) => (
   <Icon {...p}>
     <rect x="5.5" y="1.75" width="5" height="3.5" rx="1" />

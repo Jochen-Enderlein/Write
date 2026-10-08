@@ -113,6 +113,10 @@ function query(name: string, args: unknown[]): unknown {
       return db.linkSources(args[0] as string[])
     case 'summaries':
       return db.summaries(args[0] as string[])
+    case 'table':
+      return db.table(String(args[0] ?? ''))
+    case 'propKeys':
+      return db.propKeys((args[0] as string | null) ?? null)
     default:
       throw new Error(`Unbekannte Abfrage: ${name}`)
   }

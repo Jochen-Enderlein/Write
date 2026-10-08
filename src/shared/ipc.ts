@@ -10,6 +10,9 @@ import type {
   PageMeta,
   SearchHit,
   PageSummary,
+  PropKey,
+  TableRow,
+  FolderLayout,
   TagCount,
   UpdateStatus,
   TemplateInfo,
@@ -28,6 +31,33 @@ const relPath = z
   .refine((p) => !p.startsWith('/') && !p.split('/').includes('..'), 'invalid path')
 const optRelPath = z.union([relPath, z.literal('')])
 const title = z.string().min(1).max(200)
+const propValue = z.union([
+  z.string().max(10_000),
+  z.number(),
+  z.boolean(),
+  z.array(z.string().max(1000)).max(500),
+  z.null()
+])
+const tableConfig = z.object({
+  columns: z.array(z.string().max(100)).max(200).optional(),
+  types: z
+    .record(z.string().max(100), z.enum(['text', 'number', 'date', 'checkbox', 'link', 'list']))
+    .optional(),
+  sort: z
+    .array(z.object({ key: z.string().max(100), dir: z.enum(['asc', 'desc']) }))
+    .max(10)
+    .optional(),
+  filter: z
+    .array(
+      z.object({
+        key: z.string().max(100),
+        op: z.enum(['is', 'isNot', 'contains', 'empty', 'notEmpty', 'before', 'after']),
+        value: z.string().max(1000).optional()
+      })
+    )
+    .max(20)
+    .optional()
+})
 
 /** Argument schemas for every invoke channel. Main validates each call against these. */
 export const ipcSchemas = {
@@ -71,6 +101,12 @@ export const ipcSchemas = {
   ]),
   'folder:move': z.tuple([relPath, optRelPath]),
   'tree:setOrder': z.tuple([optRelPath, z.array(z.string().min(1).max(300)).max(10_000)]),
+  'page:setProps': z.tuple([relPath, z.record(z.string().min(1).max(100), propValue)]),
+  'folder:layout': z.tuple([optRelPath]),
+  'folder:setLayout': z.tuple([
+    optRelPath,
+    z.object({ mode: z.enum(['cards', 'table']), table: tableConfig }).nullable()
+  ]),
   'window:open': z.tuple([relPath.optional()]),
   'asset:save': z.tuple([relPath, z.string().min(1).max(255), z.instanceof(Uint8Array)]),
 
@@ -81,6 +117,8 @@ export const ipcSchemas = {
   'index:tags': z.tuple([]),
   'index:graph': z.tuple([]),
   'index:summaries': z.tuple([z.array(relPath).max(5000)]),
+  'index:table': z.tuple([optRelPath]),
+  'index:propKeys': z.tuple([optRelPath.nullable()]),
   'index:resolve': z.tuple([z.string().min(1).max(300)]),
   'index:rebuild': z.tuple([]),
   'index:status': z.tuple([]),
@@ -173,6 +211,9 @@ export interface IpcResults {
   'page:share': string
   'folder:move': string
   'tree:setOrder': void
+  'page:setProps': void
+  'folder:layout': FolderLayout | null
+  'folder:setLayout': void
   'window:open': void
   'asset:save': string
 
@@ -183,6 +224,8 @@ export interface IpcResults {
   'index:tags': TagCount[]
   'index:graph': GraphData
   'index:summaries': PageSummary[]
+  'index:table': TableRow[]
+  'index:propKeys': PropKey[]
   'index:resolve': string | null
   'index:rebuild': void
   'index:status': IndexStatus

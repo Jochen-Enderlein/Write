@@ -51,3 +51,14 @@ describe.each(fixtures)('BlockNote-Roundtrip %s', (name) => {
     expect(out.endsWith(body.slice(o[0]!.start))).toBe(true)
   })
 })
+
+describe('Datenbank-Block', () => {
+  it('wird aus ```write-table zum Tabellenblock und zurück', () => {
+    const body = '```write-table\nfrom: Projekte\nsort: [status]\n```\n'
+    const { doc } = load(body)
+    const block = doc()[0]!
+    expect(block.type).toBe('dbTable')
+    expect(block.props.source).toBe('from: Projekte\nsort: [status]')
+    expect(serializeBody(doc(), null)).toBe(body)
+  })
+})

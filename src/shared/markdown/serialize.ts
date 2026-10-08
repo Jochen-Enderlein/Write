@@ -285,6 +285,10 @@ function ownFlow(b: Block): BlockContent[] {
     }
     case 'mermaid':
       return [{ type: 'code', lang: 'mermaid', meta: null, value: String(b.props.source ?? '') }]
+    case 'dbTable':
+      return [
+        { type: 'code', lang: 'write-table', meta: null, value: String(b.props.source ?? '') }
+      ]
     case 'quote':
       return [
         {

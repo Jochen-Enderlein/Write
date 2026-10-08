@@ -45,7 +45,7 @@ for (let i = 0; i < count; i++) {
     '',
     sentence().repeat(3)
   ].join('\n')
-  const fm = `---\nid: GEN${String(i).padStart(23, '0')}\ntitle: ${titles[i]}\ncreated: 2026-10-05T12:00:00+02:00\nupdated: 2026-10-05T12:00:00+02:00\ntags: [${pick().toLowerCase()}]\n---\n\n`
+  const fm = `---\nid: GEN${String(i).padStart(23, '0')}\ntitle: ${titles[i]}\ncreated: 2026-10-05T12:00:00+02:00\nupdated: 2026-10-05T12:00:00+02:00\ntags: [${pick().toLowerCase()}]\nstatus: ${['offen', 'in Arbeit', 'erledigt'][i % 3]}\nprio: ${i % 5}\nfällig: 2026-${String((i % 12) + 1).padStart(2, '0')}-15\n---\n\n`
   writeFileSync(path.join(dir, `${titles[i]}.md`), fm + body + '\n')
 }
 console.log(`${count} Seiten in ${target} erzeugt`)

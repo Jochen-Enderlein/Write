@@ -1,3 +1,5 @@
+import type React from 'react'
+
 /**
  * Lets editor node views reach app state without importing the store (keeps the schema usable
  * in headless tests). The app wires the real implementations at startup.
@@ -8,7 +10,17 @@ export interface PageEmbed {
   text: string
 }
 
+/** Props of the table a `write-table` block shows; the app supplies the component. */
+export interface TableBlockProps {
+  /** YAML config of the block (`from`, `columns`, `sort`, `filter`). */
+  source: string
+  editable: boolean
+  onSource(next: string): void
+}
+
 export const editorBridge = {
+  /** Renders a `write-table` block; set by the app (it needs the store and IPC). */
+  TableBlock: ((_props: TableBlockProps) => null) as (props: TableBlockProps) => React.ReactNode,
   openTitle: (_title: string): void => undefined,
   useTitleExists: (_title: string): boolean => true,
   /** URL of an image embed (`![[Bild.png]]`) relative to the open page, or null. */

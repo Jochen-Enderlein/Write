@@ -20,6 +20,7 @@ import { GraphView } from './components/GraphView'
 import { Welcome } from './components/Welcome'
 import { Toast } from './components/Toast'
 import { editorBridge } from './editor/bridge'
+import { EmbeddedTable } from './components/EmbeddedTable'
 import { useIpcEvent, usePresence } from './lib/hooks'
 import i18next from './i18n'
 import { createSpring } from './lib/spring'
@@ -80,6 +81,7 @@ function sectionOf(body: string, heading: string): string {
 }
 
 // Wire editor node views to the store
+editorBridge.TableBlock = EmbeddedTable
 editorBridge.openTitle = (title) => void useStore.getState().openByTitle(title)
 editorBridge.useTitleExists = function useTitleExists(title: string): boolean {
   return useStore((s) => linkTargetExists(s.titleKeys, title))

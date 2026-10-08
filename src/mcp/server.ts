@@ -14,6 +14,7 @@ import type { AppSettings, TreeNode, VaultInfo } from '@shared/types'
 import { composePage, readHeader } from '@shared/page'
 import { localeOf, resolveLanguage } from '@shared/i18n'
 import { tagsField } from '@shared/frontmatter'
+import { FILTER_OPS, applyTable, propertiesOf, type FilterOp } from '@shared/properties'
 import { JOURNAL_DIR, join } from '@shared/paths'
 import { SNIPPET_CLOSE, SNIPPET_OPEN } from '../indexer/db'
 import { Vault } from '../main/vault'
@@ -128,6 +129,7 @@ const server = new McpServer(
     instructions:
       'Write is a Markdown notes app. Pages are Markdown files in a vault; paths are relative to the vault (e.g. "Projekte/Plan.md"). ' +
       'Pages link with [[Title]] wiki links and carry tags (#tag or in the frontmatter). The title, id and dates live in the frontmatter, which Write manages – ' +
+      'other frontmatter fields are the page’s properties (status, due dates …); read them with read_page or query_table and change them with set_properties. ' +
       'page contents you read and write here are the Markdown body only. Every change is kept in Write’s version history and can be undone there.'
   }
 )
@@ -175,6 +177,7 @@ server.registerTool(
         `path: ${rel}`,
         `title: ${header.title}`,
         `tags: ${tagsField(header.data).join(', ') || '–'}`,
+        `properties: ${JSON.stringify(propertiesOf(header.data))}`,
         `hash: ${page.hash}`,
         '',
         header.body.replace(/^\n+/, '')
@@ -198,6 +201,38 @@ server.registerTool(
     const prefix = folder ? folder.replace(/\/+$/, '') + '/' : ''
     const pages = flatten(await v.tree()).filter((p) => p.path.startsWith(prefix))
     return json(pages)
+  })
+)
+
+server.registerTool(
+  'query_table',
+  {
+    title: 'Query pages by properties',
+    description:
+      'The pages directly inside a folder with their properties (frontmatter fields), like Write’s table view. Optionally filtered and sorted.',
+    inputSchema: {
+      folder: z
+        .string()
+        .describe('Folder whose pages are the rows, e.g. "Projekte"; "" for the root'),
+      filter: z
+        .array(
+          z.object({
+            key: z.string().describe('Property name, or "title"'),
+            op: z.enum(FILTER_OPS as [FilterOp, ...FilterOp[]]),
+            value: z.string().optional()
+          })
+        )
+        .optional(),
+      sort: z.array(z.object({ key: z.string(), dir: z.enum(['asc', 'desc']) })).optional()
+    },
+    annotations: readOnly
+  },
+  tool(async ({ folder, filter, sort }) => {
+    const { index } = await vault(false)
+    const rows = index.db.table(folder.replace(/^\/+|\/+$/g, ''))
+    if (!rows.length) return text('No pages in that folder.')
+    const shown = applyTable(rows, { filter, sort })
+    return json(shown.map((r) => ({ path: r.path, title: r.title, tags: r.tags, ...r.props })))
   })
 )
 
@@ -346,6 +381,28 @@ server.registerTool(
     )
     if (!res.ok) throw new ToolError('The page changed while writing. Please retry.')
     return text(`Appended to ${rel}`)
+  })
+)
+
+server.registerTool(
+  'set_properties',
+  {
+    title: 'Set page properties',
+    description:
+      'Sets or removes properties (frontmatter fields) of a page, e.g. {"status": "done", "due": "2026-10-20"}. null removes a property. title, id and dates are managed by Write.',
+    inputSchema: {
+      path: z.string(),
+      properties: z.record(
+        z.string().min(1),
+        z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.null()])
+      )
+    },
+    annotations: writes
+  },
+  tool(async ({ path: rel, properties }) => {
+    const { vault: v } = await vault(true)
+    await change(v, [rel], () => v.setProps(rel, properties))
+    return text(`Updated properties of ${rel}`)
   })
 )
 

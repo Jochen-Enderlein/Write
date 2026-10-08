@@ -60,6 +60,17 @@ Vault/
 └── Projekte/                Unterseiten und _assets/ von „Projekte“
 ```
 
+**Eigenschaften und Tabellen:** Jedes Frontmatter-Feld außer `id`, `title`, `icon`, `tags`, `created` und `updated` ist eine Eigenschaft der Seite (`status: offen`, `fällig: 2026-10-20`, `kunde: "[[Acme]]"`). Es gibt kein Schema; der Typ (Text, Zahl, Datum, Checkbox, Seitenlink, Liste) wird aus den Werten erkannt (`src/shared/properties.ts`). Die Unterseiten eines Ordners lassen sich als Tabelle zeigen; Spalten, Sortierung und Filter der Ordneransicht stehen in `vault.json` unter `folders`. Eingebettet in eine Seite ist die Tabelle ein Codeblock, der auch ohne Write lesbar bleibt:
+
+````md
+```write-table
+from: Projekte          # ohne from: die eigenen Unterseiten
+columns: [status, fällig]
+sort: [{ key: fällig, dir: asc }]
+filter: [{ key: status, op: isNot, value: erledigt }]
+```
+````
+
 Callouts im Obsidian-Format (`> [!note] Titel`), Wiki-Links `[[Titel]]` / `[[Titel|Text]]` / `[[Titel#Abschnitt]]` / `[[Ordner/Titel]]`, Einbettungen `![[Bild.png]]` und `![[Seite#Abschnitt]]`, Seitensymbol (`icon:`) und Tags im Frontmatter, Tags auch als `#tag`.
 
 ## Stand Version 0.1

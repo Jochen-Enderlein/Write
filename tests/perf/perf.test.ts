@@ -71,10 +71,19 @@ describe.each([5000, 20000])('Vault mit %i Seiten', (count) => {
     const s = performance.now()
     db.backlinks(files[0]!.rel)
     const backMs = performance.now() - s
+    // Table of the folder with the most pages (and the root) plus property suggestions
+    const t1 = performance.now()
+    const rows = db.table('Bereich 1')
+    db.table('')
+    db.propKeys('Bereich 1')
+    const tableMs = performance.now() - t1
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows[0]!.props.status).toBeTruthy()
     const worst = Math.max(...times)
     console.log(
-      `[perf] ${count} Seiten: Erstindexierung ${indexMs.toFixed(0)} ms, Suche max ${worst.toFixed(1)} ms, Backlinks ${backMs.toFixed(1)} ms`
+      `[perf] ${count} Seiten: Erstindexierung ${indexMs.toFixed(0)} ms, Suche max ${worst.toFixed(1)} ms, Backlinks ${backMs.toFixed(1)} ms, Tabelle ${tableMs.toFixed(1)} ms`
     )
     expect(worst).toBeLessThan(100)
+    expect(tableMs).toBeLessThan(50)
   })
 })

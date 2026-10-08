@@ -149,6 +149,41 @@ describe('Vault', () => {
     await expect(vault.renameFolder('Projekte', 'X')).rejects.toThrow('error.notAFolder')
   })
 
+  it('ändert Eigenschaften anderer Seiten und lässt den Rest des Frontmatters stehen', async () => {
+    write(
+      'Projekte/A.md',
+      '---\n# Kommentar\ntitle: A\nstatus: offen # bleibt\nprio: 1\n---\nText\n'
+    )
+    await vault.setProps('Projekte/A.md', { status: 'erledigt', prio: null, fertig: true })
+    const text = file('Projekte/A.md')
+    expect(text).toContain('# Kommentar\ntitle: A\nstatus: erledigt')
+    expect(text).not.toContain('prio')
+    expect(text).toContain('fertig: true')
+    expect(text).toMatch(/updated: /)
+    expect(text.endsWith('---\nText\n')).toBe(true)
+    expect(events.some(([e, a]) => e === 'page:changed' && a[0] === 'Projekte/A.md')).toBe(true)
+    // id/title stay the app's business
+    await vault.setProps('Projekte/A.md', { title: 'Hack' })
+    expect(file('Projekte/A.md')).toContain('title: A')
+
+    write('Ohne.md', 'Nur Text\n')
+    await vault.setProps('Ohne.md', { status: 'neu' })
+    const h = readHeader('Ohne.md', file('Ohne.md'))
+    expect(h.data.status).toBe('neu')
+    expect(h.id).toBeTruthy()
+    expect(h.body).toBe('Nur Text\n')
+  })
+
+  it('zieht Ordner-Layouts beim Umbenennen mit', async () => {
+    const dir = await vault.createFolder('', 'Archiv')
+    await vault.createFolder(dir, 'Alt')
+    await vault.setFolderLayout('Archiv/Alt', { mode: 'table', table: { columns: ['status'] } })
+    await vault.renameFolder('Archiv', '2025')
+    expect(vault.folderLayout('Archiv/Alt')).toBeNull()
+    expect(vault.folderLayout('2025/Alt')?.table.columns).toEqual(['status'])
+    expect(JSON.parse(file('.docuapp/vault.json')).folders['2025/Alt'].mode).toBe('table')
+  })
+
   it('legt Seiten samt Unterseiten in den Papierkorb und stellt sie wieder her', async () => {
     write('Weg.md', '---\ntitle: Weg\n---\nInhalt\n')
     write('Weg/Kind.md', 'k\n')

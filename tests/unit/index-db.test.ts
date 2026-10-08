@@ -21,6 +21,35 @@ describe('Index', () => {
     expect(p.links.sort()).toEqual(['andere', 'ziel'])
   })
 
+  it('liefert die Unterseiten eines Ordners mit Eigenschaften als Tabelle', () => {
+    const d = db()
+    const page = (p: string, fm: string): void =>
+      d.upsert(p, stamp, extractPage(p, `---\n${fm}\n---\nText #${p.length}`))
+    page('Projekte/A.md', 'title: A\nstatus: offen\nprio: 2\ntags: [x]')
+    page('Projekte/B.md', 'title: B\nstatus: erledigt\nfertig: true')
+    page('Projekte/A/Unter.md', 'title: Unter\nstatus: offen')
+    page('projekte/Falsch.md', 'title: Falsch\nstatus: offen')
+    page('Projekte 2/X.md', 'title: X')
+    page('Wurzel.md', 'title: Wurzel\nort: 🚀 Mond')
+    const rows = d.table('Projekte')
+    expect(rows.map((r) => r.path).sort()).toEqual(['Projekte/A.md', 'Projekte/B.md'])
+    const a = rows.find((r) => r.title === 'A')!
+    expect(a.props).toEqual({ status: 'offen', prio: 2 })
+    expect(a.tags).toContain('x')
+    expect(rows.find((r) => r.title === 'B')!.props.fertig).toBe(true)
+    expect(d.table('').map((r) => r.path)).toEqual(['Wurzel.md'])
+    expect(d.table('🚀')).toEqual([])
+
+    const keys = d.propKeys('Projekte')
+    expect(keys.map((k) => k.key)).toEqual(['status', 'fertig', 'prio'])
+    expect(keys[0]!.values.sort()).toEqual(['erledigt', 'offen'])
+    expect(d.propKeys(null).find((k) => k.key === 'status')!.count).toBe(4)
+
+    d.remove('Projekte/A.md')
+    expect(d.table('Projekte').map((r) => r.path)).toEqual(['Projekte/B.md'])
+    expect(d.propKeys('Projekte').map((k) => k.key)).not.toContain('prio')
+  })
+
   it('findet Volltext mit Umlauten und Präfixen und markiert Treffer', () => {
     const d = db()
     d.upsert('a.md', stamp, extractPage('a.md', '# Größenordnung\n\nDie Übersicht über Äpfel.'))

@@ -58,7 +58,8 @@ import {
   FootnoteIcon,
   HighlighterIcon,
   PlusIcon,
-  SigmaIcon
+  SigmaIcon,
+  TableIcon
 } from '../components/Icons'
 import { buildExportHtml } from './exportHtml'
 import { openSourceEditor, prepareBlocks, schema, type WriteEditor } from './schema'
@@ -463,6 +464,21 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
           onItemClick: () => {
             const block = { id: makeId(), type: 'math', props: { source: 'E = mc^2' } } as const
             openSourceEditor(block.id)
+            const cur = editor.getTextCursorPosition().block
+            if (Array.isArray(cur.content) && cur.content.length === 0)
+              editor.replaceBlocks([cur], [block])
+            else editor.insertBlocks([block], cur, 'after')
+          }
+        },
+        {
+          title: t('editor.table'),
+          subtext: t('editor.tableHint'),
+          aliases: ['datenbank', 'database', 'tabelle', 'table', 'eigenschaften', 'properties'],
+          group: t('editor.groupMarkdown'),
+          icon: <TableIcon size={18} />,
+          onItemClick: () => {
+            // Without `from` the table shows this page's own subpages
+            const block = { id: makeId(), type: 'dbTable', props: { source: '' } } as const
             const cur = editor.getTextCursorPosition().block
             if (Array.isArray(cur.content) && cur.content.length === 0)
               editor.replaceBlocks([cur], [block])

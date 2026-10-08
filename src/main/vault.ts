@@ -6,6 +6,7 @@ import { ulid } from 'ulid'
 import type { IpcEvents } from '@shared/ipc'
 import type {
   ConflictInfo,
+  FolderLayout,
   PageFile,
   TemplateInfo,
   TreeNode,
@@ -33,6 +34,7 @@ import { icloudTarget, isConflictCopy, originalOfConflict } from '@shared/confli
 import { buildFrontmatter, splitFrontmatter, updateFrontmatter } from '@shared/frontmatter'
 import { dayKey, isoLocal, timeKey } from '@shared/dates'
 import { newPageFrontmatter, readHeader } from '@shared/page'
+import { RESERVED_KEYS } from '@shared/properties'
 import { renameTagInText } from '@shared/tags'
 import {
   IMAGE_EXT_RE,
@@ -70,6 +72,8 @@ interface VaultConfig {
   favorites: string[]
   /** Manual order per folder ('' = root): entry names (`Seite.md`, `Ordner`). Synced with the vault. */
   order?: Record<string, string[]>
+  /** How folder overviews show their pages ('' = root), when not the default cards. */
+  folders?: Record<string, FolderLayout>
 }
 
 /** What a vault needs from the search index (the app's index process, or the MCP server's). */
@@ -471,9 +475,13 @@ export class Vault {
 
   /** Keeps the manual order valid after an entry was renamed or moved (`to` = '' when gone). */
   private async remapOrder(from: string, to: string): Promise<void> {
+    const layoutsChanged = this.remapLayouts(from, to)
     const order = this.config.order
-    if (!order) return
-    let changed = false
+    if (!order) {
+      if (layoutsChanged) await this.saveConfig()
+      return
+    }
+    let changed = layoutsChanged
     const next: Record<string, string[]> = {}
     for (const [dir, names] of Object.entries(order)) {
       // Keys inside a moved folder move along
@@ -492,6 +500,60 @@ export class Vault {
     if (!changed) return
     this.config.order = next
     await this.saveConfig()
+  }
+
+  /** Folder layouts of a renamed or moved folder (and the folders inside) move along. */
+  private remapLayouts(from: string, to: string): boolean {
+    const folders = this.config.folders
+    if (!folders || from === '') return false
+    let changed = false
+    const next: Record<string, FolderLayout> = {}
+    for (const [dir, layout] of Object.entries(folders)) {
+      if (!isWithin(from, dir)) next[dir] = layout
+      else {
+        changed = true
+        if (to) next[to + dir.slice(from.length)] = layout
+      }
+    }
+    if (changed) this.config.folders = next
+    return changed
+  }
+
+  // ── Folder layouts and properties ────────────────────────────────────────
+
+  folderLayout(dirRel: string): FolderLayout | null {
+    return this.config.folders?.[dirRel] ?? null
+  }
+
+  /** Stores how a folder overview shows its pages; null goes back to the default cards. */
+  async setFolderLayout(dirRel: string, layout: FolderLayout | null): Promise<void> {
+    const folders = { ...(this.config.folders ?? {}) }
+    if (layout) folders[dirRel] = layout
+    else delete folders[dirRel]
+    this.config.folders = folders
+    await this.saveConfig()
+  }
+
+  /**
+   * Changes frontmatter properties of a page that is not open in this editor (a table cell).
+   * `null` removes a property. Keeps the rest of the frontmatter as it is and bumps `updated`.
+   */
+  async setProps(rel: string, changes: Record<string, unknown>): Promise<void> {
+    if (!isMarkdown(rel)) throw new Error('Nur Markdown-Seiten haben Eigenschaften')
+    const text = await fs.readFile(this.abs(rel), 'utf8')
+    const header = readHeader(rel, text)
+    const fields: Record<string, unknown> = { updated: isoLocal() }
+    for (const [k, v] of Object.entries(changes)) {
+      if (RESERVED_KEYS.has(k) && k !== 'tags') continue
+      fields[k] = v === null ? undefined : v
+    }
+    const fm = header.raw
+      ? updateFrontmatter(header.raw, fields)
+      : newPageFrontmatter(header.title, fields)
+    const next = fm + header.body
+    if (next === text) return
+    await this.writeOwn(rel, next)
+    this.opts.emit('page:changed', rel)
   }
 
   /** All markdown paths below a page's child folder (for path remapping). */

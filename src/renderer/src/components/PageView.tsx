@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { PageFile, SearchHit, WriteResult } from '@shared/types'
 import { tagsField } from '@shared/frontmatter'
 import { readHeader } from '@shared/page'
+import { propertiesOf, type PropValue } from '@shared/properties'
 import { invoke } from '../api'
 import { journalDayOf } from '../lib/journal'
 import { PageEditor, type PageEditorHandle } from '../editor/PageEditor'
@@ -15,6 +16,8 @@ import { IconPicker } from './IconPicker'
 import { JournalBar } from './JournalBar'
 import { Snippet } from './Snippet'
 import { TagEditor } from './TagEditor'
+import { PropertyEditor } from './Properties'
+import { Subpages } from './FolderView'
 
 type Banner = null | { kind: 'external' } | { kind: 'conflict'; diskText: string }
 
@@ -152,12 +155,14 @@ export function PageView({
 
   // Icon and tags live in the frontmatter; edits go through the editor so they save together
   const header = file ? readHeader(file.path, file.text) : null
-  const [meta, setMeta] = useState<{ icon: string | null; tags: string[] }>({
-    icon: null,
-    tags: []
-  })
+  const [meta, setMeta] = useState<{
+    icon: string | null
+    tags: string[]
+    props: Record<string, PropValue>
+  }>({ icon: null, tags: [], props: {} })
   useEffect(() => {
-    if (header) setMeta({ icon: header.icon, tags: tagsField(header.data) })
+    if (header)
+      setMeta({ icon: header.icon, tags: tagsField(header.data), props: propertiesOf(header.data) })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file])
   const setIcon = (icon: string | null): void => {
@@ -167,6 +172,18 @@ export function PageView({
   const setTags = (tags: string[]): void => {
     setMeta((m) => ({ ...m, tags }))
     editorRef.current?.updateFrontmatter({ tags: tags.length ? tags : undefined })
+  }
+
+  const setProps = (changes: Record<string, PropValue | undefined>): void => {
+    setMeta((m) => {
+      const props = { ...m.props }
+      for (const [k, v] of Object.entries(changes)) {
+        if (v === undefined) delete props[k]
+        else props[k] = v
+      }
+      return { ...m, props }
+    })
+    editorRef.current?.updateFrontmatter(changes)
   }
 
   const exportHtml = (): string =>
@@ -239,6 +256,7 @@ export function PageView({
         onEnter={() => editorRef.current?.focusStart()}
       />
       <TagEditor tags={meta.tags} onChange={setTags} />
+      <PropertyEditor path={file.path} props={meta.props} onChange={setProps} />
       {shownMode === 'rich' ? (
         <PageEditor ref={editorRef} file={file} onStatus={status} onConflict={conflict} />
       ) : (
@@ -265,6 +283,7 @@ export function PageView({
           </div>
         </div>
       )}
+      <Subpages path={file.path} />
       <Backlinks path={file.path} title={header.title} />
     </div>
   )

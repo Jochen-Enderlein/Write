@@ -1,5 +1,6 @@
 import { splitFrontmatter, stringField, tagsField } from '@shared/frontmatter'
 import { stemOf } from '@shared/paths'
+import { propertiesOf, type PropValue } from '@shared/properties'
 import { extractTags, extractWikilinks, normalizeTitle } from '@shared/wikilinks'
 
 export interface ExtractedPage {
@@ -9,6 +10,7 @@ export interface ExtractedPage {
   tags: string[]
   links: string[]
   text: string
+  props: Record<string, PropValue>
 }
 
 /** Fast, regex-based extraction for the index. No full markdown parse needed here. */
@@ -26,7 +28,8 @@ export function extractPage(path: string, raw: string): ExtractedPage {
     icon: stringField(data, 'icon'),
     tags: [...tags],
     links,
-    text: plainText(body)
+    text: plainText(body),
+    props: propertiesOf(data)
   }
 }
 

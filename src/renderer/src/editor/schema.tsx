@@ -547,6 +547,86 @@ export const Mermaid = createReactBlockSpec(
   }
 )
 
+/** YAML source of a table block, edited in a plain field like a diagram's code. */
+function DbTableView({
+  block,
+  editor
+}: {
+  block: { id: string; props: { source: unknown } }
+  editor: SourceEditor
+}): React.JSX.Element {
+  const source = String(block.props.source)
+  const [open, setOpen] = useState(false)
+  const Table = editorBridge.TableBlock
+  const save = (next: string): void => {
+    if (next !== source && editor.getBlock(block.id))
+      editor.updateBlock(block.id, { props: { source: next } } as never)
+  }
+  return (
+    <div
+      className={`db-block ${open ? 'open' : ''}`}
+      contentEditable={false}
+      // Clicks on cells, headers and buttons belong to the table, not to ProseMirror (which
+      // would select the whole block). Native, because ProseMirror listens before React does.
+      ref={(el) => {
+        if (el && !el.dataset.guarded) {
+          el.dataset.guarded = '1'
+          el.addEventListener('mousedown', (e) => {
+            if (!(e.target as HTMLElement).closest('.db-toggle')) e.stopPropagation()
+          })
+        }
+      }}
+    >
+      <Table source={source} editable={editor.isEditable} onSource={save} />
+      {open && (
+        <div className="db-code">
+          <div className="mermaid-label">write-table</div>
+          <textarea
+            key={source}
+            autoFocus
+            className="mermaid-input"
+            defaultValue={source}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            ref={(el) => {
+              if (el) {
+                el.style.height = 'auto'
+                el.style.height = `${el.scrollHeight}px`
+              }
+            }}
+            onBlur={(e) => save(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                setOpen(false)
+              }
+            }}
+          />
+        </div>
+      )}
+      {editor.isEditable && (
+        <button
+          type="button"
+          className="mermaid-toggle db-toggle"
+          title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
+          aria-pressed={open}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {'</>'}
+        </button>
+      )}
+    </div>
+  )
+}
+
+/** A table of a folder's pages, stored as a ```write-table code block with YAML config. */
+export const DbTable = createReactBlockSpec(
+  { type: 'dbTable', propSchema: { source: { default: '' } }, content: 'none' },
+  { render: ({ block, editor }) => <DbTableView block={block} editor={editor} /> }
+)
+
 /** Display formula `$$…$$` (LaTeX, rendered with KaTeX). */
 export const MathBlock = createReactBlockSpec(
   { type: 'math', propSchema: { source: { default: '' } }, content: 'none' },
@@ -616,6 +696,7 @@ export const schema = BlockNoteSchema.create({
     rawMarkdown: RawMarkdown(),
     mermaid: Mermaid(),
     math: MathBlock(),
+    dbTable: DbTable(),
     footnote: Footnote()
   },
   inlineContentSpecs: {
@@ -634,6 +715,9 @@ export const schema = BlockNoteSchema.create({
     highlight: createStyleSpecFromTipTapMark(HighlightMark, 'boolean')
   }
 })
+
+/** Code-block language of an embedded table. */
+export const TABLE_LANG = 'write-table'
 
 export type WriteSchema = typeof schema
 export type WriteEditor = typeof schema.BlockNoteEditor
@@ -661,6 +745,15 @@ export function prepareBlocks<
             ? content.map((c: { text?: string }) => c.text ?? '').join('')
             : ''
       out = { ...b, type: 'mermaid', props: { source }, content: undefined }
+    } else if (b.type === 'codeBlock' && String(b.props.language).toLowerCase() === TABLE_LANG) {
+      const content = (b as { content?: unknown }).content
+      const source =
+        typeof content === 'string'
+          ? content
+          : Array.isArray(content)
+            ? content.map((c: { text?: string }) => c.text ?? '').join('')
+            : ''
+      out = { ...b, type: 'dbTable', props: { source }, content: undefined }
     } else if (b.type === 'codeBlock') {
       const lang = String(b.props.language ?? 'text')
       const key = byAlias.get(lang.toLowerCase())

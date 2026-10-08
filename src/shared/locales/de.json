@@ -213,7 +213,9 @@
     "inlineMath": "Formel im Text",
     "inlineMathHint": "LaTeX mitten im Satz",
     "footnote": "Fußnote",
-    "footnoteHint": "Verweis hier, Text am Ende der Seite"
+    "footnoteHint": "Verweis hier, Text am Ende der Seite",
+    "table": "Datenbank",
+    "tableHint": "Unterseiten als Tabelle mit Eigenschaften"
   },
   "palette": {
     "placeholder": "Seite suchen oder Befehl eingeben …",
@@ -485,7 +487,12 @@
     "items_one": "{{count}} Eintrag",
     "items_other": "{{count}} Einträge",
     "subpages_one": "{{count}} Unterseite",
-    "subpages_other": "{{count}} Unterseiten"
+    "subpages_other": "{{count}} Unterseiten",
+    "layout": "Darstellung",
+    "cards": "Karten",
+    "table": "Tabelle",
+    "subpagesTitle": "Unterseiten",
+    "newSubpage": "Neue Unterseite"
   },
   "update": {
     "checking": "Suche nach Updates …",
@@ -576,5 +583,58 @@
     "copiedPage": "Seite als Markdown kopiert",
     "copiedSelection": "Auswahl als Markdown kopiert",
     "selectionTitle": "{{title}} (Auszug)"
+  },
+  "props": {
+    "add": "Eigenschaft",
+    "namePlaceholder": "Name, z. B. status",
+    "rename": "Umbenennen",
+    "remove": "Entfernen",
+    "typeLabel": "Typ",
+    "type": {
+      "text": "Text",
+      "number": "Zahl",
+      "date": "Datum",
+      "checkbox": "Checkbox",
+      "link": "Seitenlink",
+      "list": "Liste"
+    }
+  },
+  "table": {
+    "title": "Titel",
+    "tags": "Tags",
+    "columns": "Spalten",
+    "addFilter": "+ Filter",
+    "filter": "Filtern …",
+    "apply": "Übernehmen",
+    "sortAsc": "Aufsteigend sortieren",
+    "sortDesc": "Absteigend sortieren",
+    "hide": "Spalte ausblenden",
+    "show": "„{{name}}“ einblenden",
+    "showAll": "Alle Eigenschaften zeigen",
+    "newColumn": "Neue Eigenschaft …",
+    "removeFilter": "Filter entfernen",
+    "removeSort": "Sortierung entfernen",
+    "filterColumn": "Spalte",
+    "filterOp": "Bedingung",
+    "filterValue": "Wert",
+    "count_one": "{{count}} Seite",
+    "count_other": "{{count}} Seiten",
+    "empty": "Noch keine Seiten. Lege unten die erste an.",
+    "noMatch": "Keine Seite passt zu den Filtern.",
+    "more": "{{count}} weitere zeigen",
+    "new": "Neue Seite",
+    "newPlaceholder": "Titel der neuen Seite",
+    "subpages": "Unterseiten",
+    "brokenConfig": "Die Einstellungen dieser Tabelle sind kein gültiges YAML. Über </> lassen sie sich korrigieren.",
+    "folderMissing": "Den Ordner „{{folder}}“ gibt es nicht. Über </> lässt sich ein anderer eintragen.",
+    "op": {
+      "is": "ist",
+      "isNot": "ist nicht",
+      "contains": "enthält",
+      "empty": "ist leer",
+      "notEmpty": "ist nicht leer",
+      "before": "vor / kleiner als",
+      "after": "nach / größer als"
+    }
   }
 }
