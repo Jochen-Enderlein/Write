@@ -657,6 +657,14 @@
   font-weight: 600;
 }
 
+/*
+ * The formatting toolbar fits the editor; BlockNote's overflow-x: auto would make it scroll
+ * vertically as soon as a button's tooltip shows inside it, and cut the tooltip off.
+ */
+.bn-container .bn-toolbar {
+  overflow: visible !important;
+}
+
 /* Floating editor menus get the same glass as the rest of the app */
 .bn-container .bn-toolbar,
 .bn-container .bn-suggestion-menu,

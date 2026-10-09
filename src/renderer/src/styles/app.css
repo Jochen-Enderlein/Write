@@ -45,33 +45,34 @@ textarea {
 }
 
 /*
- * Scrollbars like macOS overlay scrollers, also when "Show scroll bars: Always" is set or a
- * mouse is attached: no track, a slim rounded thumb that firms up under the pointer. The
- * transparent border keeps it off the edges; its colour follows the surface's text colour.
+ * With overlay scroll bars macOS shows and hides them itself, so they stay native. When it shows
+ * classic ones instead ("Show scroll bars: Always", a mouse attached; see lib/scrollbars.ts),
+ * they look like overlay ones here: no track, a slim rounded thumb that firms up under the
+ * pointer, in the surface's text colour.
  */
-::-webkit-scrollbar {
+.classic-scrollbars ::-webkit-scrollbar {
   width: 11px;
   height: 11px;
   background: transparent;
 }
 
-::-webkit-scrollbar-track,
-::-webkit-scrollbar-corner {
+.classic-scrollbars ::-webkit-scrollbar-track,
+.classic-scrollbars ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+.classic-scrollbars ::-webkit-scrollbar-thumb {
   min-height: 32px;
   border: 3px solid transparent;
   border-radius: 999px;
   background: color-mix(in srgb, var(--scroll-thumb, var(--label)) 26%, transparent) padding-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.classic-scrollbars ::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in srgb, var(--scroll-thumb, var(--label)) 44%, transparent);
 }
 
-::-webkit-scrollbar-thumb:active {
+.classic-scrollbars ::-webkit-scrollbar-thumb:active {
   background-color: color-mix(in srgb, var(--scroll-thumb, var(--label)) 56%, transparent);
 }
 
@@ -82,7 +83,7 @@ textarea {
 }
 
 @media (prefers-contrast: more) {
-  ::-webkit-scrollbar-thumb {
+  .classic-scrollbars ::-webkit-scrollbar-thumb {
     background-color: color-mix(in srgb, var(--scroll-thumb, var(--label)) 55%, transparent);
   }
 }

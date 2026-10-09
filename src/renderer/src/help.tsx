@@ -10,6 +10,7 @@ import { normalizeTitle, parseLinkTarget } from '@shared/wikilinks'
 import { invoke, on } from './api'
 import { editorBridge } from './editor/bridge'
 import i18next, { loadLanguage } from './i18n'
+import { watchScrollbars } from './lib/scrollbars'
 import { CONTENT } from './help/content'
 import { HelpApp } from './help/HelpApp'
 
@@ -43,6 +44,7 @@ function applyAccent(accent: string | null): void {
 void invoke('app:accentColor').then(applyAccent)
 on('app:accentColor', applyAccent)
 on('settings:changed', () => void loadLanguage())
+watchScrollbars()
 
 void loadLanguage().then(() =>
   createRoot(document.getElementById('root')!).render(
