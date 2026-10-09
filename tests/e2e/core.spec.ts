@@ -800,8 +800,9 @@ test('benennt verschachtelte Tags um und vervollständigt Links im Markdown-Modu
   await win.locator('.cm-content').click()
   await win.keyboard.press('Meta+ArrowDown')
   await win.keyboard.type('\nSiehe [[Linkz')
-  await expect(win.locator('.cm-tooltip-autocomplete')).toContainText('Linkziel')
-  await win.keyboard.press('Enter')
+  // Pick the suggestion with the mouse: CodeMirror ignores Enter for 75 ms after the list
+  // updates, and on a slow runner the press can land in that window and insert a line break
+  await win.locator('.cm-tooltip-autocomplete li', { hasText: 'Linkziel' }).click()
   await eventually(() => expect(read('Getaggt.md')).toContain('Siehe [[Linkziel]]'))
   await win.getByRole('radio', { name: /Formatiert/ }).click()
 })
