@@ -5,6 +5,23 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.5.0 – 2026-10-09
+
+### Neu
+
+- **Seiten nebeneinander:** Zwei Seiten gleichzeitig offen – links recherchieren, rechts schreiben. Mit ⌘\ oder dem Knopf mit den zwei Rechtecken oben rechts, mit ⌘-Klick auf einen Link oder über _Daneben öffnen_ im Seitenbaum. Den Trenner kannst du ziehen; ist dieselbe Seite auf beiden Seiten offen, erscheint jede Änderung sofort auf beiden.
+- **Blockreferenzen:** Verlinke nicht nur Seiten, sondern einzelne Absätze oder Listenpunkte – mit `[[Seite#^id]]`, oder bette sie mit `![[Seite#^id]]` ein. Über den Griff ⋮⋮ eines Blocks wählst du _Link auf Block kopieren_; die Kennung am Ende des Blocks wird klein und grau angezeigt. Das Format ist dasselbe wie in Obsidian.
+- **Hilfe:** Ein eigenes Hilfe-Fenster erklärt alles, was Write kann – mit Suche, Beispielen zum Ausprobieren direkt im Editor und Knöpfen, die den Befehl gleich ausführen. Öffnen mit ⌘? oder unten in der Seitenleiste.
+
+### Verbessert
+
+- Scrollleisten sehen auch bei _Rollbalken immer anzeigen_ aus wie in anderen Mac-Apps: schmal und ohne graue Spur.
+
+### Behoben
+
+- Die Seitenleiste zittert in kleinen Fenstern nicht mehr, wenn man ganz nach unten scrollt; lange Seitennamen werden mit „…“ gekürzt.
+- Die Formatierungsleiste zeigt keine Scrollleiste mehr, ihre Tooltips sind wieder vollständig zu sehen.
+
 ## 0.4.0 – 2026-10-08
 
 ### Neu
