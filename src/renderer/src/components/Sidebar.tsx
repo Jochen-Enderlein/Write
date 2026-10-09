@@ -13,6 +13,7 @@ import {
   CalendarIcon,
   FolderPlusIcon,
   GearIcon,
+  QuestionIcon,
   GraphIcon,
   ChevronDownIcon,
   PlusIcon,
@@ -133,7 +134,7 @@ export function Sidebar({
               <button
                 key={p}
                 className={`sidebar-item ${view.kind === 'page' && view.path === p ? 'active' : ''}`}
-                onClick={() => s().openPage(p)}
+                onClick={(e) => (e.metaKey ? s().openSide(p) : s().openPage(p))}
               >
                 {titleIndex.get(p)?.icon ? (
                   <span style={{ width: 16, textAlign: 'center' }}>{titleIndex.get(p)!.icon}</span>
@@ -199,6 +200,11 @@ export function Sidebar({
             <GearIcon />
             <span className="label">{t('sidebar.settings')}</span>
             <span className="shortcut">{glyph('settings.open')}</span>
+          </button>
+          <button className="sidebar-item" onClick={() => void invoke('help:open')}>
+            <QuestionIcon />
+            <span className="label">{t('sidebar.help')}</span>
+            <span className="shortcut">{glyph('help.open')}</span>
           </button>
           {notices.map((n) => (
             <div key={n.kind} className="index-progress" role="status">

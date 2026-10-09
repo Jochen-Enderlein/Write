@@ -19,7 +19,8 @@ export function InfoPopover({ path }: { path: string }): React.JSX.Element {
     tags: string[]
     backlinks: number
   } | null>(null)
-  const editor = useStore((s) => s.editor)
+  // The popover hangs off the toolbar, which belongs to the main pane
+  const editor = useStore((s) => s.editors.main)
   const setInfoOpen = useStore((s) => s.setInfoOpen)
 
   useLayoutEffect(() => {

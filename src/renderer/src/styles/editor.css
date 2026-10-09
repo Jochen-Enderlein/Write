@@ -754,3 +754,11 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+
+/* ── Block ids: ` ^abc123` marks a target for [[Seite#^abc123]] ─────────── */
+
+.write-editor .block-id {
+  color: var(--label-4);
+  font-size: 0.8em;
+  font-family: var(--font-mono);
+}

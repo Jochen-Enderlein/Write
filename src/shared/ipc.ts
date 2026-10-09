@@ -23,7 +23,7 @@ import type {
   VaultState,
   WriteResult
 } from './types'
-import type { CommandId } from './keymap'
+import { COMMANDS, type CommandId } from './keymap'
 
 const relPath = z
   .string()
@@ -191,6 +191,10 @@ export const ipcSchemas = {
   'app:revealPath': z.tuple([z.enum(['vault', 'data'])]),
   'app:accentColor': z.tuple([]),
   'app:language': z.tuple([]),
+  /** Opens the help window, optionally at a topic. */
+  'help:open': z.tuple([z.string().max(64).optional()]),
+  /** The help window's "Try it" buttons: runs a command in the main window. */
+  'help:run': z.tuple([z.enum(COMMANDS.map((c) => c.id) as [CommandId, ...CommandId[]])]),
   /** Renderer reports that a requested flush (before close/quit) is done. */
   'app:flushed': z.tuple([z.number().int()])
 } as const
@@ -288,6 +292,8 @@ export interface IpcResults {
   'app:accentColor': string | null
   'app:language': 'de' | 'en'
   'app:flushed': void
+  'help:open': void
+  'help:run': void
 }
 
 /** Events pushed from main to renderer. */
@@ -309,6 +315,10 @@ export interface IpcEvents {
   /** Main asks the window to save pending edits (before closing or quitting). */
   'app:flush': [id: number]
   'settings:changed': [AppSettings]
+  /** The help window should show this topic (null: stay where it is). */
+  'help:show': [topic: string | null]
+  /** ⌘F while the help window is in front. */
+  'help:find': []
 }
 
 export type IpcEvent = keyof IpcEvents

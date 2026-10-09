@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { invoke } from '../api'
 import { renderMarkdownHtml } from '../editor/renderMarkdown'
-import { titleOf, useStore } from '../store'
+import { editorFor, titleOf, useStore } from '../store'
 import { ContextMenu, type MenuItem } from './ContextMenu'
 import { ShareIcon } from './Icons'
 
@@ -28,7 +28,7 @@ export function ShareButton({ path }: { path: string }): React.JSX.Element {
 
   const open = (): void => {
     const r = button.current?.getBoundingClientRect()
-    const editor = useStore.getState().editor
+    const editor = editorFor(path)
     setMenu({
       x: r ? r.right - 220 : 200,
       y: r ? r.bottom + 6 : 60,
@@ -40,12 +40,13 @@ export function ShareButton({ path }: { path: string }): React.JSX.Element {
   const first = useRef(token)
   useEffect(() => {
     if (token !== first.current) open()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
   const share = async (format: 'md' | 'html' | 'pdf', selection: string | null): Promise<void> => {
     const s = useStore.getState()
-    const editor = s.editor
-    if (!editor || editor.path !== path) return
+    const editor = editorFor(path)
+    if (!editor) return
     const pageTitle = titleOf(path)
     const title = selection ? t('share.selectionTitle', { title: pageTitle }) : pageTitle
     const icon = s.titleIndex.get(path)?.icon ?? null
@@ -65,7 +66,7 @@ export function ShareButton({ path }: { path: string }): React.JSX.Element {
 
   const copy = async (selection: string | null): Promise<void> => {
     const s = useStore.getState()
-    const editor = s.editor
+    const editor = editorFor(path)
     if (!editor) return
     const markdown = selection ?? withTitle(titleOf(path), editor.bodyMarkdown())
     await invoke('clipboard:write', markdown)

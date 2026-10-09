@@ -28,9 +28,11 @@ import type { PageFile, WriteResult } from '@shared/types'
 import { buildFrontmatter, splitFrontmatter, updateFrontmatter } from '@shared/frontmatter'
 import { composePage, readHeader } from '@shared/page'
 import { normalizeTitle } from '@shared/wikilinks'
+import { blockIdOf, blockLine, newBlockId } from '@shared/blockrefs'
 import { invoke } from '../api'
 import { t } from '../i18n'
 import { useStore, type HeadingInfo } from '../store'
+import { announceSaved, usePane } from '../lib/pane'
 import type { FindTarget, Match } from './find'
 import type { PageEditorHandle } from './PageEditor'
 
@@ -239,6 +241,7 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const path = file.path
+  const pane = usePane()
   const initial = useRef(readHeader(path, file.text))
   // The editor is created once per file; links to the page itself aren't suggested
   const self = useRef(path)
@@ -276,6 +279,7 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
         onStatus('saving')
         const res = await invoke('page:write', path, page, force ? null : s.hash)
         if (res.ok) {
+          announceSaved(path, pane)
           s.hash = res.hash
           s.lastBody = text
           s.header = readHeader(path, page)
@@ -291,7 +295,7 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
       s.saving = s.saving.then(run, run)
       return s.saving
     },
-    [path, onStatus, onConflict]
+    [path, pane, onStatus, onConflict]
   )
   const saveRef = useRef(save)
   saveRef.current = save
@@ -314,7 +318,8 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
       callbacks.current.onBody?.(text)
       useStore.setState((st) => ({
         docVersion: st.docVersion + 1,
-        wordCount: countMarkdownWords(text)
+        // The toolbar counts the main pane's page
+        wordCount: pane === 'main' ? countMarkdownWords(text) : st.wordCount
       }))
     })
     const scrolled = EditorView.domEventHandlers({
@@ -350,7 +355,7 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
     })
     view.current = v
     callbacks.current.onBody?.(startText.current)
-    useStore.setState({ wordCount: countMarkdownWords(startText.current) })
+    if (pane === 'main') useStore.setState({ wordCount: countMarkdownWords(startText.current) })
     if (useStore.getState().pendingEditorFocus) {
       useStore.setState({ pendingEditorFocus: false })
       v.focus()
@@ -359,6 +364,8 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
       v.destroy()
       view.current = null
     }
+    // Created once per file; the pane of an editor never changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -405,8 +412,13 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
         const m = /^line:(\d+)$/.exec(id)
         if (m) goToLine(Number(m[1]))
       },
-      scrollToHeading: (text) => {
-        const want = normalizeTitle(text)
+      scrollToAnchor: (anchor) => {
+        if (anchor.startsWith('^')) {
+          const line = blockLine(body(), anchor.slice(1))
+          if (line !== -1) goToLine(line + 1)
+          return line !== -1
+        }
+        const want = normalizeTitle(anchor)
         const h = markdownHeadings(body()).find((x) => normalizeTitle(x.text) === want)
         if (h) goToLine(Number(h.id.slice(5)))
         return Boolean(h)
@@ -431,6 +443,17 @@ export const MarkdownEditor = forwardRef<PageEditorHandle, Props>(function Markd
           .map((r) => v.state.sliceDoc(r.from, r.to))
           .join('\n\n')
         return text.trim() ? text : null
+      },
+      blockRef: () => {
+        // The caret's line gets ` ^id` at its end, unless it already has one
+        const v = view.current
+        if (!v) return null
+        const line = v.state.doc.lineAt(v.state.selection.main.head)
+        const own = blockIdOf(line.text)
+        if (own || !line.text.trim()) return own
+        const id = newBlockId()
+        v.dispatch({ changes: { from: line.to, insert: ` ^${id}` } })
+        return id
       },
       bodyMarkdown: () => body(),
       findTarget: () => (view.current ? codeMirrorFind(view.current) : null)

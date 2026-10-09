@@ -32,6 +32,15 @@ export default defineConfig({
   },
   renderer: {
     plugins: [react(), thirdPartyLicenses()],
+    experimental: {
+      // Vite writes asset URLs as `new URL(file, import.meta.url)` after Rollup has renamed
+      // variables, so a library's own top-level `URL` (react-dnd has one) can shadow the global
+      // in a shared chunk. Resolving against the page via globalThis avoids that.
+      renderBuiltUrl: (file, { hostType }) =>
+        hostType === 'js'
+          ? { runtime: `new globalThis.URL(${JSON.stringify(file)}, document.baseURI).href` }
+          : { relative: true }
+    },
     resolve: {
       alias: {
         ...shared,
@@ -44,7 +53,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve('src/renderer/index.html'),
-          capture: resolve('src/renderer/capture.html')
+          capture: resolve('src/renderer/capture.html'),
+          help: resolve('src/renderer/help.html')
         }
       }
     }

@@ -10,6 +10,7 @@ import { PageEditor, type PageEditorHandle } from '../editor/PageEditor'
 import { MarkdownEditor } from '../editor/MarkdownEditor'
 import { MarkdownPreview, type MarkdownPreviewHandle } from '../editor/MarkdownPreview'
 import { useIpcEvent } from '../lib/hooks'
+import { usePane, useSavedElsewhere } from '../lib/pane'
 import { useStore, type EditorMode } from '../store'
 import { WarningIcon } from './Icons'
 import { IconPicker } from './IconPicker'
@@ -31,7 +32,9 @@ export function PageView({
   onStatus(s: SaveStatus): void
 }): React.JSX.Element {
   const { t } = useTranslation()
+  const pane = usePane()
   const [file, setFile] = useState<PageFile | null>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
   const [missing, setMissing] = useState(false)
   const [token, setToken] = useState(0)
   const [banner, setBanner] = useState<Banner>(null)
@@ -108,11 +111,16 @@ export function PageView({
   // What is on screen; differs from `path` only while the next page is loading
   const shown = file?.path ?? null
   useLayoutEffect(() => {
-    if (shown) document.querySelector('.main-scroll')?.scrollTo({ top: 0 })
+    if (shown) pageRef.current?.closest('.pane-scroll')?.scrollTo({ top: 0 })
   }, [shown])
 
   useIpcEvent('page:changed', (p) => {
     if (p !== shown) return
+    if (dirty.current) setBanner({ kind: 'external' })
+    else void load()
+  })
+  // The same page in the other pane was saved
+  useSavedElsewhere(shown, () => {
     if (dirty.current) setBanner({ kind: 'external' })
     else void load()
   })
@@ -133,14 +141,15 @@ export function PageView({
   useEffect(() => {
     if (!file) return
     const ed = (): PageEditorHandle | null => editorRef.current
-    setEditor({
+    setEditor(pane, {
       path: file.path,
       flush: async () => ed()?.flush(),
       insertMarkdown: (md) => ed()?.insertMarkdown(md),
       stats: () => ed()?.stats() ?? { words: 0 },
       headings: () => ed()?.headings() ?? [],
       scrollToBlock: (id) => ed()?.scrollToBlock(id),
-      scrollToHeading: (text) => ed()?.scrollToHeading(text) ?? false,
+      scrollToAnchor: (anchor) => ed()?.scrollToAnchor(anchor) ?? false,
+      blockRef: () => ed()?.blockRef() ?? null,
       updateFrontmatter: (changes) => ed()?.updateFrontmatter(changes),
       exportHtml: () => ed()?.exportHtml() ?? '',
       findTarget: () => ed()?.findTarget() ?? null,
@@ -148,10 +157,10 @@ export function PageView({
       bodyMarkdown: () => ed()?.bodyMarkdown() ?? ''
     })
     // Coming from full-text search: show the hits on the page
-    const query = useStore.getState().pendingFind
-    if (query) useStore.getState().openFind(false)
-    return () => setEditor(null)
-  }, [file, setEditor])
+    const st = useStore.getState()
+    if (st.pendingFind && st.activePane === pane) st.openFind(false)
+    return () => setEditor(pane, null)
+  }, [file, setEditor, pane])
 
   // Icon and tags live in the frontmatter; edits go through the editor so they save together
   const header = file ? readHeader(file.path, file.text) : null
@@ -230,6 +239,7 @@ export function PageView({
     <div
       className={`page ${shownMode === 'rich' ? '' : `mode-${shownMode}`}`}
       key={token}
+      ref={pageRef}
       aria-busy={shown !== path || undefined}
     >
       {banner && (
@@ -318,7 +328,9 @@ function TitleField({
   const ref = useRef<HTMLTextAreaElement>(null)
   const renamePage = useStore((s) => s.renamePage)
   const navigate = useStore((s) => s.navigate)
+  const openSide = useStore((s) => s.openSide)
   const focusToken = useStore((s) => s.titleFocusToken)
+  const pane = usePane()
   const committing = useRef(false)
 
   useEffect(() => setValue(title), [title])
@@ -331,10 +343,11 @@ function TitleField({
   }, [value])
 
   useEffect(() => {
-    if (focusToken === 0 || !ref.current) return
+    // Only the title of the pane the command was meant for
+    if (focusToken === 0 || !ref.current || useStore.getState().activePane !== pane) return
     ref.current.focus()
     ref.current.select()
-  }, [focusToken])
+  }, [focusToken, pane])
 
   const commit = async (): Promise<void> => {
     const next = value.replace(/\s+/g, ' ').trim()
@@ -349,8 +362,10 @@ function TitleField({
     committing.current = true
     const newPath = await renamePage(path, next)
     committing.current = false
-    if (newPath && newPath !== path) navigate({ kind: 'page', path: newPath }, { replace: true })
-    else if (!newPath) setValue(title)
+    if (newPath && newPath !== path) {
+      if (pane === 'side') openSide(newPath)
+      else navigate({ kind: 'page', path: newPath }, { replace: true })
+    } else if (!newPath) setValue(title)
   }
 
   return (
@@ -400,6 +415,11 @@ function Backlinks({ path, title }: { path: string; title: string }): React.JSX.
   const notify = useStore((s) => s.notify)
   const fail = useStore((s) => s.fail)
 
+  // ⌘-click opens the source in the other pane
+  const pane = usePane()
+  const open = (e: React.MouseEvent, source: string): void =>
+    openPage(source, e.metaKey ? (pane === 'main' ? 'side' : 'main') : undefined)
+
   const load = useCallback(() => {
     void invoke('index:backlinks', path).then(setHits, () => setHits([]))
     void invoke('index:mentions', path).then(setMentions, () => setMentions([]))
@@ -432,7 +452,7 @@ function Backlinks({ path, title }: { path: string; title: string }): React.JSX.
         </h2>
       )}
       {hits.map((h) => (
-        <button key={h.path} className="backlink" onClick={() => openPage(h.path)}>
+        <button key={h.path} className="backlink" onClick={(e) => open(e, h.path)}>
           <div className="title">
             {h.icon ? `${h.icon} ` : ''}
             {h.title}
@@ -456,7 +476,7 @@ function Backlinks({ path, title }: { path: string; title: string }): React.JSX.
       {showMentions &&
         mentions.map((h) => (
           <div key={h.path} className="backlink mention">
-            <button className="mention-open" onClick={() => openPage(h.path)}>
+            <button className="mention-open" onClick={(e) => open(e, h.path)}>
               <div className="title">
                 {h.icon ? `${h.icon} ` : ''}
                 {h.title}

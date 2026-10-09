@@ -36,7 +36,7 @@ import { buildMenu } from './menu'
 import { loadSettings, saveSettings, vaultDataDir } from './settings'
 import { Vault } from './vault'
 import { createUpdater, type Updater } from './updates'
-import { createCaptureWindow, createMainWindow, showCapture } from './windows'
+import { createCaptureWindow, createHelpWindow, createMainWindow, showCapture } from './windows'
 import { compareVersions } from '@shared/changelog'
 
 const userData = env('USER_DATA')
@@ -57,6 +57,7 @@ const glass = createGlassService()
 const mainWindows = new Set<BrowserWindow>()
 let lastFocused: BrowserWindow | null = null
 let captureWindow: BrowserWindow | null = null
+let helpWindow: BrowserWindow | null = null
 let language: Language = 'de'
 
 /** The main window commands and dialogs belong to: the focused one, else the last focused. */
@@ -370,6 +371,8 @@ function registerIpc(): void {
     if (p) await shell.openPath(p)
   })
   handle('app:accentColor', accentColor)
+  handle('help:open', (topic) => openHelp(topic))
+  handle('help:run', (id) => runInMainWindow(id))
   handle('app:language', () => language)
   handle('app:flushed', (id) => {
     flushWaiters.get(id)?.()
@@ -455,9 +458,42 @@ function openCapture(): void {
   showCapture(captureWindow)
 }
 
+/** Shows the help window (one per app), at `topic` if given. */
+function openHelp(topic?: string): void {
+  if (helpWindow && !helpWindow.isDestroyed()) {
+    if (topic) helpWindow.webContents.send('help:show', topic)
+    if (helpWindow.isMinimized()) helpWindow.restore()
+    helpWindow.show()
+    helpWindow.focus()
+    return
+  }
+  helpWindow = createHelpWindow(glass, topic)
+  helpWindow.on('closed', () => (helpWindow = null))
+}
+
+/** Runs a command in the main window, e.g. from the help's "Try it" buttons. */
+function runInMainWindow(id: CommandId): void {
+  if (onMenuCommand(id)) return
+  const win = mainWindow()
+  if (!win) return
+  if (win.isMinimized()) win.restore()
+  win.show()
+  win.focus()
+  win.webContents.send('menu:command', id)
+}
+
 function onMenuCommand(id: CommandId): boolean {
   if (id === 'capture.open') {
     openCapture()
+    return true
+  }
+  if (id === 'help.open') {
+    openHelp()
+    return true
+  }
+  // In front of everything else, the help window searches itself
+  if (id === 'find.open' && helpWindow && BrowserWindow.getFocusedWindow() === helpWindow) {
+    helpWindow.webContents.send('help:find')
     return true
   }
   return false

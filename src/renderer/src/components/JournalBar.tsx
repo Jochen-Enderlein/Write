@@ -5,6 +5,7 @@ import { locale } from '../i18n'
 import { usePresence } from '../lib/hooks'
 import { adjacentDay, journalDays, parseDay } from '../lib/journal'
 import { useStore } from '../store'
+import { useIsActivePane } from '../lib/pane'
 import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon } from './Icons'
 
 /**
@@ -14,7 +15,9 @@ import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon } from './Icons'
 export function JournalBar({ day }: { day: string }): React.JSX.Element {
   const { t } = useTranslation()
   const titles = useStore((s) => s.titles)
-  const open = useStore((s) => s.calendarOpen)
+  // With two journal pages side by side, the calendar opens on the active one
+  const active = useIsActivePane()
+  const open = useStore((s) => s.calendarOpen) && active
   const openDay = useStore((s) => s.openJournalDay)
   const days = useMemo(() => journalDays(titles), [titles])
   const calendar = usePresence(open, 140)

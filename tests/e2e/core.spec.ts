@@ -806,6 +806,97 @@ test('benennt verschachtelte Tags um und vervollständigt Links im Markdown-Modu
   await win.getByRole('radio', { name: /Formatiert/ }).click()
 })
 
+/** Runs a menu bar command as if it was picked from the menu. */
+async function menuCommand(id: string): Promise<void> {
+  await app.evaluate(({ BrowserWindow }, cmd) => {
+    BrowserWindow.getAllWindows()
+      .find((w) => !w.webContents.getURL().includes('capture'))!
+      .webContents.send('menu:command', cmd)
+  }, id)
+}
+
+test('verlinkt, bettet ein und kopiert Links auf einzelne Blöcke', async () => {
+  writeFileSync(
+    path.join(vault, 'Blockziel.md'),
+    '# Blockziel\n\nOben steht etwas.\n\nDer wichtige Satz. ^satz1\n\nGanz unten.\n'
+  )
+  writeFileSync(
+    path.join(vault, 'Blockquelle.md'),
+    '# Blockquelle\n\nSiehe [[Blockziel#^satz1]].\n\n![[Blockziel#^satz1]]\n'
+  )
+  await win.locator('.tree-row .name', { hasText: 'Blockquelle' }).click()
+  await expect(win.locator('.embed-page-text')).toHaveText('Der wichtige Satz.')
+  await win.locator('.wikilink', { hasText: 'Blockziel › ^satz1' }).click()
+  await expect(win.locator('.page-title')).toHaveValue('Blockziel')
+  await expect(win.locator('.block-id')).toHaveText('^satz1')
+
+  // The jump left the caret on ^satz1; the command must follow the click right away
+  await win.locator('.bn-editor').getByText('Ganz unten.').click()
+  await menuCommand('page.copyBlockLink')
+  await eventually(() => expect(read('Blockziel.md')).toMatch(/\nGanz unten\. \^[a-z0-9]{6}\n/))
+  const id = /Ganz unten\. \^([a-z0-9]{6})/.exec(read('Blockziel.md'))![1]
+  await expect
+    .poll(() => app.evaluate(({ clipboard }) => clipboard.readText()))
+    .toBe(`[[Blockziel#^${id}]]`)
+  for (const p of ['Blockziel.md', 'Blockquelle.md']) rmSync(path.join(vault, p), { force: true })
+  await expect(win.locator('.tree-row .name', { hasText: 'Blockquelle' })).toHaveCount(0)
+})
+
+test('zeigt zwei Seiten nebeneinander und hält sie gleich', async () => {
+  await win.locator('.tree-row .name', { hasText: 'Abschnitte' }).click()
+  await expect(win.locator('.page-title')).toHaveValue('Abschnitte')
+  // ⌘-click opens a link in the pane beside
+  await win.locator('.wikilink', { hasText: 'Anker' }).click({ modifiers: ['Meta'] })
+  const side = win.locator('.side-pane')
+  const main = win.locator('.main')
+  await expect(side.locator('.page-title')).toHaveValue('Anker')
+  await expect(main.locator('.page-title')).toHaveValue('Abschnitte')
+
+  // The active pane is where the tree opens pages; the main one gets the same page
+  await main.locator('.bn-editor').click()
+  await win.locator('.tree-row .name', { hasText: 'Anker' }).click()
+  await expect(main.locator('.page-title')).toHaveValue('Anker')
+  await side.locator('.bn-editor').getByText('Text im Anker.').click()
+  await win.keyboard.press('End')
+  await win.keyboard.type(' Rechts getippt.')
+  await eventually(() => expect(read('Anker.md')).toContain('Text im Anker. Rechts getippt.'))
+  await expect(main.locator('.bn-editor')).toContainText('Rechts getippt.')
+
+  await side.getByRole('button', { name: 'Rechte Seite schließen' }).click()
+  await expect(side).toHaveCount(0)
+  await win.getByRole('button', { name: /^Seiten nebeneinander/ }).click()
+  await expect(side.locator('.page-title')).toHaveValue('Abschnitte')
+  await side.getByRole('button', { name: 'Rechte Seite schließen' }).click()
+  await expect(side).toHaveCount(0)
+})
+
+test('erklärt alles in einem eigenen Hilfe-Fenster mit Live-Beispielen', async () => {
+  const opened = app.waitForEvent('window', (w) => w.url().includes('help.html'))
+  await win.locator('.sidebar-item', { hasText: 'Hilfe' }).click()
+  const help = await opened
+  await expect(help.locator('.help-head h1')).toBeVisible()
+
+  await help.locator('.help-topic', { hasText: 'Blockreferenzen' }).click()
+  await expect(help.locator('.help-head h1')).toHaveText('Blockreferenzen')
+  const example = help.locator('.help-example').first()
+  await expect(example.locator('.embed-page-text')).toHaveText('Das Budget ist knapp.')
+  await example.getByRole('radio', { name: 'Markdown' }).click()
+  await expect(example.locator('.help-example-source')).toContainText('^mein-satz')
+
+  await help.locator('.help-search input').fill('mermaid')
+  await expect(help.locator('.help-head h1')).toHaveText('Code & Diagramme')
+  await expect(help.locator('.help-topic')).toHaveCount(1)
+  await help.locator('.help-search input').fill('')
+
+  // "Try it" runs the command in the main window
+  await help.locator('.help-topic', { hasText: 'Geteilte Ansicht' }).click()
+  await help.getByRole('button', { name: 'Geteilte Ansicht öffnen' }).click()
+  await expect(win.locator('.side-pane')).toHaveCount(1)
+  await win.locator('.side-pane').getByRole('button', { name: 'Rechte Seite schließen' }).click()
+  await expect(win.locator('.side-pane')).toHaveCount(0)
+  await help.close()
+})
+
 test('speichert eben Getipptes auch beim sofortigen Schließen des Fensters', async () => {
   await win.locator('.tree-row .name', { hasText: 'Quelle' }).click()
   await expect(win.locator('.page-title')).toHaveValue('Quelle')

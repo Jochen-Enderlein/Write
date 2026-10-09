@@ -5,12 +5,12 @@ import { t } from './i18n'
 import { adjacentDay, journalDayOf, journalDays } from './lib/journal'
 import { toggleTheme } from './lib/theme'
 import { checkForUpdates } from './lib/updates'
-import { titleOf, useStore } from './store'
+import { activePage, editorFor, titleOf, useStore } from './store'
 
 async function exportPage(format: 'pdf' | 'html' | 'print', path: string): Promise<void> {
   const s = useStore.getState()
-  const editor = s.editor
-  if (!editor || editor.path !== path) return
+  const editor = editorFor(path)
+  if (!editor) return
   await editor.flush()
   const target = await invoke('page:export', {
     format,
@@ -23,7 +23,9 @@ async function exportPage(format: 'pdf' | 'html' | 'print', path: string): Promi
 /** Runs a command from the menu bar, a shortcut or the command palette. */
 export async function runCommand(id: CommandId): Promise<void> {
   const s = useStore.getState()
-  const page = s.view.kind === 'page' ? s.view.path : null
+  // Page commands act on the pane being worked in; toolbar ones (info, share, graph) on the main page
+  const page = activePage()
+  const mainPage = s.view.kind === 'page' ? s.view.path : null
   try {
     switch (id) {
       case 'page.new':
@@ -57,7 +59,7 @@ export async function runCommand(id: CommandId): Promise<void> {
         if (page) s.setSheet({ kind: 'history', path: page })
         return
       case 'page.info':
-        if (page) s.setInfoOpen(!s.infoOpen)
+        if (mainPage) s.setInfoOpen(!s.infoOpen)
         return
       case 'page.reveal':
         if (page) await invoke('page:reveal', page)
@@ -86,11 +88,19 @@ export async function runCommand(id: CommandId): Promise<void> {
       case 'graph.show':
         return s.navigate({ kind: 'graph', center: null })
       case 'page.share':
-        if (page) useStore.setState({ shareToken: s.shareToken + 1 })
+        if (mainPage) useStore.setState({ shareToken: s.shareToken + 1 })
         return
       case 'page.graph':
         if (page) s.navigate({ kind: 'graph', center: page })
         return
+      case 'view.splitPane':
+        return s.toggleSplit()
+      case 'page.copyBlockLink': {
+        const id = page ? editorFor(page)?.blockRef() : null
+        if (!page || !id) return s.notify(t('editor.blockLinkNone'))
+        await invoke('clipboard:write', `[[${titleOf(page)}#^${id}]]`)
+        return s.notify(t('editor.blockLinkCopied'))
+      }
       case 'conflicts.show':
         return s.setSheet({ kind: 'conflicts' })
       case 'index.rebuild':
@@ -122,6 +132,8 @@ export async function runCommand(id: CommandId): Promise<void> {
         return await toggleTheme()
       case 'update.check':
         return await checkForUpdates()
+      case 'help.open':
+        return await invoke('help:open')
       case 'help.whatsNew':
         return s.setSheet({ kind: 'whatsNew', since: null })
       case 'page.icon':

@@ -87,7 +87,7 @@ function HistorySheet({ path, onClose }: { path: string; onClose(): void }): Rea
 
   useEffect(() => {
     void (async () => {
-      await s().editor?.flush()
+      await s().flushPage(path)
       const [list, file] = await Promise.all([
         invoke('history:list', path),
         invoke('page:read', path)

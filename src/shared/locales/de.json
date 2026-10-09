@@ -52,7 +52,10 @@
     "modeRich": "Formatiert bearbeiten",
     "modeMarkdown": "Als Markdown bearbeiten",
     "modeSplit": "Markdown mit Vorschau",
-    "pageShare": "Teilen …"
+    "pageShare": "Teilen …",
+    "splitPane": "Seiten nebeneinander",
+    "copyBlockLink": "Link auf Block kopieren",
+    "help": "Write-Hilfe"
   },
   "menu": {
     "about": "Über {{name}}",
@@ -114,7 +117,8 @@
     "resize": "Breite der Seitenleiste ändern",
     "newFolder": "Neuer Ordner",
     "settings": "Einstellungen",
-    "graph": "Graph"
+    "graph": "Graph",
+    "help": "Hilfe"
   },
   "tree": {
     "newSubpage": "Neue Unterseite",
@@ -132,7 +136,8 @@
     "untitledFolder": "Neuer Ordner",
     "expand": "Aufklappen",
     "collapse": "Zuklappen",
-    "newWindow": "In neuem Fenster öffnen"
+    "newWindow": "In neuem Fenster öffnen",
+    "openBeside": "Daneben öffnen"
   },
   "page": {
     "untitled": "Unbenannt",
@@ -217,7 +222,10 @@
     "table": "Datenbank",
     "tableHint": "Unterseiten als Tabelle mit Eigenschaften",
     "tasks": "Aufgaben",
-    "tasksHint": "Offene To-dos aus allen Seiten als Tabelle"
+    "tasksHint": "Offene To-dos aus allen Seiten als Tabelle",
+    "copyBlockLink": "Link auf Block kopieren",
+    "blockLinkCopied": "Link auf den Block kopiert",
+    "blockLinkNone": "Hier ist kein Block, auf den ein Link zeigen könnte"
   },
   "palette": {
     "placeholder": "Seite suchen oder Befehl eingeben …",
@@ -433,7 +441,8 @@
     "find": "Suchen",
     "replace": "Ersetzen",
     "spaceKey": "Leertaste",
-    "highlight": "Markieren (Textmarker)"
+    "highlight": "Markieren (Textmarker)",
+    "space": "Leertaste"
   },
   "find": {
     "placeholder": "In Seite suchen",
@@ -652,5 +661,33 @@
     "empty": "Keine To-dos gefunden. Schreibe irgendwo „- [ ] …“, optional mit „📅 2026-10-20“.",
     "count_one": "{{count}} Aufgabe",
     "count_other": "{{count}} Aufgaben"
+  },
+  "split": {
+    "noPage": "Öffne zuerst eine Seite",
+    "close": "Rechte Seite schließen",
+    "toMain": "Links öffnen",
+    "label": "Seite daneben"
+  },
+  "help": {
+    "windowTitle": "Write-Hilfe",
+    "search": "Hilfe durchsuchen",
+    "clearSearch": "Suche löschen",
+    "topics": "Themen",
+    "noResults": "Nichts zu „{{query}}“ gefunden",
+    "related": "Siehe auch",
+    "pager": "Weitere Themen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "tip": "Tipp",
+    "note": "Gut zu wissen",
+    "exampleView": "Ansicht des Beispiels",
+    "exampleResult": "Ergebnis",
+    "exampleMarkdown": "Markdown",
+    "exampleEditable": "Zum Ausprobieren – hier wird nichts gespeichert",
+    "exampleFile": "So steht es in der Datei",
+    "exampleReset": "Zurücksetzen",
+    "copyMarkdown": "Markdown kopieren",
+    "copied": "Kopiert",
+    "more": "Mehr dazu"
   }
 }

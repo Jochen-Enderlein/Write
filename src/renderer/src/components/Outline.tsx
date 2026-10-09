@@ -6,7 +6,8 @@ import { CloseIcon } from './Icons'
 /** Headings of the open page; click to jump, the section in view is highlighted. */
 export function Outline({ closing }: { closing: boolean }): React.JSX.Element | null {
   const { t } = useTranslation()
-  const editor = useStore((s) => s.editor)
+  // The outline sits in the main pane and lists its page
+  const editor = useStore((s) => s.editors.main)
   const docVersion = useStore((s) => s.docVersion)
   const toggle = useStore((s) => s.toggleOutline)
   const [active, setActive] = useState<string | null>(null)

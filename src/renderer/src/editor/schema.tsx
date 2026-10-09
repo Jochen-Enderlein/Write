@@ -144,7 +144,7 @@ function LinkChip({ target, alias }: { target: string; alias: string }): React.J
         // Navigate on press for immediate feedback; keep the editor from moving the caret
         if (e.button !== 0) return
         e.preventDefault()
-        editorBridge.openTitle(target)
+        editorBridge.openTitle(target, e.metaKey)
       }}
     >
       {alias || linkLabel(target)}
@@ -196,7 +196,7 @@ function EmbedPage({ target }: { target: string }): React.JSX.Element {
         onMouseDown={(e) => {
           if (e.button !== 0) return
           e.preventDefault()
-          editorBridge.openTitle(target)
+          editorBridge.openTitle(target, e.metaKey)
         }}
       >
         {page?.title ?? linkLabel(target)}

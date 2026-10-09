@@ -384,7 +384,12 @@ export function SettingsSheet({ onClose }: { onClose(): void }): React.JSX.Eleme
             </div>
             {settings && settings.mcpAccess !== 'off' && <McpSetup />}
           </div>
-          <p className="settings-note">{t('mcp.note')}</p>
+          <p className="settings-note">
+            {t('mcp.note')}{' '}
+            <button className="link-button" onClick={() => void invoke('help:open', 'ai')}>
+              {t('help.more')}
+            </button>
+          </p>
         </section>
 
         <section>

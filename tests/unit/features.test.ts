@@ -30,12 +30,25 @@ import { resolveLanguage } from '@shared/i18n'
 
 describe('Wiki-Links im Obsidian-Format', () => {
   it('trennt Seite, Pfad und Überschrift', () => {
-    expect(parseLinkTarget('Projekt#Ziele')).toEqual({ page: 'Projekt', heading: 'Ziele' })
-    expect(parseLinkTarget('Ordner/Seite.md')).toEqual({ page: 'Ordner/Seite', heading: null })
-    expect(parseLinkTarget('#Notizen')).toEqual({ page: '', heading: 'Notizen' })
-    expect(parseLinkTarget('Seite#^block1')).toEqual({ page: 'Seite', heading: null })
+    expect(parseLinkTarget('Projekt#Ziele')).toEqual({
+      page: 'Projekt',
+      heading: 'Ziele',
+      block: null
+    })
+    expect(parseLinkTarget('Ordner/Seite.md')).toEqual({
+      page: 'Ordner/Seite',
+      heading: null,
+      block: null
+    })
+    expect(parseLinkTarget('#Notizen')).toEqual({ page: '', heading: 'Notizen', block: null })
+    expect(parseLinkTarget('Seite#^block1')).toEqual({
+      page: 'Seite',
+      heading: null,
+      block: 'block1'
+    })
     expect(linkLabel('Projekt#Ziele')).toBe('Projekt › Ziele')
     expect(linkLabel('#Notizen')).toBe('Notizen')
+    expect(linkLabel('Seite#^block1')).toBe('Seite › ^block1')
   })
 
   it('indexiert nur den Seitenteil und keine Bilder', () => {

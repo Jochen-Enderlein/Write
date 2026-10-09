@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePresence } from '../lib/hooks'
+import { usePane } from '../lib/pane'
 import { useStore } from '../store'
 import { SmileIcon } from './Icons'
 
@@ -120,6 +121,7 @@ export function IconPicker({
   const ref = useRef<HTMLDivElement>(null)
   const token = useStore((s) => s.iconPickerToken)
   const firstToken = useRef(token)
+  const pane = usePane()
   const { mounted, closing } = usePresence(open, 140)
   const grid = useRef<HTMLDivElement>(null)
 
@@ -140,8 +142,9 @@ export function IconPicker({
   }
 
   useEffect(() => {
-    if (token !== firstToken.current) setOpen(true)
-  }, [token])
+    // The menu command opens the picker of the active pane's page
+    if (token !== firstToken.current && useStore.getState().activePane === pane) setOpen(true)
+  }, [token, pane])
 
   useEffect(() => {
     if (!open) return

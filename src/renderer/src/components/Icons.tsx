@@ -206,6 +206,13 @@ export const ModeSplitIcon = (p: P) => (
     <path d="M8 2.75v10.5M3.75 6h2.5M3.75 8.5h2" />
   </Icon>
 )
+/** Two pages side by side (split view). */
+export const PanesIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="1.5" y="2.75" width="5.75" height="10.5" rx="1.5" />
+    <rect x="8.75" y="2.75" width="5.75" height="10.5" rx="1.5" />
+  </Icon>
+)
 /** Square with an arrow leaving it upwards, like the macOS share button. */
 export const ShareIcon = (p: P) => (
   <Icon {...p}>
@@ -254,5 +261,66 @@ export const HighlighterIcon = (p: P) => (
     <path d="M9.75 2.75 13.25 6.25 8 11.5H4.5V8z" />
     <path d="M4.5 11.5 3 13h3.5" />
     <path d="M2.5 14.75h11" strokeWidth={2} stroke="var(--mark-solid, #ffcc00)" />
+  </Icon>
+)
+export const LinkIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6.75 9.25a2.75 2.75 0 0 0 3.9 0l2.1-2.1a2.75 2.75 0 0 0-3.9-3.9l-.85.85" />
+    <path d="M9.25 6.75a2.75 2.75 0 0 0-3.9 0l-2.1 2.1a2.75 2.75 0 0 0 3.9 3.9l.85-.85" />
+  </Icon>
+)
+/** Pilcrow: a single paragraph (block references). */
+export const PilcrowIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M7.25 13.25V2.75h5M10.25 2.75v10.5" />
+    <path d="M7.25 8.75H6a3 3 0 0 1 0-6h1.25" />
+  </Icon>
+)
+/** A page shown inside another (embeds). */
+export const EmbedIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="1.75" y="1.75" width="12.5" height="12.5" rx="2" />
+    <rect x="4.5" y="6.25" width="7" height="5.25" rx="1" />
+    <path d="M4.5 4.25h4" />
+  </Icon>
+)
+export const PropertiesIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="3.5" cy="4.5" r="1" />
+    <circle cx="3.5" cy="8" r="1" />
+    <circle cx="3.5" cy="11.5" r="1" />
+    <path d="M6.5 4.5h7M6.5 8h5M6.5 11.5h6" />
+  </Icon>
+)
+/** Two stacked sheets (templates). */
+export const TemplateIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="4.25" y="1.75" width="9" height="10.5" rx="1.5" />
+    <path d="M2.75 4.75v8a1.5 1.5 0 0 0 1.5 1.5h6.5M6.5 5h4.5M6.5 7.5h4.5M6.5 10h2.5" />
+  </Icon>
+)
+/** Concentric rings (focus mode). */
+export const FocusIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="8" cy="8" r="6" />
+    <circle cx="8" cy="8" r="2.5" />
+  </Icon>
+)
+export const BoltIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M9 1.75 3.5 9h4l-.5 5.25L12.5 7h-4z" />
+  </Icon>
+)
+export const SparkleIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M7 2.25 8.2 5.8 11.75 7 8.2 8.2 7 11.75 5.8 8.2 2.25 7 5.8 5.8z" />
+    <path d="M12.25 10.5v3M10.75 12h3" />
+  </Icon>
+)
+export const QuestionIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="8" cy="8" r="6.25" />
+    <path d="M6.25 6.25a1.75 1.75 0 1 1 2.6 1.53c-.5.28-.85.72-.85 1.3v.17" />
+    <path d="M8 11.5h.01" strokeWidth={1.8} />
   </Icon>
 )

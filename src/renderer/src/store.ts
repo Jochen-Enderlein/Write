@@ -11,7 +11,7 @@ import type {
   VaultNotice,
   VaultState
 } from '@shared/types'
-import { normalizeTitle, parseLinkTarget } from '@shared/wikilinks'
+import { linkAnchor, normalizeTitle, parseLinkTarget } from '@shared/wikilinks'
 import { errorMessage, invoke } from './api'
 import { t } from './i18n'
 
@@ -27,6 +27,9 @@ export type View =
   | { kind: 'trash' }
   /** The link graph; `center` (a page path or `#tag`) makes it the local view around it. */
   | { kind: 'graph'; center: string | null }
+
+/** The two page columns of a window: the main view and, in split view, a page beside it. */
+export type Pane = 'main' | 'side'
 
 export type PaletteMode = 'all' | 'pages' | 'templates' | 'vaults' | 'move'
 
@@ -58,8 +61,10 @@ export interface EditorHandle {
   headings(): HeadingInfo[]
   /** Scrolls to a block and puts the caret there. */
   scrollToBlock(id: string): void
-  /** Scrolls to the first heading with this text; false if there is none. */
-  scrollToHeading(text: string): boolean
+  /** Scrolls to a heading (by its text) or a block (`^id`); false if there is none. */
+  scrollToAnchor(anchor: string): boolean
+  /** Gives the block at the caret an id (` ^id`) unless it has one, and returns it. */
+  blockRef(): string | null
   /** Changes frontmatter fields (`undefined` removes one) and saves. */
   updateFrontmatter(changes: Record<string, unknown>): void
   /** Self-contained HTML of the rendered page, for export and printing. */
@@ -75,6 +80,7 @@ export interface EditorHandle {
 const RECENT_MAX = 12
 const OUTLINE_KEY = 'outline:open'
 const MODE_KEY = 'editor:mode'
+const SIDE_KEY = 'side'
 
 /** How pages are edited: rich blocks, plain Markdown, or Markdown with a live preview. */
 export type EditorMode = 'rich' | 'markdown' | 'split'
@@ -103,14 +109,20 @@ interface State {
   pendingEditorFocus: boolean
   /** Tree node that should enter rename mode once it shows up (fresh folders). */
   pendingTreeEdit: string | null
+  /** The editor of the active pane; global commands (find, templates …) act on it. */
   editor: EditorHandle | null
+  editors: Record<Pane, EditorHandle | null>
+  /** Page shown beside the main view (split view), or null. */
+  side: string | null
+  /** Pane the user last worked in; opening a page goes there. */
+  activePane: Pane
   accent: string | null
   settings: AppSettings | null
   /** Recently opened pages of this vault, newest first. */
   recent: string[]
   /** Normalised titles, file names and paths of all pages (fast link existence checks). */
   titleKeys: Set<string>
-  /** Heading the next opened page should scroll to (`[[Seite#Abschnitt]]`). */
+  /** Heading or `^block` the next opened page should scroll to (`[[Seite#Abschnitt]]`). */
   pendingAnchor: string | null
   /** Text the find bar should search for when the next page opens (from full-text search). */
   pendingFind: string | null
@@ -135,8 +147,19 @@ interface State {
   navigate(v: View, opts?: { replace?: boolean }): void
   goBack(): void
   goForward(): void
-  openPage(path: string): void
-  openByTitle(title: string): Promise<void>
+  /** Opens a page in `pane`, by default the active one. */
+  openPage(path: string, pane?: Pane): void
+  openByTitle(title: string, pane?: Pane): Promise<void>
+  /** Shows `path` beside the main view and makes that pane active. */
+  openSide(path: string): void
+  closeSide(): void
+  /** Split view on or off; on shows the page opened before the current one beside it. */
+  toggleSplit(): void
+  setActivePane(pane: Pane): void
+  /** Saves pending edits of every editor that shows `path`. */
+  flushPage(path: string): Promise<void>
+  /** Saves pending edits in both panes. */
+  flushAll(): Promise<void>
   newPage(parent?: string, title?: string, body?: string): Promise<void>
   newFolder(parent?: string): Promise<void>
   renameFolder(path: string, name: string): Promise<void>
@@ -154,7 +177,7 @@ interface State {
   toggleSidebar(): void
   notify(text: string, action?: { label: string; run(): void }): void
   fail(err: unknown): void
-  setEditor(h: EditorHandle | null): void
+  setEditor(pane: Pane, h: EditorHandle | null): void
   requestTitleFocus(): void
   openJournalDay(day: string): Promise<void>
   openInNewWindow(path: string): Promise<void>
@@ -192,6 +215,9 @@ export const useStore = create<State>((set, get) => ({
   pendingEditorFocus: false,
   pendingTreeEdit: null,
   editor: null,
+  editors: { main: null, side: null },
+  side: null,
+  activePane: 'main',
   accent: null,
   settings: null,
   recent: [],
@@ -241,9 +267,14 @@ export const useStore = create<State>((set, get) => ({
       }
     })()
     const start = initialPage ?? last
+    // A window opened for one page starts without the split
+    const side = initialPage ? null : readSide(vault.current.id)
     set({
       view: start ? { kind: 'page', path: start } : { kind: 'empty' },
-      recent: readRecent(vault.current.id)
+      recent: readRecent(vault.current.id),
+      side,
+      activePane: 'main',
+      editor: get().editors.main
     })
     const [conflicts, notices, indexStatus] = await Promise.all([
       invoke('conflicts:list'),
@@ -326,35 +357,93 @@ export const useStore = create<State>((set, get) => ({
     remember(next)
   },
 
-  openPage(path) {
-    get().navigate({ kind: 'page', path })
+  openPage(path, pane) {
+    const s = get()
+    const target = pane ?? (s.side ? s.activePane : 'main')
+    if (target === 'main') {
+      if (s.activePane !== 'main') get().setActivePane('main')
+      get().navigate({ kind: 'page', path })
+    } else get().openSide(path)
   },
 
-  async openByTitle(target) {
+  async openByTitle(target, pane) {
     try {
-      const { page, heading } = parseLinkTarget(target)
-      const view = get().view
-      // `[[#Abschnitt]]` points into the open page
-      if (!page) {
-        if (heading) get().editor?.scrollToHeading(heading)
+      const link = parseLinkTarget(target)
+      const anchor = linkAnchor(link)
+      const s = get()
+      // `[[#Abschnitt]]` points into the page it is on
+      if (!link.page) {
+        if (anchor) s.editor?.scrollToAnchor(anchor)
         return
       }
-      const path = await invoke('index:resolve', page)
-      if (path && view.kind === 'page' && view.path === path) {
-        if (heading) get().editor?.scrollToHeading(heading)
+      const to = pane ?? (s.side ? s.activePane : 'main')
+      const path = await invoke('index:resolve', link.page)
+      const shown = to === 'side' ? s.side : s.view.kind === 'page' ? s.view.path : null
+      if (path && shown === path) {
+        if (anchor) get().editors[to]?.scrollToAnchor(anchor)
         return
       }
-      set({ pendingAnchor: heading })
-      if (path) get().openPage(path)
-      else await get().newPage('', page.replace(/^.*\//, ''))
+      set({ pendingAnchor: anchor })
+      if (path) get().openPage(path, to)
+      else await get().newPage('', link.page.replace(/^.*\//, ''))
     } catch (err) {
       get().fail(err)
     }
   },
 
+  openSide(path) {
+    const s = get()
+    set({
+      side: path,
+      activePane: 'side',
+      editor: s.editors.side,
+      find: { ...s.find, open: false }
+    })
+    writeSide(path)
+    remember({ kind: 'page', path }, false)
+  },
+
+  closeSide() {
+    set({
+      side: null,
+      activePane: 'main',
+      editor: get().editors.main,
+      find: { ...get().find, open: false }
+    })
+    writeSide(null)
+  },
+
+  toggleSplit() {
+    const s = get()
+    if (s.side) return s.closeSide()
+    const main = s.view.kind === 'page' ? s.view.path : null
+    const other = s.recent.find((p) => p !== main) ?? main
+    if (other) s.openSide(other)
+    else s.notify(t('split.noPage'))
+  },
+
+  setActivePane(pane) {
+    const s = get()
+    if (pane === s.activePane || (pane === 'side' && !s.side)) return
+    // The find bar belongs to the page it searched
+    set({ activePane: pane, editor: s.editors[pane], find: { ...s.find, open: false } })
+  },
+
+  async flushPage(path) {
+    const { editors } = get()
+    await Promise.all(
+      [editors.main, editors.side].filter((e) => e?.path === path).map((e) => e!.flush())
+    )
+  },
+
+  async flushAll() {
+    const { editors } = get()
+    await Promise.all([editors.main?.flush(), editors.side?.flush()])
+  },
+
   async newPage(parent = '', title, body) {
     try {
-      await get().editor?.flush()
+      await get().flushAll()
       const path = await invoke('page:create', parent, title ?? t('page.untitled'), body)
       get().openPage(path)
       get().requestTitleFocus()
@@ -377,7 +466,7 @@ export const useStore = create<State>((set, get) => ({
   async renameFolder(path, name) {
     if (!name.trim() || name.trim() === path.split('/').pop()) return
     try {
-      await get().editor?.flush()
+      await get().flushAll()
       await invoke('folder:rename', path, name.trim())
     } catch (err) {
       get().fail(err)
@@ -388,7 +477,7 @@ export const useStore = create<State>((set, get) => ({
     const current = get().titleIndex.get(path)?.title
     if (!title.trim() || title.trim() === current) return path
     try {
-      if (get().editor?.path === path) await get().editor!.flush()
+      await get().flushPage(path)
       const next = await invoke('page:rename', path, title.trim())
       return next
     } catch (err) {
@@ -399,7 +488,7 @@ export const useStore = create<State>((set, get) => ({
 
   async movePage(path, parent) {
     try {
-      if (get().editor?.path === path) await get().editor!.flush()
+      await get().flushPage(path)
       return await invoke('page:move', path, parent)
     } catch (err) {
       get().fail(err)
@@ -409,8 +498,7 @@ export const useStore = create<State>((set, get) => ({
 
   async moveFolder(path, parent) {
     try {
-      const view = get().view
-      if (view.kind === 'page' && view.path.startsWith(path + '/')) await get().editor?.flush()
+      await get().flushAll()
       return await invoke('folder:move', path, parent)
     } catch (err) {
       get().fail(err)
@@ -420,7 +508,7 @@ export const useStore = create<State>((set, get) => ({
 
   async trashPage(path) {
     try {
-      if (get().editor?.path === path) await get().editor!.flush()
+      await get().flushPage(path)
       const title = titleOf(path)
       const id = await invoke('page:trash', path)
       get().notify(t('trash.moved', { title }), {
@@ -434,8 +522,7 @@ export const useStore = create<State>((set, get) => ({
 
   async trashFolder(path) {
     try {
-      const view = get().view
-      if (view.kind === 'page' && view.path.startsWith(path + '/')) await get().editor?.flush()
+      await get().flushAll()
       const title = path.split('/').pop()!
       const id = await invoke('folder:trash', path)
       get().notify(t('trash.moved', { title }), {
@@ -496,8 +583,9 @@ export const useStore = create<State>((set, get) => ({
     console.error(err)
     get().notify(errorMessage(err))
   },
-  setEditor(editor) {
-    set({ editor })
+  setEditor(pane, handle) {
+    const editors = { ...get().editors, [pane]: handle }
+    set({ editors, editor: editors[get().activePane] })
   },
   requestTitleFocus() {
     set({ titleFocusToken: get().titleFocusToken + 1 })
@@ -511,7 +599,7 @@ export const useStore = create<State>((set, get) => ({
   },
   async openInNewWindow(path) {
     try {
-      if (get().editor?.path === path) await get().editor!.flush()
+      await get().flushPage(path)
       await invoke('window:open', path)
     } catch (err) {
       get().fail(err)
@@ -559,14 +647,14 @@ export const useStore = create<State>((set, get) => ({
 }))
 
 /** Stores the last page per vault and keeps the "recently opened" list. */
-function remember(v: View): void {
+function remember(v: View, main = true): void {
   const s = useStore.getState()
   const id = s.vault?.current?.id
   if (v.kind !== 'page' || !id) return
   const recent = [v.path, ...s.recent.filter((p) => p !== v.path)].slice(0, RECENT_MAX)
   useStore.setState({ recent })
   try {
-    localStorage.setItem(`lastPage:${id}`, v.path)
+    if (main) localStorage.setItem(`lastPage:${id}`, v.path)
     localStorage.setItem(`recent:${id}`, JSON.stringify(recent))
   } catch {
     // per-viewer convenience only
@@ -579,6 +667,26 @@ function readRecent(vaultId: string): string[] {
     return Array.isArray(list) ? list.filter((p): p is string => typeof p === 'string') : []
   } catch {
     return []
+  }
+}
+
+/** The page beside the main view is remembered per vault, like the last page. */
+function readSide(vaultId: string): string | null {
+  try {
+    return localStorage.getItem(`${SIDE_KEY}:${vaultId}`) || null
+  } catch {
+    return null
+  }
+}
+
+function writeSide(path: string | null): void {
+  const id = useStore.getState().vault?.current?.id
+  if (!id) return
+  try {
+    if (path) localStorage.setItem(`${SIDE_KEY}:${id}`, path)
+    else localStorage.removeItem(`${SIDE_KEY}:${id}`)
+  } catch {
+    // per-viewer convenience only
   }
 }
 
@@ -626,8 +734,14 @@ export function applyMoves(moves: { from: string; to: string }[]): void {
     return to ? { kind: 'page', path: to } : null
   }
   const view = remap(s.view) ?? { kind: 'empty' as const }
+  const side = s.side && map.has(s.side) ? map.get(s.side) || null : s.side
+  if (side !== s.side) {
+    if (side) writeSide(side)
+    else s.closeSide()
+  }
   useStore.setState({
     view,
+    side,
     back: s.back.map(remap).filter((v): v is View => v !== null),
     forward: s.forward.map(remap).filter((v): v is View => v !== null),
     favorites: s.favorites.map((f) => map.get(f) ?? f).filter(Boolean),
@@ -638,6 +752,20 @@ export function applyMoves(moves: { from: string; to: string }[]): void {
 export function titleOf(path: string): string {
   const meta = useStore.getState().titleIndex.get(path)
   return meta?.title ?? path.split('/').pop()!.replace(/\.md$/i, '')
+}
+
+/** The editor showing `path`, preferring the active pane. */
+export function editorFor(path: string): EditorHandle | null {
+  const { editor, editors } = useStore.getState()
+  if (editor?.path === path) return editor
+  return [editors.main, editors.side].find((e) => e?.path === path) ?? null
+}
+
+/** The page in the active pane, which page commands act on. */
+export function activePage(): string | null {
+  const s = useStore.getState()
+  if (s.activePane === 'side' && s.side) return s.side
+  return s.view.kind === 'page' ? s.view.path : null
 }
 
 /** True if a wiki-link target (`Seite`, `Ordner/Seite`, `Seite#Abschnitt`) points to a page. */

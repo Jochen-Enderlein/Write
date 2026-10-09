@@ -15,6 +15,8 @@ body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .bn-side-menu, .mermaid-code, .mermaid-toggle, .math-code, .math-toggle, .raw-md-label, .bn-trailing-block { display: none !important; }
 .callout-kind select { display: none; }
 .wikilink { text-decoration: none; }
+/* Block ids (^abc123) are link targets, not text */
+.block-id { display: none !important; }
 @media print {
   .page { padding: 0; max-width: none; }
   .bn-block-outer { break-inside: avoid-page; }

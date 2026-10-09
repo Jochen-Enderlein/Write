@@ -52,7 +52,10 @@
     "modeRich": "Edit Formatted",
     "modeMarkdown": "Edit as Markdown",
     "modeSplit": "Markdown with Preview",
-    "pageShare": "Share …"
+    "pageShare": "Share …",
+    "splitPane": "Pages Side by Side",
+    "copyBlockLink": "Copy Link to Block",
+    "help": "Write Help"
   },
   "menu": {
     "about": "About {{name}}",
@@ -114,7 +117,8 @@
     "resize": "Resize sidebar",
     "newFolder": "New Folder",
     "settings": "Settings",
-    "graph": "Graph"
+    "graph": "Graph",
+    "help": "Help"
   },
   "tree": {
     "newSubpage": "New Subpage",
@@ -132,7 +136,8 @@
     "untitledFolder": "New Folder",
     "expand": "Expand",
     "collapse": "Collapse",
-    "newWindow": "Open in New Window"
+    "newWindow": "Open in New Window",
+    "openBeside": "Open Beside"
   },
   "page": {
     "untitled": "Untitled",
@@ -217,7 +222,10 @@
     "table": "Database",
     "tableHint": "Subpages as a table with properties",
     "tasks": "Tasks",
-    "tasksHint": "Open to-dos from all pages as a table"
+    "tasksHint": "Open to-dos from all pages as a table",
+    "copyBlockLink": "Copy link to block",
+    "blockLinkCopied": "Link to block copied",
+    "blockLinkNone": "There is no block here to link to"
   },
   "palette": {
     "placeholder": "Search pages or type a command …",
@@ -433,7 +441,8 @@
     "find": "Find",
     "replace": "Replace",
     "spaceKey": "Space",
-    "highlight": "Highlight"
+    "highlight": "Highlight",
+    "space": "Space"
   },
   "find": {
     "placeholder": "Find in page",
@@ -652,5 +661,33 @@
     "empty": "No to-dos found. Write “- [ ] …” anywhere, optionally with “📅 2026-10-20”.",
     "count_one": "{{count}} task",
     "count_other": "{{count}} tasks"
+  },
+  "split": {
+    "noPage": "Open a page first",
+    "close": "Close right page",
+    "toMain": "Open on the left",
+    "label": "Page beside"
+  },
+  "help": {
+    "windowTitle": "Write Help",
+    "search": "Search Help",
+    "clearSearch": "Clear search",
+    "topics": "Topics",
+    "noResults": "Nothing found for “{{query}}”",
+    "related": "See also",
+    "pager": "More topics",
+    "previous": "Previous",
+    "next": "Next",
+    "tip": "Tip",
+    "note": "Good to know",
+    "exampleView": "Example view",
+    "exampleResult": "Result",
+    "exampleMarkdown": "Markdown",
+    "exampleEditable": "Try it – nothing here is saved",
+    "exampleFile": "This is what the file contains",
+    "exampleReset": "Reset",
+    "copyMarkdown": "Copy Markdown",
+    "copied": "Copied",
+    "more": "Learn more"
   }
 }

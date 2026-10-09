@@ -21,7 +21,8 @@ export interface TableBlockProps {
 export const editorBridge = {
   /** Renders a `write-table` block; set by the app (it needs the store and IPC). */
   TableBlock: ((_props: TableBlockProps) => null) as (props: TableBlockProps) => React.ReactNode,
-  openTitle: (_title: string): void => undefined,
+  /** Follows a link; `beside` (⌘-click) opens it in the other pane. */
+  openTitle: (_title: string, _beside?: boolean): void => undefined,
   useTitleExists: (_title: string): boolean => true,
   /** URL of an image embed (`![[Bild.png]]`) relative to the open page, or null. */
   resolveImage: async (_target: string): Promise<string | null> => null,

@@ -357,6 +357,7 @@ function TreeMenu({
       onSelect: () => void s.toggleFavorite(path),
       separatorBefore: true
     },
+    { label: t('tree.openBeside'), onSelect: () => s.openSide(path) },
     { label: t('tree.newWindow'), onSelect: () => void s.openInNewWindow(path) },
     { label: t('tree.reveal'), onSelect: () => void invoke('page:reveal', path) },
     {

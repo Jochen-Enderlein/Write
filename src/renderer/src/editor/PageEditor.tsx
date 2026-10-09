@@ -7,10 +7,11 @@ import {
   useRef,
   useState
 } from 'react'
-import { filterSuggestionItems } from '@blocknote/core/extensions'
+import { SideMenuExtension, filterSuggestionItems } from '@blocknote/core/extensions'
 import { de, en } from '@blocknote/core/locales'
 import { syntaxHighlighter } from '@blocknote/code-block'
 import { codeIndent } from './codeIndent'
+import { blockIds } from './blockIds'
 import {
   BasicTextStyleButton,
   DragHandleMenu,
@@ -28,7 +29,8 @@ import {
   useBlockNoteEditor,
   useComponentsContext,
   useCreateBlockNote,
-  useEditorState
+  useEditorState,
+  useExtensionState
 } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import type { PageFile, WriteResult } from '@shared/types'
@@ -45,11 +47,13 @@ import { buildFrontmatter, splitFrontmatter, updateFrontmatter } from '@shared/f
 import { composePage, readHeader } from '@shared/page'
 import { resolveRelative } from '@shared/paths'
 import { normalizeTitle } from '@shared/wikilinks'
+import { blockIdOf, matchBlockRef, newBlockId } from '@shared/blockrefs'
 import { proseMirrorFind, type FindTarget } from './find'
 import { invoke } from '../api'
 import i18next, { t } from '../i18n'
 import { useStore, type HeadingInfo } from '../store'
 import { useColorScheme, useIpcEvent } from '../lib/hooks'
+import { announceSaved, usePane } from '../lib/pane'
 import { scrollBehavior } from '../lib/motion'
 import {
   CalloutIcon,
@@ -74,7 +78,10 @@ export interface PageEditorHandle {
   stats(): { words: number }
   headings(): HeadingInfo[]
   scrollToBlock(id: string): void
-  scrollToHeading(text: string): boolean
+  /** Scrolls to a heading (by its text) or a block (`^id`); false if there is none. */
+  scrollToAnchor(anchor: string): boolean
+  /** Gives the block at the caret an id (` ^id`) unless it has one, and returns it. */
+  blockRef(): string | null
   updateFrontmatter(changes: Record<string, unknown>): void
   exportHtml(): string
   findTarget(): FindTarget | null
@@ -129,6 +136,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
   ref
 ) {
   const scheme = useColorScheme()
+  const pane = usePane()
   const path = file.path
 
   // Parse once per loaded file; the editor is recreated by the parent when the file reloads.
@@ -152,7 +160,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
         }
       },
       initialContent: loaded.parsed.blocks.length ? (loaded.parsed.blocks as never) : undefined,
-      extensions: [syntaxHighlighter, codeIndent],
+      extensions: [syntaxHighlighter, codeIndent, blockIds],
       tables: {
         headers: true,
         splitCells: false,
@@ -246,27 +254,34 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
     return out
   }, [editor])
 
-  const scrollToHeading = useCallback(
-    (text: string): boolean => {
-      const want = normalizeTitle(text)
+  const scrollToAnchor = useCallback(
+    (anchor: string): boolean => {
+      if (anchor.startsWith('^')) {
+        const id = matchBlockRef(flatBlocks(editor.document as unknown as Block[]), anchor.slice(1))
+        if (id) scrollToBlock(id)
+        return Boolean(id)
+      }
+      const want = normalizeTitle(anchor)
       const h = headings().find((x) => normalizeTitle(x.text) === want)
       if (h) scrollToBlock(h.id)
       return Boolean(h)
     },
-    [headings, scrollToBlock]
+    [editor, headings, scrollToBlock]
   )
 
-  // `[[Seite#Abschnitt]]`: jump to the heading once the page is open
+  // `[[Seite#Abschnitt]]` / `[[Seite#^id]]`: jump there once the page is open
   useEffect(() => {
     const anchor = useStore.getState().pendingAnchor
     if (!anchor) return
     useStore.setState({ pendingAnchor: null })
-    requestAnimationFrame(() => scrollToHeading(anchor))
-  }, [scrollToHeading])
+    requestAnimationFrame(() => scrollToAnchor(anchor))
+  }, [scrollToAnchor])
 
   // Word count for the toolbar, and the current block for focus mode
   useEffect(() => {
-    useStore.setState({ wordCount: countWords(editor.document as unknown as Block[]) })
+    // The toolbar counts the main pane's page
+    if (pane === 'main')
+      useStore.setState({ wordCount: countWords(editor.document as unknown as Block[]) })
     const style = document.createElement('style')
     document.head.appendChild(style)
     const off = editor.onSelectionChange(() => {
@@ -284,7 +299,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
       off()
       style.remove()
     }
-  }, [editor])
+  }, [editor, pane])
 
   useEffect(() => {
     // What "unchanged" serialises to – the file body itself, byte for byte
@@ -309,6 +324,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
         onStatus('saving')
         const res = await invoke('page:write', path, text, force ? null : s.hash)
         if (res.ok) {
+          announceSaved(path, pane)
           s.hash = res.hash
           s.lastBody = body
           s.header = readHeader(path, text)
@@ -324,7 +340,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
       s.saving = s.saving.then(run, run)
       return s.saving
     },
-    [editor, path, onStatus, onConflict]
+    [editor, path, pane, onStatus, onConflict]
   )
 
   const flush = useCallback(async () => {
@@ -363,7 +379,14 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
       stats: () => ({ words: countWords(editor.document as unknown as Block[]) }),
       headings,
       scrollToBlock,
-      scrollToHeading,
+      scrollToAnchor,
+      blockRef: () => {
+        try {
+          return ensureBlockRef(editor, caretBlock(editor) as unknown as Block)
+        } catch {
+          return null
+        }
+      },
       updateFrontmatter: (changes) => {
         const s = state.current
         const raw = s.header.raw || buildFrontmatter({})
@@ -401,7 +424,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
         }
       }
     }),
-    [editor, flush, save, path, headings, scrollToBlock, scrollToHeading]
+    [editor, flush, save, path, headings, scrollToBlock, scrollToAnchor]
   )
 
   const onChange = useCallback(() => {
@@ -412,11 +435,12 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
     s.timer = setTimeout(() => void save(), SAVE_DELAY)
     useStore.setState((st) => ({ docVersion: st.docVersion + 1 }))
     clearTimeout(s.countTimer)
-    s.countTimer = setTimeout(
-      () => useStore.setState({ wordCount: countWords(editor.document as unknown as Block[]) }),
-      COUNT_DELAY
-    )
-  }, [save, onStatus, editor])
+    if (pane === 'main')
+      s.countTimer = setTimeout(
+        () => useStore.setState({ wordCount: countWords(editor.document as unknown as Block[]) }),
+        COUNT_DELAY
+      )
+  }, [save, onStatus, editor, pane])
 
   const templates = useTemplates()
   const titles = useStore((st) => st.titles)
@@ -614,6 +638,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
             dragHandleMenu={(p) => (
               <DragHandleMenu {...p}>
                 <RemoveBlockItem>{dict.drag_handle.delete_menuitem}</RemoveBlockItem>
+                <CopyBlockLinkItem title={() => state.current.header.title} />
                 <TableRowHeaderItem>{dict.drag_handle.header_row_menuitem}</TableRowHeaderItem>
                 <TableColumnHeaderItem>
                   {dict.drag_handle.header_column_menuitem}
@@ -663,6 +688,100 @@ function HighlightButton(): React.JSX.Element | null {
       }}
     />
   )
+}
+
+/** "Copy link to block" in the block handle menu: `[[Seite#^id]]` to the clipboard. */
+function CopyBlockLinkItem({ title }: { title(): string }): React.JSX.Element | null {
+  const Components = useComponentsContext()!
+  const editor = useBlockNoteEditor() as unknown as WriteEditor
+  const block = useExtensionState(SideMenuExtension, {
+    editor: editor as never,
+    selector: (st) => st?.block
+  })
+  if (!block) return null
+  return (
+    <Components.Generic.Menu.Item
+      className="bn-menu-item"
+      onClick={() => {
+        const id = ensureBlockRef(editor, block as unknown as Block)
+        if (!id) return
+        void invoke('clipboard:write', `[[${title()}#^${id}]]`).then(
+          () => useStore.getState().notify(t('editor.blockLinkCopied')),
+          (err: unknown) => useStore.getState().fail(err)
+        )
+      }}
+    >
+      {t('editor.copyBlockLink')}
+    </Components.Generic.Menu.Item>
+  )
+}
+
+/**
+ * The block the caret is visibly in. ProseMirror picks up a click or arrow key only with the next
+ * selectionchange event; a command that arrives in between must not act on the block before.
+ */
+function caretBlock(editor: WriteEditor): ReturnType<WriteEditor['getBlock']> {
+  const node = window.getSelection()?.anchorNode
+  const el = node instanceof Element ? node : node?.parentElement
+  const id = el?.closest('[data-id]')?.getAttribute('data-id')
+  const shown = id && editor.domElement?.contains(el!) ? editor.getBlock(id) : undefined
+  return shown ?? editor.getTextCursorPosition().block
+}
+
+/** Blocks with inline text that carry their id at the end (` ^id`); others get a `^id` line. */
+const INLINE_ID_TYPES = new Set([
+  'paragraph',
+  'heading',
+  'bulletListItem',
+  'numberedListItem',
+  'checkListItem',
+  'quote',
+  'callout'
+])
+
+/** Text of a block as far as `^id` markers go. */
+function blockText(b: Block): string {
+  return b.type === 'rawMarkdown' ? String(b.props.markdown ?? '') : plainText(b.content)
+}
+
+/** All blocks in document order with their text, for resolving `^id`. */
+function flatBlocks(blocks: Block[]): { id: string; text: string }[] {
+  const out: { id: string; text: string }[] = []
+  const walk = (list: Block[]): void => {
+    for (const b of list) {
+      if (b.id) out.push({ id: b.id, text: blockText(b) })
+      walk(b.children)
+    }
+  }
+  walk(blocks)
+  return out
+}
+
+/**
+ * The id of `block`, giving it one if it has none: text blocks end with ` ^id`, everything else
+ * (code, tables, diagrams …) gets a paragraph `^id` right after it, as in Obsidian.
+ */
+function ensureBlockRef(editor: WriteEditor, block: Block): string | null {
+  if (!block.id) return null
+  const own = blockIdOf(blockText(block))
+  if (own) return own
+  if (INLINE_ID_TYPES.has(block.type)) {
+    // An empty block has nothing to point at; a lone `^id` would name the block above
+    if (!plainText(block.content).trim()) return null
+    const id = newBlockId()
+    const content = Array.isArray(block.content) ? block.content : []
+    editor.updateBlock(block.id, {
+      content: [...content, { type: 'text', text: ` ^${id}`, styles: {} }]
+    } as never)
+    return id
+  }
+  const flat = flatBlocks(editor.document as unknown as Block[])
+  const next = flat[flat.findIndex((b) => b.id === block.id) + 1]
+  const nextId = next && /^\^[A-Za-z0-9-]+\s*$/.test(next.text.trim()) ? blockIdOf(next.text) : null
+  if (nextId) return nextId
+  const id = newBlockId()
+  editor.insertBlocks([{ type: 'paragraph', content: `^${id}` }] as never, block.id, 'after')
+  return id
 }
 
 function collectText(blocks: Block[]): string {

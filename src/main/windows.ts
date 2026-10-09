@@ -6,7 +6,7 @@ const preload = (): string => path.join(import.meta.dirname, '../preload/index.c
 
 function load(
   win: BrowserWindow,
-  page: 'index' | 'capture',
+  page: 'index' | 'capture' | 'help',
   query: Record<string, string> = {}
 ): void {
   const devUrl = process.env.ELECTRON_RENDERER_URL
@@ -75,6 +75,42 @@ export function createMainWindow(
     if (process.platform === 'darwin') app.focus()
   })
   load(win, 'index', initialPage ? { page: initialPage } : {})
+  return win
+}
+
+/** The help: a window of its own, so it can stay open next to the work. */
+export function createHelpWindow(glass: GlassService, topic?: string): BrowserWindow {
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea
+  const width = Math.min(1040, display.width - 80)
+  const height = Math.min(720, display.height - 80)
+  const win = new BrowserWindow({
+    width,
+    height,
+    x: Math.round(display.x + (display.width - width) / 2),
+    y: Math.round(display.y + (display.height - height) / 2),
+    minWidth: 720,
+    minHeight: 460,
+    show: false,
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 20, y: 20 },
+    transparent: true,
+    backgroundColor: '#00000000',
+    fullscreenable: false,
+    webPreferences: {
+      preload: preload(),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      spellcheck: false
+    }
+  })
+  harden(win)
+  win.webContents.once('did-finish-load', () => {
+    glass.apply(win)
+    win.setWindowButtonVisibility(true)
+  })
+  win.once('ready-to-show', () => win.show())
+  load(win, 'help', topic ? { topic } : {})
   return win
 }
 

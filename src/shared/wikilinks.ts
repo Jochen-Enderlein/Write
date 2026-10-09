@@ -10,23 +10,32 @@ export function normalizeTitle(t: string): string {
 export interface LinkTarget {
   /** Page part: a title, a file name or a vault path (`Ordner/Seite`), without `.md`. Empty for `[[#Abschnitt]]`. */
   page: string
-  /** Heading after `#`, if any. Block references (`#^id`) are ignored. */
+  /** Heading after `#`, if any. */
   heading: string | null
+  /** Block id after `#^` (`[[Seite#^abc123]]`), if any. */
+  block: string | null
 }
 
-/** Splits `Seite#Abschnitt`, `Ordner/Seite.md` or `#Abschnitt` into page and heading. */
+/** Splits `Seite#Abschnitt`, `Seite#^id`, `Ordner/Seite.md` or `#Abschnitt` into its parts. */
 export function parseLinkTarget(target: string): LinkTarget {
   const i = target.indexOf('#')
   const page = (i === -1 ? target : target.slice(0, i)).trim().replace(/\.md$/i, '')
-  const heading = i === -1 ? '' : target.slice(i + 1).trim()
-  return { page, heading: heading && !heading.startsWith('^') ? heading : null }
+  const anchor = i === -1 ? '' : target.slice(i + 1).trim()
+  if (anchor.startsWith('^')) return { page, heading: null, block: anchor.slice(1) || null }
+  return { page, heading: anchor || null, block: null }
+}
+
+/** Where a link points inside its page, as editors take it: a heading text or `^id`. */
+export function linkAnchor(target: LinkTarget): string | null {
+  return target.block ? `^${target.block}` : target.heading
 }
 
 /** How a link is shown without alias: `Seite#Abschnitt` → `Seite › Abschnitt`. */
 export function linkLabel(target: string): string {
-  const { page, heading } = parseLinkTarget(target)
-  if (!heading) return page || target
-  return page ? `${page} › ${heading}` : heading
+  const { page, heading, block } = parseLinkTarget(target)
+  const anchor = heading ?? (block ? `^${block}` : null)
+  if (!anchor) return page || target
+  return page ? `${page} › ${anchor}` : anchor
 }
 
 /** File extensions an embed `![[…]]` shows as an image. */

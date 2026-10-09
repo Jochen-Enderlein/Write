@@ -51,7 +51,9 @@ function PaletteBody({ mode }: { mode: PaletteMode }): React.JSX.Element {
   const view = useStore((s) => s.view)
   const s = useStore.getState
   const close = (): void => s().setPalette(false)
-  const page = view.kind === 'page' ? view.path : null
+  // Moving acts on the page of the active pane
+  const side = useStore((s) => (s.activePane === 'side' ? s.side : null))
+  const page = side ?? (view.kind === 'page' ? view.path : null)
 
   useEffect(() => setQuery(''), [mode])
   useEffect(() => {

@@ -13,6 +13,7 @@ import {
   ModeSplitIcon,
   InfoIcon,
   OutlineIcon,
+  PanesIcon,
   SearchIcon,
   SidebarIcon,
   StarIcon
@@ -68,6 +69,7 @@ export function Toolbar({ status }: { status: SaveStatus }): React.JSX.Element {
   const infoOpen = useStore((s) => s.infoOpen)
   const focusMode = useStore((s) => s.focusMode)
   const editorMode = useStore((s) => s.editorMode)
+  const split = useStore((s) => Boolean(s.side))
   const s = useStore.getState
   const page = view.kind === 'page' ? view.path : null
   const trail =
@@ -202,6 +204,14 @@ export function Toolbar({ status }: { status: SaveStatus }): React.JSX.Element {
           </button>
         </>
       )}
+      <button
+        className="icon-button"
+        aria-pressed={split}
+        title={`${t('cmd.splitPane')} ${glyph('view.splitPane')}`}
+        onClick={() => s().toggleSplit()}
+      >
+        <PanesIcon />
+      </button>
       <button
         className="icon-button"
         title={`${t('cmd.palette')} ${glyph('palette.open')}`}

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { AppSettings } from '@shared/types'
 import { readHeader } from '@shared/page'
 import { parseLinkTarget } from '@shared/wikilinks'
+import { blockSection, headingSection, stripBlockId } from '@shared/blockrefs'
 import { invoke } from './api'
 import { runCommand } from './commands'
 import { FolderView } from './components/FolderView'
@@ -19,6 +20,7 @@ import { SearchView, TagsView, TrashView } from './components/Views'
 import { GraphView } from './components/GraphView'
 import { Welcome } from './components/Welcome'
 import { Toast } from './components/Toast'
+import { SidePane } from './components/SidePane'
 import { editorBridge } from './editor/bridge'
 import { EmbeddedTable } from './components/EmbeddedTable'
 import { useIpcEvent, usePresence } from './lib/hooks'
@@ -64,25 +66,14 @@ function currentPage(): string | null {
   return v.kind === 'page' ? v.path : null
 }
 
-/** Section of a page body below `heading` up to the next heading of the same or a higher level. */
-function sectionOf(body: string, heading: string): string {
-  const lines = body.split('\n')
-  const want = heading.trim().toLowerCase()
-  const start = lines.findIndex((l) => {
-    const m = /^(#{1,6})\s+(.*)$/.exec(l)
-    return m && m[2]!.trim().toLowerCase() === want
-  })
-  if (start === -1) return body
-  const level = /^(#{1,6})/.exec(lines[start]!)![1]!.length
-  const end = lines.findIndex(
-    (l, i) => i > start && /^(#{1,6})\s/.test(l) && /^(#{1,6})/.exec(l)![1]!.length <= level
-  )
-  return lines.slice(start + 1, end === -1 ? undefined : end).join('\n')
-}
-
 // Wire editor node views to the store
 editorBridge.TableBlock = EmbeddedTable
-editorBridge.openTitle = (title) => void useStore.getState().openByTitle(title)
+editorBridge.openTitle = (title, beside) => {
+  const s = useStore.getState()
+  // ⌘-click opens the link in the other pane (beside the main view, or back on the left)
+  const pane = beside ? (s.side && s.activePane === 'side' ? 'main' : 'side') : undefined
+  void s.openByTitle(title, pane)
+}
 editorBridge.useTitleExists = function useTitleExists(title: string): boolean {
   return useStore((s) => linkTargetExists(s.titleKeys, title))
 }
@@ -93,14 +84,24 @@ editorBridge.resolveImage = async (target) => {
   return rel ? 'vault-asset://vault/' + rel.split('/').map(encodeURIComponent).join('/') : null
 }
 editorBridge.loadPage = async (target) => {
-  const { page, heading } = parseLinkTarget(target)
+  const { page, heading, block } = parseLinkTarget(target)
   const path = page ? await invoke('index:resolve', page).catch(() => null) : currentPage()
   if (!path) return null
   const file = await invoke('page:read', path).catch(() => null)
   if (!file) return null
   const header = readHeader(path, file.text)
-  const body = heading ? sectionOf(header.body, heading) : header.body
-  const text = body.trim()
+  if (block) {
+    // A block that is gone shows as missing rather than as the whole page
+    const section = blockSection(header.body, block)
+    return section === null ? null : { path, title: header.title, text: section.trim() }
+  }
+  const body = heading ? headingSection(header.body, heading) : header.body
+  // Block ids are anchors, not text
+  const text = body
+    .split('\n')
+    .map((l) => stripBlockId(l))
+    .join('\n')
+    .trim()
   return { path, title: header.title, text: text.length > 1200 ? text.slice(0, 1200) + ' …' : text }
 }
 
@@ -113,6 +114,8 @@ export function App(): React.JSX.Element {
   const settings = useStore((s) => s.settings)
   const focusMode = useStore((s) => s.focusMode)
   const outlineOpen = useStore((s) => s.outlineOpen)
+  const side = useStore((s) => s.side)
+  const findHere = useStore((s) => s.activePane === 'main')
   const outline = usePresence(outlineOpen && view.kind === 'page', 160)
   const [status, setStatus] = useState<SaveStatus>('idle')
   const [scrolled, setScrolled] = useState(false)
@@ -172,8 +175,9 @@ export function App(): React.JSX.Element {
   })
   // Before the window closes or the app quits: save what is still pending
   useIpcEvent('app:flush', (id) => {
-    const editor = useStore.getState().editor
-    void Promise.resolve(editor?.flush())
+    void useStore
+      .getState()
+      .flushAll()
       .catch(() => undefined)
       .finally(() => void invoke('app:flushed', id))
   })
@@ -234,16 +238,24 @@ export function App(): React.JSX.Element {
         'app',
         !showSidebar && 'sidebar-hidden',
         focusMode && 'focus-mode',
-        outlineOpen && view.kind === 'page' && 'outline-open'
+        outlineOpen && view.kind === 'page' && 'outline-open',
+        side && !findHere && 'side-active'
       ]
         .filter(Boolean)
         .join(' ')}
       style={{ ['--sidebar-open-w' as string]: `${openWidth.current}px` }}
     >
       <Sidebar width={openWidth.current} onResize={onResize} />
-      <main className={`main ${scrolled ? 'scrolled' : ''}`}>
+      <main
+        className={`main ${scrolled ? 'scrolled' : ''}`}
+        onPointerDownCapture={() => useStore.getState().setActivePane('main')}
+        onFocusCapture={() => useStore.getState().setActivePane('main')}
+      >
         <Toolbar status={status} />
-        <div className="main-scroll" onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)}>
+        <div
+          className="main-scroll pane-scroll"
+          onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)}
+        >
           <ErrorBoundary resetKey={JSON.stringify(view)}>
             {view.kind === 'page' && <PageView path={view.path} onStatus={setStatus} />}
             {view.kind === 'folder' && <FolderView folder={view.folder} />}
@@ -257,9 +269,10 @@ export function App(): React.JSX.Element {
           </ErrorBoundary>
         </div>
         {infoOpen && view.kind === 'page' && <InfoPopover path={view.path} />}
-        {view.kind === 'page' && <FindBar />}
+        {view.kind === 'page' && findHere && <FindBar />}
         {outline.mounted && view.kind === 'page' && <Outline closing={outline.closing} />}
       </main>
+      {side && <SidePane path={side} />}
       <CommandPalette />
       <SheetHost />
       <Toast />

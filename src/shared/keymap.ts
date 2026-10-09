@@ -51,8 +51,11 @@ export type CommandId =
   | 'view.modeRich'
   | 'view.modeMarkdown'
   | 'view.modeSplit'
+  | 'view.splitPane'
+  | 'page.copyBlockLink'
   | 'update.check'
   | 'help.whatsNew'
+  | 'help.open'
 
 export interface CommandDef {
   id: CommandId
@@ -97,6 +100,7 @@ export const COMMANDS: CommandDef[] = [
     accelerator: 'Control+CmdOrCtrl+3',
     menu: 'view'
   },
+  { id: 'view.splitPane', label: 'cmd.splitPane', accelerator: 'CmdOrCtrl+\\', menu: 'view' },
   { id: 'journal.today', label: 'cmd.journalToday', accelerator: 'CmdOrCtrl+Alt+J', menu: 'go' },
   {
     id: 'journal.previous',
@@ -124,6 +128,7 @@ export const COMMANDS: CommandDef[] = [
     accelerator: 'CmdOrCtrl+Alt+N',
     menu: 'page'
   },
+  { id: 'page.copyBlockLink', label: 'cmd.copyBlockLink', menu: 'page' },
   { id: 'page.exportPdf', label: 'cmd.exportPdf', menu: 'page' },
   { id: 'page.exportHtml', label: 'cmd.exportHtml', menu: 'page' },
   { id: 'page.print', label: 'cmd.print', accelerator: 'CmdOrCtrl+Alt+P', menu: 'page' },
@@ -148,6 +153,7 @@ export const COMMANDS: CommandDef[] = [
   { id: 'conflicts.show', label: 'cmd.conflicts', menu: 'go' },
   { id: 'index.rebuild', label: 'cmd.rebuildIndex', menu: 'file' },
   { id: 'capture.open', label: 'cmd.capture', menu: 'file' },
+  { id: 'help.open', label: 'cmd.help', accelerator: 'CmdOrCtrl+Shift+/', menu: 'help' },
   { id: 'shortcuts.show', label: 'cmd.shortcuts', accelerator: 'CmdOrCtrl+/', menu: 'help' },
   { id: 'help.whatsNew', label: 'cmd.whatsNew', menu: 'help' }
 ]
@@ -189,6 +195,11 @@ export function acceleratorGlyphs(acc: string | undefined, spaceLabel = 'Leertas
     ['CmdOrCtrl', '⌘'],
     ['Command', '⌘']
   ]
+  // ⇧/ is how macOS writes ⌘? (the Help shortcut)
+  if (key === '/' && parts.includes('Shift')) {
+    parts.splice(parts.indexOf('Shift'), 1)
+    return acceleratorGlyphs([...parts, '?'].join('+'), spaceLabel)
+  }
   let s = ''
   for (const [name, glyph] of order) if (parts.includes(name)) s += glyph
   const keys: Record<string, string> = {
