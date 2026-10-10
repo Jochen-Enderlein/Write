@@ -520,6 +520,40 @@
   border-radius: 0;
 }
 
+/* Hovering a wiki link shows the start of its page; it never takes the pointer */
+.link-preview {
+  width: 340px;
+  pointer-events: none;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.link-preview-title {
+  margin-bottom: 6px;
+  font-weight: 650;
+  color: var(--label);
+}
+
+.link-preview-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 9;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--label-2);
+}
+
+.link-preview-empty {
+  color: var(--label-2);
+}
+
+.link-preview-hint {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--label-3);
+}
+
 /* Callouts */
 .callout {
   --tint: var(--blue);

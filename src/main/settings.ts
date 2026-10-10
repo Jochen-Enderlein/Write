@@ -27,6 +27,7 @@ const defaults: SettingsFile = {
     editorFont: 'sans',
     editorFontSize: 16,
     editorWidth: 'normal',
+    smartTypography: true,
     language: 'system',
     theme: 'system',
     autoUpdates: 'ask',

@@ -171,6 +171,7 @@ export const ipcSchemas = {
         editorFont: z.enum(['sans', 'serif', 'mono']),
         editorFontSize: z.number().int().min(12).max(26),
         editorWidth: z.enum(['narrow', 'normal', 'wide', 'full']),
+        smartTypography: z.boolean(),
         language: z.enum(['system', 'de', 'en']),
         theme: z.enum(['system', 'light', 'dark']),
         autoUpdates: z.enum(['ask', 'on', 'off']),

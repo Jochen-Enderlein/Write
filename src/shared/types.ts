@@ -164,6 +164,8 @@ export interface AppSettings {
   editorFont: EditorFont
   editorFontSize: number
   editorWidth: EditorWidth
+  /** Typing turns "…" into „…“, ` -- ` into ` – ` and `...` into `…`. */
+  smartTypography: boolean
   language: LanguageSetting
   /** Light or dark appearance; `system` follows macOS. */
   theme: ThemeSetting

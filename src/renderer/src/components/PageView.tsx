@@ -11,6 +11,7 @@ import { MarkdownEditor } from '../editor/MarkdownEditor'
 import { MarkdownPreview, type MarkdownPreviewHandle } from '../editor/MarkdownPreview'
 import { useIpcEvent } from '../lib/hooks'
 import { usePane, useSavedElsewhere } from '../lib/pane'
+import { readPosition, writePosition } from '../lib/positions'
 import { useStore, type EditorMode } from '../store'
 import { WarningIcon } from './Icons'
 import { IconPicker } from './IconPicker'
@@ -110,8 +111,32 @@ export function PageView({
 
   // What is on screen; differs from `path` only while the next page is loading
   const shown = file?.path ?? null
+  // A page opens where it was left; a new one, or one opened at a heading or a hit, at the top
   useLayoutEffect(() => {
-    if (shown) pageRef.current?.closest('.pane-scroll')?.scrollTo({ top: 0 })
+    const el = pageRef.current?.closest<HTMLElement>('.pane-scroll')
+    if (!shown || !el) return
+    const st = useStore.getState()
+    const top = st.pendingAnchor || st.pendingFind ? 0 : (readPosition(shown)?.scroll ?? 0)
+    el.scrollTo({ top })
+    // Images, diagrams and the editor itself may still grow the page for a moment
+    let frame = 0
+    let tries = 0
+    const settle = (): void => {
+      if (Math.abs(el.scrollTop - top) < 2 || ++tries > 20) return
+      el.scrollTo({ top })
+      frame = requestAnimationFrame(settle)
+    }
+    if (top > 0) frame = requestAnimationFrame(settle)
+    const onScroll = (): void => writePosition(shown, { scroll: el.scrollTop })
+    el.addEventListener('scroll', onScroll, { passive: true })
+    // Scrolling by hand ends the settling, so it never pulls against the reader
+    const stop = (): void => cancelAnimationFrame(frame)
+    el.addEventListener('wheel', stop, { passive: true, once: true })
+    return () => {
+      stop()
+      el.removeEventListener('scroll', onScroll)
+      el.removeEventListener('wheel', stop)
+    }
   }, [shown])
 
   useIpcEvent('page:changed', (p) => {

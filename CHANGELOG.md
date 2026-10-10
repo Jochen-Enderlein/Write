@@ -5,6 +5,20 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.6.0 – 2026-10-10
+
+### Neu
+
+- **Link-Vorschau:** Bleibst du kurz mit der Maus auf einem `[[Link]]`, zeigt eine kleine Vorschau den Anfang der Seite – oder den Abschnitt bzw. Block, auf den er zeigt. Öffnen musst du sie dafür nicht.
+- **Typografische Zeichen:** Beim Tippen wird aus `"Hallo"` „Hallo“, aus `geht's` geht’s, aus `Wort -- Wort` ein Gedankenstrich und aus `...` eine Ellipse. ⌫ direkt danach nimmt die Ersetzung zurück. In Code bleibt alles, wie du es tippst. Abschalten lässt es sich unter _Einstellungen → Darstellung_.
+- **Markierung umschließen:** Markierten Text und dann `(`, `[`, `{` oder `"` tippen setzt die Zeichen um den Text, statt ihn zu ersetzen. Zweimal `[` macht aus der Markierung einen Link auf die gleichnamige Seite.
+- **Schreibmaschinen-Scrollen:** Im Fokusmodus bleibt die Zeile, in der du schreibst, in der Mitte des Fensters.
+
+### Verbessert
+
+- **Write merkt sich, wo du warst:** Kehrst du auf eine Seite zurück – mit ⌘[, über einen Link oder die Seitenleiste –, steht sie an derselben Stelle wie vorher. Warst du gerade am Schreiben, wartet der Cursor dort, wo du aufgehört hast.
+- **Link einfügen:** Eine kopierte Adresse über markierten Text eingefügt macht den Text zum Link, statt ihn zu ersetzen.
+
 ## 0.5.0 – 2026-10-09
 
 ### Neu

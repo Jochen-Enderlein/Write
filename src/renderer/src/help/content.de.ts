@@ -101,6 +101,10 @@ export const de: HelpContent = {
           kind: 'tip',
           text: 'Umbenennen ist sicher: Alle Links auf die Seite werden in allen anderen Seiten mit angepasst.'
         },
+        {
+          kind: 'p',
+          text: 'Write merkt sich, wo du auf einer Seite warst: Kehrst du zurück – etwa mit {{cmd:nav.back}} –, steht sie an derselben Stelle, und der Cursor wartet dort, wo du aufgehört hast.'
+        },
         { kind: 'try', command: 'page.new', label: 'Neue Seite anlegen' }
       ],
       related: ['links', 'trash', 'search']
@@ -120,7 +124,12 @@ export const de: HelpContent = {
         'überschrift',
         'textmarker',
         'einfügen',
-        'paste'
+        'paste',
+        'anführungszeichen',
+        'gedankenstrich',
+        'typografie',
+        'klammern',
+        'url'
       ],
       blocks: [
         {
@@ -155,6 +164,19 @@ export const de: HelpContent = {
         {
           kind: 'p',
           text: 'Fahre mit der Maus links neben einen Block: Mit dem Griff **⋮⋮** ziehst du ihn an eine andere Stelle, ein Klick darauf öffnet das Blockmenü – zum Löschen oder um einen [Link auf den Block](topic:blockrefs) zu kopieren.'
+        },
+        { kind: 'h', text: 'Beim Tippen' },
+        {
+          kind: 'list',
+          items: [
+            '**Typografische Zeichen:** Aus `"Hallo"` wird „Hallo“, aus `geht\'s` wird geht’s, aus `Wort -- Wort` ein Gedankenstrich und aus `...` eine Ellipse. **⌫** direkt danach nimmt es zurück. In Code bleibt alles, wie du es tippst; abschalten kannst du es in den [Einstellungen](topic:settings).',
+            '**Markierung umschließen:** Markiere Text und tippe `(`, `[`, `{` oder `"` – der Text wird eingeklammert statt ersetzt. Zweimal `[` macht aus der Markierung einen [Link](topic:links).',
+            '**Link einfügen:** Kopiere eine Adresse, markiere Text und füge sie mit {{keys:CmdOrCtrl+V}} ein – der Text wird zum Link.'
+          ]
+        },
+        {
+          kind: 'example',
+          markdown: 'Markiere ein Wort und tippe zweimal [ – oder tippe hier "Anführungszeichen".\n'
         },
         {
           kind: 'tip',
@@ -216,7 +238,8 @@ export const de: HelpContent = {
           items: [
             'Tippe `[[` – eine Liste deiner Seiten erscheint.',
             'Wähle eine Seite oder tippe einen neuen Titel: Ein Klick auf einen Link zu einer Seite, die es noch nicht gibt, legt sie an.',
-            'Ein Klick auf den Link öffnet die Seite, mit **⌘-Klick** öffnet sie sich [daneben](topic:split).'
+            'Ein Klick auf den Link öffnet die Seite, mit **⌘-Klick** öffnet sie sich [daneben](topic:split).',
+            'Bleibst du kurz mit der Maus auf einem Link, zeigt eine **Vorschau** den Anfang der Seite – ohne sie zu öffnen.'
           ]
         },
         {
@@ -686,7 +709,7 @@ export const de: HelpContent = {
       blocks: [
         {
           kind: 'p',
-          text: '**Fokusmodus** ({{cmd:view.focus}}) blendet Seitenleiste und Toolbar aus und dimmt alle Absätze außer dem, in dem du gerade schreibst.'
+          text: '**Fokusmodus** ({{cmd:view.focus}}) blendet Seitenleiste und Toolbar aus und dimmt alle Absätze außer dem, in dem du gerade schreibst. Die Zeile, in der du tippst, bleibt dabei in der Mitte des Fensters, wie bei einer Schreibmaschine.'
         },
         {
           kind: 'p',
@@ -898,7 +921,7 @@ export const de: HelpContent = {
         {
           kind: 'list',
           items: [
-            '**Darstellung** – Schrift (System, Serif, Monospace), Schriftgröße, Zeilenbreite und Hell/Dunkel. Die Akzentfarbe folgt macOS.',
+            '**Darstellung** – Schrift (System, Serif, Monospace), Schriftgröße, Zeilenbreite, typografische Zeichen und Hell/Dunkel. Die Akzentfarbe folgt macOS.',
             '**Sprache** – Deutsch oder Englisch, oder wie das System.',
             '**Vaults** – geöffnete Vaults, im Finder zeigen, aus der Liste entfernen.',
             '**Quick Capture** – der Kurzbefehl, der aus jeder App eine Notiz aufnimmt.',

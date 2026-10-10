@@ -171,6 +171,22 @@ export function SettingsSheet({ onClose }: { onClose(): void }): React.JSX.Eleme
                 </div>
                 <div className="row">
                   <div className="row-main">
+                    <div className="row-title" id="smart-typography-label">
+                      {t('settings.smartTypography')}
+                    </div>
+                    <div className="row-sub">{t('settings.smartTypographyHint')}</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    className="switch"
+                    aria-labelledby="smart-typography-label"
+                    checked={settings.smartTypography}
+                    onChange={(e) => void update({ smartTypography: e.target.checked })}
+                  />
+                </div>
+                <div className="row">
+                  <div className="row-main">
                     <div className="row-title">{t('settings.language')}</div>
                     <div className="row-sub">{t('settings.languageHint')}</div>
                   </div>

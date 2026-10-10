@@ -8,6 +8,8 @@ import { invoke } from '../api'
 import { useColorScheme } from '../lib/hooks'
 import { blockIds } from '../editor/blockIds'
 import { codeIndent } from '../editor/codeIndent'
+import { typing } from '../editor/typing'
+import i18next from '../i18n'
 import { prepareBlocks, schema } from '../editor/schema'
 import { CheckIcon } from '../components/Icons'
 
@@ -103,7 +105,16 @@ function LiveEditor({
     {
       schema,
       initialContent: initial.length ? (initial as never) : undefined,
-      extensions: [syntaxHighlighter, codeIndent, blockIds],
+      // The help shows the default: smart punctuation on, in the help's language
+      extensions: [
+        syntaxHighlighter,
+        codeIndent,
+        blockIds,
+        typing(
+          () => true,
+          () => (i18next.language === 'en' ? 'en' : 'de')
+        )
+      ],
       tables: { headers: true, splitCells: false, cellBackgroundColor: false, cellTextColor: false }
     },
     []

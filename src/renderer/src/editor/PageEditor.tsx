@@ -12,6 +12,8 @@ import { de, en } from '@blocknote/core/locales'
 import { syntaxHighlighter } from '@blocknote/code-block'
 import { codeIndent } from './codeIndent'
 import { blockIds } from './blockIds'
+import { typing } from './typing'
+import { TextSelection } from 'prosemirror-state'
 import {
   BasicTextStyleButton,
   DragHandleMenu,
@@ -55,6 +57,7 @@ import { useStore, type HeadingInfo } from '../store'
 import { useColorScheme, useIpcEvent } from '../lib/hooks'
 import { announceSaved, usePane } from '../lib/pane'
 import { scrollBehavior } from '../lib/motion'
+import { readPosition, writePosition } from '../lib/positions'
 import {
   CalloutIcon,
   DiagramIcon,
@@ -98,6 +101,10 @@ interface Props {
 }
 
 const SAVE_DELAY = 500
+const URL_RE = /^(https?:\/\/|mailto:)\S+$/i
+
+const smartTypography = (): boolean => useStore.getState().settings?.smartTypography ?? true
+const quoteStyle = (): 'de' | 'en' => (i18next.language === 'en' ? 'en' : 'de')
 const COUNT_DELAY = 300
 
 function countWords(blocks: Block[]): number {
@@ -160,7 +167,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
         }
       },
       initialContent: loaded.parsed.blocks.length ? (loaded.parsed.blocks as never) : undefined,
-      extensions: [syntaxHighlighter, codeIndent, blockIds],
+      extensions: [syntaxHighlighter, codeIndent, blockIds, typing(smartTypography, quoteStyle)],
       tables: {
         headers: true,
         splitCells: false,
@@ -176,6 +183,12 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
       pasteHandler: ({ event, editor: ed, defaultPasteHandler }) => {
         const data = event.clipboardData
         const inCode = ed.getTextCursorPosition().block.type === 'codeBlock'
+        // A URL pasted over selected text links that text instead of replacing it
+        const url = data?.getData('text/plain').trim() ?? ''
+        if (!inCode && URL_RE.test(url) && !ed.prosemirrorState.selection.empty) {
+          ed.createLink(url)
+          return true
+        }
         if (
           !data ||
           inCode ||
@@ -219,6 +232,54 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
     conflict: false,
     countTimer: 0 as unknown as ReturnType<typeof setTimeout>
   })
+
+  // Back on a page: the caret where it was, and the focus too if the editor had it
+  useEffect(() => {
+    const st = useStore.getState()
+    const caret = readPosition(path)
+    const view = editor.prosemirrorView
+    if (!caret?.caret || !view || st.pendingAnchor || st.pendingEditorFocus || st.pendingFind)
+      return
+    const doc = view.state.doc
+    // The page changed in between (sync, another window); the old offsets mean nothing now
+    if (caret.caret.size !== doc.content.size) return
+    try {
+      const sel = TextSelection.between(
+        doc.resolve(caret.caret.anchor),
+        doc.resolve(caret.caret.head)
+      )
+      view.dispatch(view.state.tr.setSelection(sel))
+      if (caret.focused) view.focus()
+    } catch {
+      // offsets out of range
+    }
+  }, [editor, path])
+
+  useEffect(() => {
+    const dom = editor.domElement
+    if (!dom) return
+    const remember = (focused: boolean): void => {
+      const view = editor.prosemirrorView
+      if (!view) return
+      const { anchor, head } = view.state.selection
+      writePosition(path, { caret: { anchor, head, size: view.state.doc.content.size }, focused })
+    }
+    const onIn = (): void => remember(true)
+    // Leaving the page removes the editor, which can blur it too; only a blur while the page
+    // stays open means the reader moved elsewhere
+    const onOut = (): void =>
+      void setTimeout(() => dom.isConnected && writePosition(path, { focused: false }))
+    dom.addEventListener('focusin', onIn)
+    dom.addEventListener('focusout', onOut)
+    const off = editor.onSelectionChange(() =>
+      remember(editor.prosemirrorView?.hasFocus() ?? false)
+    )
+    return () => {
+      dom.removeEventListener('focusin', onIn)
+      dom.removeEventListener('focusout', onOut)
+      off()
+    }
+  }, [editor, path])
 
   useEffect(() => {
     if (!useStore.getState().pendingEditorFocus) return
@@ -294,6 +355,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
       style.textContent = id
         ? `.focus-mode .write-editor [data-id="${CSS.escape(id)}"] { --focus-dim: 1; }`
         : ''
+      if (useStore.getState().focusMode) centerCaret(editor)
     })
     return () => {
       off()
@@ -782,6 +844,17 @@ function ensureBlockRef(editor: WriteEditor, block: Block): string | null {
   const id = newBlockId()
   editor.insertBlocks([{ type: 'paragraph', content: `^${id}` }] as never, block.id, 'after')
   return id
+}
+
+/** Typewriter scrolling in focus mode: the line being written stays a little above the middle. */
+function centerCaret(editor: WriteEditor): void {
+  const view = editor.prosemirrorView
+  const scroller = editor.domElement?.closest<HTMLElement>('.pane-scroll')
+  if (!view || !scroller || !view.state.selection.empty || !view.hasFocus()) return
+  const caret = view.coordsAtPos(view.state.selection.head)
+  const box = scroller.getBoundingClientRect()
+  const delta = (caret.top + caret.bottom) / 2 - (box.top + box.height * 0.45)
+  if (Math.abs(delta) > 4) scroller.scrollBy({ top: delta, behavior: scrollBehavior() })
 }
 
 function collectText(blocks: Block[]): string {

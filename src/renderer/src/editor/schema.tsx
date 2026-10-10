@@ -18,6 +18,7 @@ import { renderMermaid } from './mermaid'
 import { renderTex } from './katex'
 import { editForKey } from './codeIndent'
 import { editorBridge } from './bridge'
+import { useLinkPreview } from './LinkPreview'
 
 export const CALLOUT_ICONS: Record<string, string> = {
   note: '✎',
@@ -136,18 +137,21 @@ export const RawMarkdown = createReactBlockSpec(
 
 function LinkChip({ target, alias }: { target: string; alias: string }): React.JSX.Element {
   const exists = editorBridge.useTitleExists(target)
+  const { bind, close, preview } = useLinkPreview(target)
   return (
     <span
       className={exists ? 'wikilink' : 'wikilink missing'}
-      title={exists ? target : t('editor.missingPage')}
+      {...bind}
       onMouseDown={(e) => {
         // Navigate on press for immediate feedback; keep the editor from moving the caret
         if (e.button !== 0) return
         e.preventDefault()
+        close()
         editorBridge.openTitle(target, e.metaKey)
       }}
     >
       {alias || linkLabel(target)}
+      {preview}
     </span>
   )
 }

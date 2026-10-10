@@ -93,6 +93,10 @@ export const en: HelpContent = {
           kind: 'tip',
           text: 'Renaming is safe: every link to the page is updated in all other pages.'
         },
+        {
+          kind: 'p',
+          text: 'Write remembers where you were on a page: come back – with {{cmd:nav.back}}, say – and it is at the same spot, with the cursor where you left off.'
+        },
         { kind: 'try', command: 'page.new', label: 'Create a page' }
       ],
       related: ['links', 'trash', 'search']
@@ -111,7 +115,12 @@ export const en: HelpContent = {
         'list',
         'heading',
         'highlight',
-        'paste'
+        'paste',
+        'quotes',
+        'dash',
+        'typography',
+        'brackets',
+        'url'
       ],
       blocks: [
         {
@@ -146,6 +155,19 @@ export const en: HelpContent = {
         {
           kind: 'p',
           text: 'Hover to the left of a block: drag the **⋮⋮** handle to move it, or click it for the block menu – to delete the block or copy a [link to it](topic:blockrefs).'
+        },
+        { kind: 'h', text: 'While typing' },
+        {
+          kind: 'list',
+          items: [
+            '**Smart punctuation:** `"hi"` becomes “hi”, `it\'s` becomes it’s, `word -- word` gets an en dash and `...` an ellipsis. **⌫** right after takes it back. Code stays exactly as typed; turn it off in [Settings](topic:settings).',
+            '**Wrap a selection:** select text and type `(`, `[`, `{` or `"` – the text is wrapped instead of replaced. Typing `[` twice turns the selection into a [link](topic:links).',
+            '**Paste a link:** copy an address, select text and paste with {{keys:CmdOrCtrl+V}} – the text becomes a link.'
+          ]
+        },
+        {
+          kind: 'example',
+          markdown: 'Select a word and type [ twice – or type "quotes" here.\n'
         },
         {
           kind: 'tip',
@@ -207,7 +229,8 @@ export const en: HelpContent = {
           items: [
             'Type `[[` – a list of your pages appears.',
             'Pick a page or type a new title: clicking a link to a page that doesn’t exist yet creates it.',
-            'Click a link to open the page; **⌘-click** opens it [beside](topic:split) the current one.'
+            'Click a link to open the page; **⌘-click** opens it [beside](topic:split) the current one.',
+            'Rest the pointer on a link for a moment and a **preview** shows the start of the page – without opening it.'
           ]
         },
         {
@@ -667,7 +690,7 @@ export const en: HelpContent = {
       blocks: [
         {
           kind: 'p',
-          text: '**Focus mode** ({{cmd:view.focus}}) hides the sidebar and toolbar and dims every paragraph except the one you’re writing in.'
+          text: '**Focus mode** ({{cmd:view.focus}}) hides the sidebar and toolbar and dims every paragraph except the one you’re writing in. The line you’re typing stays in the middle of the window, like on a typewriter.'
         },
         {
           kind: 'p',
@@ -880,7 +903,7 @@ export const en: HelpContent = {
         {
           kind: 'list',
           items: [
-            '**Appearance** – font (System, Serif, Monospace), font size, line width and light/dark. The accent color follows macOS.',
+            '**Appearance** – font (System, Serif, Monospace), font size, line width, smart punctuation and light/dark. The accent color follows macOS.',
             '**Language** – German or English, or the same as the system.',
             '**Vaults** – open vaults, show them in the Finder, remove them from the list.',
             '**Quick Capture** – the shortcut that takes a note from any app.',
