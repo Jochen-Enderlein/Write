@@ -486,11 +486,13 @@ async function command(id: string): Promise<void> {
 }
 
 test('sucht und ersetzt in der Seite', async () => {
+  // Set up here instead of relying on an earlier test: a retry starts with a fresh vault
+  writeFileSync(path.join(vault, 'Quelle.md'), '# Quelle\n\nExtern geändert.\n')
   await win.locator('.tree-row .name', { hasText: 'Quelle' }).click()
   await expect(win.locator('.page-title')).toHaveValue('Quelle')
+  await expect(win.locator('.bn-editor')).toContainText('Extern geändert.')
   await command('find.replace')
   const bar = win.locator('.find-bar')
-  // An earlier test replaced the file with "Extern geändert."
   await bar.getByPlaceholder('In Seite suchen').fill('Extern')
   await expect(bar.locator('.find-count')).toHaveText('1 von 1')
   await bar.getByPlaceholder('Ersetzen durch').fill('Intern')
