@@ -5,7 +5,7 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
-## Unveröffentlicht
+## 0.6.1 – 2026-11-02
 
 ### Behoben
 
