@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## Unveröffentlicht
+
+### Behoben
+
+- **Ansicht wechseln:** Schaltest du schnell zwischen _Formatiert_, _Markdown_ und _Markdown mit Vorschau_ hin und her, zeigt Write jetzt immer die Ansicht, die du zuletzt gewählt hast. Vorher konnte die Seite in einer anderen Ansicht hängen bleiben und ließ sich erst nach einem weiteren Wechsel wieder richtig anzeigen.
+
 ## 0.6.0 – 2026-10-10
 
 ### Neu

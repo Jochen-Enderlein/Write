@@ -58,10 +58,10 @@ export function PageView({
   wanted.current = path
 
   const load = useCallback(
-    async (nextMode?: EditorMode) => {
+    async (nextMode?: EditorMode, current: () => boolean = () => true) => {
       try {
         const f = await invoke('page:read', path)
-        if (wanted.current !== path) return
+        if (wanted.current !== path || !current()) return
         if (nextMode) setShownMode(nextMode)
         setFile(f)
         setMissing(false)
@@ -83,13 +83,23 @@ export function PageView({
     void load()
   }, [load])
 
-  // Switching modes: save what the current editor holds, then let the other one read the file
+  // Switching modes: save what the current editor holds, then let the other one read the file.
+  // Switching again while that is under way drops the older read; otherwise it could land last
+  // and show a mode other than the chosen one, which choosing it again would never fix.
   useEffect(() => {
     if (mode === shownMode) return
     let stale = false
     void (async () => {
-      await editorRef.current?.flush()
-      if (!stale) await load(mode)
+      try {
+        await editorRef.current?.flush()
+      } catch (err) {
+        // Not saved: stay in the editor that holds the text, and say so
+        if (stale) return
+        fail(err)
+        useStore.getState().setEditorMode(shownMode)
+        return
+      }
+      if (!stale) await load(mode, () => !stale)
     })()
     return () => {
       stale = true

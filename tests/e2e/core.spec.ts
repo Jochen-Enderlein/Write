@@ -590,6 +590,28 @@ test('bearbeitet Seiten auch als Markdown und mit Vorschau daneben', async () =>
   await expect(win.locator('.bn-editor h2')).toHaveText('Zweiter Teil live')
 })
 
+test('zeigt nach schnellem Hin- und Herschalten die zuletzt gewählte Ansicht', async () => {
+  writeFileSync(path.join(vault, 'Wechsel.md'), '# Wechsel\n\nHin und her.\n')
+  await win.locator('.tree-row .name', { hasText: 'Wechsel' }).click()
+  await expect(win.locator('.bn-editor h1')).toHaveText('Wechsel')
+
+  const rich = win.getByRole('radio', { name: /Formatiert/ })
+  const markdown = win.getByRole('radio', { name: /Als Markdown/ })
+  for (let i = 0; i < 3; i++) {
+    await markdown.click()
+    await rich.click()
+  }
+  await markdown.click()
+  await expect(win.locator('.cm-content')).toContainText('Hin und her.')
+  await win.waitForTimeout(500)
+  await expect(win.locator('.cm-content')).toBeVisible()
+  await expect(win.locator('.bn-editor')).toHaveCount(0)
+
+  await rich.click()
+  await expect(win.locator('.bn-editor h1')).toHaveText('Wechsel')
+  await expect(win.locator('.cm-content')).toHaveCount(0)
+})
+
 test('gibt KI-Assistenten Zugriff und zeigt die Einrichtung dafür', async () => {
   await win.locator('.sidebar-item', { hasText: 'Einstellungen' }).click()
   const access = win.getByLabel('Zugriff für KI-Assistenten (MCP)')
