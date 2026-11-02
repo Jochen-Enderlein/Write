@@ -730,7 +730,19 @@ export const en: HelpContent = {
     share: {
       title: 'Sharing & Export',
       summary: 'Pass on a page or an excerpt as Markdown, PDF or HTML.',
-      keywords: ['share', 'export', 'pdf', 'html', 'print', 'airdrop', 'mail', 'copy'],
+      keywords: [
+        'share',
+        'export',
+        'pdf',
+        'html',
+        'print',
+        'airdrop',
+        'mail',
+        'copy',
+        'save',
+        'download',
+        'file'
+      ],
       blocks: [
         {
           kind: 'p',
@@ -739,6 +751,7 @@ export const en: HelpContent = {
         {
           kind: 'list',
           items: [
+            '**Save as … file** – stores the page as a Markdown, PDF or HTML file, in _Downloads_ to begin with.',
             '**Copy as Markdown** – for chats, tickets or other editors.',
             'In the _Page_ menu: **Export as PDF**, **Export as HTML** and **Print** ({{cmd:page.print}}).'
           ]

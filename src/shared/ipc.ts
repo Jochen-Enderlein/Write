@@ -60,6 +60,13 @@ const tableConfig = z.object({
     .optional()
 })
 
+/** A page or selection to pass on as a file: Markdown, or the rendered HTML for PDF/HTML. */
+const shareRequest = z.object({
+  format: z.enum(['md', 'html', 'pdf']),
+  title: z.string().max(500),
+  content: z.string().max(50_000_000)
+})
+
 /** Argument schemas for every invoke channel. Main validates each call against these. */
 export const ipcSchemas = {
   'vault:state': z.tuple([]),
@@ -86,13 +93,8 @@ export const ipcSchemas = {
   'page:openLink': z.tuple([z.string().url()]),
   'page:linkMentions': z.tuple([relPath, title]),
   'page:resolveEmbed': z.tuple([relPath, z.string().min(1).max(500)]),
-  'page:share': z.tuple([
-    z.object({
-      format: z.enum(['md', 'html', 'pdf']),
-      title: z.string().max(500),
-      content: z.string().max(50_000_000)
-    })
-  ]),
+  'page:share': z.tuple([shareRequest]),
+  'page:saveCopy': z.tuple([shareRequest]),
   'page:export': z.tuple([
     z.object({
       format: z.enum(['pdf', 'html', 'print']),
@@ -230,6 +232,7 @@ export interface IpcResults {
   'page:resolveEmbed': string | null
   'page:export': string | null
   'page:share': string
+  'page:saveCopy': string | null
   'folder:move': string
   'tree:setOrder': void
   'page:setProps': void

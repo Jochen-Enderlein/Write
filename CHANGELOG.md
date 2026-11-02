@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## Unveröffentlicht
+
+### Neu
+
+- **Als Datei speichern:** Im Teilen-Menü kannst du die Seite – oder nur den markierten Ausschnitt – jetzt auch direkt als Markdown-, PDF- oder HTML-Datei speichern, statt sie nur weiterzugeben. Vorgeschlagen wird dein Ordner _Downloads_, danach zeigt der Finder die Datei.
+
 ## 0.6.1 – 2026-11-02
 
 ### Behoben

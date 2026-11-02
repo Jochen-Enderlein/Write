@@ -749,7 +749,19 @@ export const de: HelpContent = {
     share: {
       title: 'Teilen & Export',
       summary: 'Eine Seite oder einen Ausschnitt als Markdown, PDF oder HTML weitergeben.',
-      keywords: ['teilen', 'export', 'pdf', 'html', 'drucken', 'airdrop', 'mail', 'kopieren'],
+      keywords: [
+        'teilen',
+        'export',
+        'pdf',
+        'html',
+        'drucken',
+        'airdrop',
+        'mail',
+        'kopieren',
+        'speichern',
+        'download',
+        'datei'
+      ],
       blocks: [
         {
           kind: 'p',
@@ -758,6 +770,7 @@ export const de: HelpContent = {
         {
           kind: 'list',
           items: [
+            '**Als … Datei speichern** – legt die Seite als Markdown-, PDF- oder HTML-Datei ab, zunächst im Ordner _Downloads_.',
             '**Als Markdown kopieren** – für Chats, Tickets oder andere Editoren.',
             'Im Menü _Seite_: **Als PDF exportieren**, **Als HTML exportieren** und **Drucken** ({{cmd:page.print}}).'
           ]

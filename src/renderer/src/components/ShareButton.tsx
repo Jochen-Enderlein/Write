@@ -15,7 +15,7 @@ function withTitle(title: string, body: string): string {
 
 /**
  * Shares the open page – or, with text selected, just that part – as Markdown, PDF or HTML
- * through the macOS share menu, or copies it as Markdown.
+ * through the macOS share menu, saves it as such a file, or copies it as Markdown.
  */
 export function ShareButton({ path }: { path: string }): React.JSX.Element {
   const { t } = useTranslation()
@@ -43,7 +43,11 @@ export function ShareButton({ path }: { path: string }): React.JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
-  const share = async (format: 'md' | 'html' | 'pdf', selection: string | null): Promise<void> => {
+  const share = async (
+    format: 'md' | 'html' | 'pdf',
+    selection: string | null,
+    save = false
+  ): Promise<void> => {
     const s = useStore.getState()
     const editor = editorFor(path)
     if (!editor) return
@@ -58,7 +62,12 @@ export function ShareButton({ path }: { path: string }): React.JSX.Element {
           : selection
             ? await renderMarkdownHtml(path, selection, title, icon)
             : editor.exportHtml()
-      await invoke('page:share', { format, title, content })
+      if (!save) {
+        await invoke('page:share', { format, title, content })
+        return
+      }
+      const target = await invoke('page:saveCopy', { format, title, content })
+      if (target) s.notify(t('share.saved', { name: target.replace(/^.*\//, '') }))
     } catch (err) {
       s.fail(err)
     }
@@ -77,6 +86,13 @@ export function ShareButton({ path }: { path: string }): React.JSX.Element {
     { label: t('share.markdown'), onSelect: () => void share('md', selection) },
     { label: t('share.pdf'), onSelect: () => void share('pdf', selection) },
     { label: t('share.html'), onSelect: () => void share('html', selection) },
+    {
+      label: t('share.saveMarkdown'),
+      onSelect: () => void share('md', selection, true),
+      separatorBefore: true
+    },
+    { label: t('share.savePdf'), onSelect: () => void share('pdf', selection, true) },
+    { label: t('share.saveHtml'), onSelect: () => void share('html', selection, true) },
     {
       label: t('share.copyMarkdown'),
       onSelect: () => void copy(selection),

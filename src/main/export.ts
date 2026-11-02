@@ -112,6 +112,20 @@ export interface ShareRequest {
 
 const SHARE_DIR = path.join(os.tmpdir(), 'write-share')
 
+/** The file's bytes: Markdown as is, HTML with images inlined, or that HTML printed to PDF. */
+async function fileContent(
+  req: ShareRequest,
+  absOf: (rel: string) => string
+): Promise<string | Buffer> {
+  if (req.format === 'md') return req.content
+  const html = await inlineAssets(req.content, absOf)
+  return req.format === 'pdf' ? await renderPdf(html) : html
+}
+
+function fileName(req: ShareRequest): string {
+  return `${sanitizeTitle(req.title) || 'Write'}.${req.format}`
+}
+
 /**
  * Writes the page (or a selection of it) as a file and opens the macOS share menu for it –
  * Mail, Messages, AirDrop, Notes and whatever else is installed.
@@ -124,14 +138,39 @@ export async function shareFile(
 ): Promise<string> {
   const dir = path.join(SHARE_DIR, ulid())
   await fs.mkdir(dir, { recursive: true })
-  const file = path.join(dir, `${sanitizeTitle(req.title) || 'Write'}.${req.format}`)
-  if (req.format === 'md') await fs.writeFile(file, req.content)
-  else {
-    const html = await inlineAssets(req.content, absOf)
-    await fs.writeFile(file, req.format === 'pdf' ? await renderPdf(html) : html)
-  }
+  const file = path.join(dir, fileName(req))
+  await fs.writeFile(file, await fileContent(req, absOf))
   if (showMenu) new ShareMenu({ filePaths: [file] }).popup(parent ? { window: parent } : {})
   return file
+}
+
+/**
+ * Saves the page (or a selection of it) as a file where the user chooses, Downloads first.
+ * Without `ask` (tests), it goes straight into a fresh folder next to the shared files.
+ * Returns the written file, or null when the user cancelled.
+ */
+export async function saveFile(
+  req: ShareRequest,
+  parent: BrowserWindow | null,
+  absOf: (rel: string) => string,
+  dialogTitle: string,
+  ask = true
+): Promise<string | null> {
+  const name = fileName(req)
+  let target: string | null
+  if (ask) {
+    const kind = { md: 'Markdown', pdf: 'PDF', html: 'HTML' }[req.format]
+    target = await askTarget(parent, dialogTitle, name, kind, [req.format], 'Downloads')
+  } else {
+    const dir = path.join(SHARE_DIR, 'saved', ulid())
+    await fs.mkdir(dir, { recursive: true })
+    target = path.join(dir, name)
+  }
+  if (!target) return null
+  // Render first, so cancelling a slow PDF never leaves half a file behind
+  const content = await fileContent(req, absOf)
+  await fs.writeFile(target, content)
+  return target
 }
 
 /** Shared files only need to live until the receiving app has read them; clean up at start. */
@@ -144,11 +183,12 @@ async function askTarget(
   title: string,
   fileName: string,
   kind: string,
-  extensions: string[]
+  extensions: string[],
+  folder: 'Desktop' | 'Downloads' = 'Desktop'
 ): Promise<string | null> {
   const opts = {
     title,
-    defaultPath: path.join(os.homedir(), 'Desktop', fileName),
+    defaultPath: path.join(os.homedir(), folder, fileName),
     filters: [{ name: kind, extensions }]
   }
   const res = parent ? await dialog.showSaveDialog(parent, opts) : await dialog.showSaveDialog(opts)

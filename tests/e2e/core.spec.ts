@@ -640,7 +640,7 @@ test('gibt KI-Assistenten Zugriff und zeigt die Einrichtung dafür', async () =>
   await win.keyboard.press('Escape')
 })
 
-test('teilt eine Seite oder nur die Auswahl als Markdown und PDF', async () => {
+test('teilt eine Seite oder nur die Auswahl als Markdown und PDF und speichert sie als Datei', async () => {
   const shareDir = path.join(tmpdir(), 'write-share')
   const newest = (ext: string): string => {
     const files = readdirSync(shareDir, { recursive: true })
@@ -664,6 +664,14 @@ test('teilt eine Seite oder nur die Auswahl als Markdown und PDF', async () => {
   )
   await share('Als PDF teilen …')
   await eventually(() => expect(statSync(newest('Teilen.pdf')).size).toBeGreaterThan(5000), 15000)
+
+  // Saving skips the dialog in tests and lands next to the shared files
+  await share('Als Markdown-Datei speichern …')
+  await expect(win.locator('.toast', { hasText: 'Gespeichert als Teilen.md' })).toBeVisible()
+  expect(newest('Teilen.md')).toContain(path.join('write-share', 'saved'))
+  expect(readFileSync(newest('Teilen.md'), 'utf8')).toBe(
+    '# Teilen\n\nErster Absatz.\n\nZweiter Absatz.\n'
+  )
 
   await win.locator('.bn-editor p', { hasText: 'Zweiter Absatz' }).click({ clickCount: 3 })
   await win.locator('button[title="Teilen"]').click()

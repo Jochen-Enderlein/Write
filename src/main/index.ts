@@ -28,7 +28,7 @@ import type { IndexStatus, VaultInfo, VaultState } from '@shared/types'
 import { createI18n, localeOf, resolveLanguage, type Language } from '@shared/i18n'
 import type { CommandId } from '@shared/keymap'
 import { env } from './env'
-import { cleanShareFiles, exportPage, shareFile } from './export'
+import { cleanShareFiles, exportPage, saveFile, shareFile } from './export'
 import { isValidTag, normalizeTag } from '@shared/tags'
 import { createGlassService } from './glass'
 import { IndexClient } from './indexClient'
@@ -234,6 +234,18 @@ function registerIpc(): void {
   handle('page:share', (req) =>
     shareFile(req, mainWindow(), (rel) => vault().abs(rel), !env('SHARE_DRY_RUN'))
   )
+  handle('page:saveCopy', async (req) => {
+    const ask = !env('SHARE_DRY_RUN')
+    const target = await saveFile(
+      req,
+      mainWindow(),
+      (rel) => vault().abs(rel),
+      t('share.saveTitle'),
+      ask
+    )
+    if (target && ask) shell.showItemInFolder(target)
+    return target
+  })
   handle('folder:move', (rel, parent) => vault().moveFolder(rel, parent))
   handle('tree:setOrder', (dir, names) => vault().setOrder(dir, names))
   handle('page:setProps', (rel, changes) => vault().setProps(rel, changes))
