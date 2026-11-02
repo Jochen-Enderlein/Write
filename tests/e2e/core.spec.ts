@@ -587,29 +587,37 @@ test('bearbeitet Seiten auch als Markdown und mit Vorschau daneben', async () =>
   await expect(win.locator('.split-preview h2')).toHaveText('Zweiter Teil live')
 
   await win.getByRole('radio', { name: /Formatiert/ }).click()
+  // The hidden preview is a BlockNote view too; only without the source panes is it the editor
+  await expect(win.locator('.split-panes, .markdown-pane')).toHaveCount(0)
   await expect(win.locator('.bn-editor h2')).toHaveText('Zweiter Teil live')
 })
 
 test('zeigt nach schnellem Hin- und Herschalten die zuletzt gewählte Ansicht', async () => {
   writeFileSync(path.join(vault, 'Wechsel.md'), '# Wechsel\n\nHin und her.\n')
+  writeFileSync(path.join(vault, 'Daneben.md'), '# Daneben\n\nAndere Seite.\n')
   await win.locator('.tree-row .name', { hasText: 'Wechsel' }).click()
-  await expect(win.locator('.bn-editor h1')).toHaveText('Wechsel')
+  await expect(win.locator('.page-title')).toHaveValue('Wechsel')
 
   const rich = win.getByRole('radio', { name: /Formatiert/ })
   const markdown = win.getByRole('radio', { name: /Als Markdown/ })
+  const sourcePanes = win.locator('.split-panes, .markdown-pane')
+  await rich.click()
+  await expect(sourcePanes).toHaveCount(0)
   for (let i = 0; i < 3; i++) {
     await markdown.click()
     await rich.click()
   }
   await markdown.click()
-  await expect(win.locator('.cm-content')).toContainText('Hin und her.')
+  await expect(win.locator('.markdown-pane .cm-content')).toContainText('Hin und her.')
   await win.waitForTimeout(500)
-  await expect(win.locator('.cm-content')).toBeVisible()
-  await expect(win.locator('.bn-editor')).toHaveCount(0)
+  await expect(win.locator('.markdown-pane .cm-content')).toContainText('Hin und her.')
 
+  // Opening another page while the switch is under way still ends in the chosen mode
   await rich.click()
-  await expect(win.locator('.bn-editor h1')).toHaveText('Wechsel')
-  await expect(win.locator('.cm-content')).toHaveCount(0)
+  await win.locator('.tree-row .name', { hasText: 'Daneben' }).click()
+  await expect(win.locator('.page-title')).toHaveValue('Daneben')
+  await expect(sourcePanes).toHaveCount(0)
+  await expect(win.locator('.bn-editor h1')).toHaveText('Daneben')
 })
 
 test('gibt KI-Assistenten Zugriff und zeigt die Einrichtung dafür', async () => {

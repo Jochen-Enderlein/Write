@@ -84,8 +84,9 @@ export function PageView({
   }, [load])
 
   // Switching modes: save what the current editor holds, then let the other one read the file.
-  // Switching again while that is under way drops the older read; otherwise it could land last
-  // and show a mode other than the chosen one, which choosing it again would never fix.
+  // Switching again, or opening another page, while that is under way drops the older read and
+  // starts over; otherwise the page could stay in a mode other than the chosen one, which
+  // choosing it again would never fix.
   useEffect(() => {
     if (mode === shownMode) return
     let stale = false
@@ -104,8 +105,7 @@ export function PageView({
     return () => {
       stale = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode])
+  }, [mode, shownMode, load, fail])
 
   const onBody = useCallback((text: string) => {
     clearTimeout(bodyTimer.current)
