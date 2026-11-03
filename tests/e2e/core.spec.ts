@@ -898,8 +898,27 @@ test('zeigt zwei Seiten nebeneinander und hält sie gleich', async () => {
   await win.locator('.tree-row .name', { hasText: 'Anker' }).click()
   await expect(main.locator('.page-title')).toHaveValue('Anker')
   await side.locator('.bn-editor').getByText('Text im Anker.').click()
+  const dump = async (label: string): Promise<void> => {
+    const state = await win.evaluate(() => {
+      const a = document.activeElement
+      const sel = window.getSelection()
+      return {
+        active: a?.closest('.side-pane') ? 'side' : a?.closest('.main') ? 'main' : a?.tagName,
+        caret: sel?.anchorNode?.textContent?.slice(0, 40) + ' @' + sel?.anchorOffset,
+        side: document.querySelector('.side-pane .bn-editor')?.textContent,
+        main: document.querySelector('.main .bn-editor')?.textContent,
+        banner: document.querySelector('.banner')?.textContent ?? null
+      }
+    })
+    console.log('DIAG', label, JSON.stringify(state), JSON.stringify(read('Anker.md')))
+  }
+  await dump('nach Klick')
   await win.keyboard.press('End')
+  await dump('nach End')
   await win.keyboard.type(' Rechts')
+  await dump('nach Tippen')
+  await win.waitForTimeout(3000)
+  await dump('3 s später')
   // Saving reloads the left pane; the caret must stay where the typing goes on
   await eventually(() => expect(read('Anker.md')).toContain('Text im Anker. Rechts\n'))
   await expect(main.locator('.bn-editor')).toContainText('Rechts')
