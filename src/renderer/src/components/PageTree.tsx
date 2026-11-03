@@ -5,6 +5,7 @@ import { basename } from '@shared/paths'
 import type { TreeNode } from '@shared/types'
 import { invoke } from '../api'
 import { useElementSize } from '../lib/hooks'
+import { missedRelease } from '../lib/press'
 import { applyMoves, useStore } from '../store'
 import { ContextMenu, type MenuItem } from './ContextMenu'
 import { ChevronIcon, DocIcon, FolderIcon, MoreIcon, PlusIcon } from './Icons'
@@ -222,8 +223,9 @@ function Row({
       onPointerDown={(e) => {
         // Highlight on press for immediate feedback; the page opens on release (onActivate), so
         // starting a drag to reorder doesn't switch pages. ⌃-click is a secondary click on macOS.
-        if (e.button === 0 && !e.ctrlKey && !node.isEditing)
-          node.tree.select(node.id, { focus: false })
+        if (e.button !== 0 || e.ctrlKey || node.isEditing) return
+        node.tree.select(node.id, { focus: false })
+        openOnMissedRelease(e, node)
       }}
       onDragEnd={() => {
         // Pressing selected the row; if it was dragged elsewhere, the open page stays selected
@@ -368,4 +370,28 @@ function TreeMenu({
     }
   ]
   return <ContextMenu x={x} y={y} items={items} onClose={onClose} />
+}
+
+/**
+ * The tree can change under a resting pointer between press and release, e.g. when a sync adds
+ * a page above. The release then lands on another row, the browser sends no click, and the row
+ * stays highlighted without opening. Open the pressed row in that case.
+ */
+function openOnMissedRelease(down: React.PointerEvent<HTMLElement>, node: NodeApi<TreeNode>): void {
+  const row = down.currentTarget
+  const from = { x: down.clientX, y: down.clientY }
+  const done = new AbortController()
+  const opts = { once: true, signal: done.signal }
+  window.addEventListener(
+    'pointerup',
+    (up) => {
+      done.abort()
+      const on = up.target instanceof Node && row.contains(up.target)
+      if (missedRelease(from, { x: up.clientX, y: up.clientY }, on)) node.activate()
+    },
+    opts
+  )
+  // A drag ends without pointerup; the next release elsewhere must not open this row
+  window.addEventListener('pointercancel', () => done.abort(), opts)
+  window.addEventListener('dragstart', () => done.abort(), opts)
 }

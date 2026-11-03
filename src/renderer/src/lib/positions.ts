@@ -24,3 +24,12 @@ export function writePosition(path: string, patch: PagePosition): void {
   positions.set(path, next)
   if (positions.size > LIMIT) positions.delete(positions.keys().next().value!)
 }
+
+/**
+ * Whether an editor that just opened may take the focus back. Not from another editor or text
+ * field: with the same page open in both panes, saving in one reloads the other, and that must
+ * not pull the caret away from where someone is typing.
+ */
+export function mayRestoreFocus(active: Element | null): boolean {
+  return !active?.closest('input, textarea, [contenteditable="true"]')
+}

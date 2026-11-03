@@ -5,11 +5,16 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
-## 0.6.2 – 2026-11-02
+## 0.6.2 – 2026-11-03
 
 ### Neu
 
 - **Als Datei speichern:** Im Teilen-Menü kannst du die Seite – oder nur den markierten Ausschnitt – jetzt auch direkt als Markdown-, PDF- oder HTML-Datei speichern, statt sie nur weiterzugeben. Vorgeschlagen wird dein Ordner _Downloads_, danach zeigt der Finder die Datei.
+
+### Behoben
+
+- **Seitenbaum:** Ein Klick auf eine Seite öffnet sie jetzt auch dann, wenn sich der Baum genau in diesem Moment ändert – etwa weil eine Synchronisierung eine neue Seite darüber einfügt. Vorher wurde die Zeile nur markiert, die Seite blieb aber zu.
+- **Seiten nebeneinander:** Ist dieselbe Seite links und rechts offen, bleibt der Cursor beim Schreiben jetzt in der Seite, in der du tippst. Vorher konnte er nach dem Speichern auf die andere Seite springen.
 
 ## 0.6.1 – 2026-11-02
 

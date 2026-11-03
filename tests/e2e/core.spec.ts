@@ -899,7 +899,11 @@ test('zeigt zwei Seiten nebeneinander und hält sie gleich', async () => {
   await expect(main.locator('.page-title')).toHaveValue('Anker')
   await side.locator('.bn-editor').getByText('Text im Anker.').click()
   await win.keyboard.press('End')
-  await win.keyboard.type(' Rechts getippt.')
+  await win.keyboard.type(' Rechts')
+  // Saving reloads the left pane; the caret must stay where the typing goes on
+  await eventually(() => expect(read('Anker.md')).toContain('Text im Anker. Rechts\n'))
+  await expect(main.locator('.bn-editor')).toContainText('Rechts')
+  await win.keyboard.type(' getippt.')
   await eventually(() => expect(read('Anker.md')).toContain('Text im Anker. Rechts getippt.'))
   await expect(main.locator('.bn-editor')).toContainText('Rechts getippt.')
 

@@ -57,7 +57,7 @@ import { useStore, type HeadingInfo } from '../store'
 import { useColorScheme, useIpcEvent } from '../lib/hooks'
 import { announceSaved, usePane } from '../lib/pane'
 import { scrollBehavior } from '../lib/motion'
-import { readPosition, writePosition } from '../lib/positions'
+import { mayRestoreFocus, readPosition, writePosition } from '../lib/positions'
 import {
   CalloutIcon,
   DiagramIcon,
@@ -249,7 +249,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
         doc.resolve(caret.caret.head)
       )
       view.dispatch(view.state.tr.setSelection(sel))
-      if (caret.focused) view.focus()
+      if (caret.focused && mayRestoreFocus(document.activeElement)) view.focus()
     } catch {
       // offsets out of range
     }
