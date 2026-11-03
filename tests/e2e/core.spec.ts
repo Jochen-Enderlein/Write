@@ -25,20 +25,21 @@ let vault: string
 const read = (rel: string): string => readFileSync(path.join(vault, rel), 'utf8')
 
 // Slower on shared CI runners: file system events and renames can take a while there
+// On timeout it fails with the last check's message, so the log shows what was there instead
 async function eventually(fn: () => void, timeout = process.env.CI ? 20000 : 8000): Promise<void> {
   await expect
     .poll(
       () => {
         try {
           fn()
-          return true
-        } catch {
-          return false
+          return 'ok'
+        } catch (err) {
+          return (err as Error).message
         }
       },
       { timeout }
     )
-    .toBe(true)
+    .toBe('ok')
 }
 
 /** The app opens the main window and a hidden Quick Capture panel; pick the main one. */
@@ -93,12 +94,37 @@ test.beforeAll(async () => {
   await win.waitForSelector('.tree-row')
 })
 
-// A screenshot of the app window for every failure, kept with the CI artifacts
+/** What the window shows, in a few lines: enough to read a CI failure without the artifacts. */
+async function describeWindow(): Promise<string> {
+  return win.evaluate(() => {
+    const cut = (t: string | null | undefined): string =>
+      (t ?? '').replace(/\s+/g, ' ').slice(0, 300)
+    const a = document.activeElement
+    const pane = (el: Element | null): string =>
+      el?.closest('.side-pane') ? 'side' : el?.closest('.main') ? 'main' : 'outside'
+    const lines = [
+      `focus: ${a?.tagName.toLowerCase()}.${a?.className} in ${pane(a)}`,
+      ...[...document.querySelectorAll('.page')].map(
+        (p) =>
+          `${pane(p)} page "${(p.querySelector('.page-title') as HTMLTextAreaElement | null)?.value}"` +
+          ` ${p.className}: ${cut(p.querySelector('.bn-editor, .cm-content')?.textContent)}`
+      ),
+      ...[...document.querySelectorAll('.banner, .toast')].map(
+        (b) => `message: ${cut(b.textContent)}`
+      )
+    ]
+    return lines.join('\n')
+  })
+}
+
+// A screenshot of the app window for every failure, kept with the CI artifacts, and a short
+// description in the log
 // Playwright requires the fixtures argument to be a destructuring pattern
 // eslint-disable-next-line no-empty-pattern
 test.afterEach(async ({}, info) => {
-  if (info.status !== info.expectedStatus && win && !win.isClosed())
-    await win.screenshot({ path: info.outputPath('app.png') }).catch(() => undefined)
+  if (info.status === info.expectedStatus || !win || win.isClosed()) return
+  await win.screenshot({ path: info.outputPath('app.png') }).catch(() => undefined)
+  console.log(`--- Fenster nach „${info.title}“:\n${await describeWindow().catch((e) => e)}`)
 })
 
 test.afterAll(async () => {
