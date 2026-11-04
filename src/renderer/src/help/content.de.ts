@@ -611,6 +611,20 @@ export const de: HelpContent = {
           kind: 'p',
           text: 'Große Diagramme zeigt der Knopf mit den zwei Pfeilen über das ganze Fenster. Dort zoomst du mit zwei Fingern, ⌘ und Scrollen oder **+** und **−**, verschiebst durch Ziehen, **0** zeigt wieder alles, **F** schaltet auf Vollbild und **Escape** schließt die Ansicht.'
         },
+        { kind: 'h', text: 'UML-Klassendiagramme bauen' },
+        {
+          kind: 'p',
+          text: 'Mit `/UML` entsteht ein Klassendiagramm mit offenem Code. Über dem Diagramm liegen Bausteine: **Klasse**, **Interface**, **Abstrakt** und **Enum** ziehst du ins Diagramm oder klickst sie an, **Attribut** und **Methode** ziehst du auf eine Klasse. Für Beziehungen wählst du in der Leiste Vererbung, Realisierung, Assoziation, Abhängigkeit, Aggregation oder Komposition und ziehst im Diagramm von einer Klasse zur anderen – bei Vererbung von der Unterklasse zur Oberklasse, bei Aggregation und Komposition vom Ganzen zum Teil.'
+        },
+        {
+          kind: 'p',
+          text: 'Jeder Handgriff schreibt die passende Zeile in den Mermaid-Code daneben; Namen und Typen änderst du direkt dort. Die Bausteine erscheinen bei jedem Klassendiagramm, sobald sein Code offen ist.'
+        },
+        {
+          kind: 'example',
+          markdown:
+            '```mermaid\nclassDiagram\n  class Tier {\n    +name: String\n  }\n  class Hund\n  Tier <|-- Hund\n```\n'
+        },
         {
           kind: 'example',
           markdown: '```mermaid\ngraph LR\n  Idee --> Entwurf --> Fertig\n```\n'

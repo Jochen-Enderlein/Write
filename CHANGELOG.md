@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## Unveröffentlicht
+
+### Neu
+
+- **UML-Klassendiagramme per Drag-and-drop:** Mit `/UML` legst du ein Klassendiagramm an. Klassen, Interfaces, abstrakte Klassen und Enums ziehst du aus einer Leiste ins Diagramm, Attribute und Methoden auf eine Klasse; Beziehungen wie Vererbung, Assoziation oder Komposition ziehst du einfach von einer Klasse zur anderen. Der Mermaid-Code daneben schreibt sich dabei mit – Namen und Typen passt du direkt dort an.
+
 ## 0.6.3 – 2026-11-04
 
 ### Neu

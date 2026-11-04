@@ -592,6 +592,20 @@ export const en: HelpContent = {
           kind: 'p',
           text: 'The button with the two arrows shows a large diagram across the whole window. Zoom there with two fingers, ⌘ and scrolling or **+** and **−**, move it by dragging; **0** shows it all again, **F** switches to full screen and **Escape** closes the view.'
         },
+        { kind: 'h', text: 'Building UML class diagrams' },
+        {
+          kind: 'p',
+          text: '`/UML` adds a class diagram with its code open. Building blocks sit above the diagram: drag **Class**, **Interface**, **Abstract** and **Enum** into the diagram or click them, and drag **Attribute** and **Method** onto a class. For relations, pick inheritance, realization, association, dependency, aggregation or composition in the bar and drag in the diagram from one class to another – for inheritance from the subclass to the superclass, for aggregation and composition from the whole to the part.'
+        },
+        {
+          kind: 'p',
+          text: 'Every gesture writes the matching line into the Mermaid code beside it; change names and types right there. The building blocks appear for any class diagram once its code is open.'
+        },
+        {
+          kind: 'example',
+          markdown:
+            '```mermaid\nclassDiagram\n  class Animal {\n    +name: String\n  }\n  class Dog\n  Animal <|-- Dog\n```\n'
+        },
         {
           kind: 'example',
           markdown: '```mermaid\ngraph LR\n  Idea --> Draft --> Done\n```\n'

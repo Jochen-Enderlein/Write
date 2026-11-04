@@ -3,6 +3,7 @@ import {
   expect,
   test,
   type ElectronApplication,
+  type Locator,
   type Page
 } from '@playwright/test'
 import {
@@ -419,6 +420,52 @@ test('zeigt ein Diagramm groß über das ganze Fenster und zoomt darin', async (
   await expect(viewer).toHaveCount(0)
   // Viewing changes nothing in the file
   expect(read('Diagramm.md')).toContain('```mermaid\ngraph TD\n  A --> B\n  B --> C\n```\n')
+})
+
+test('baut ein UML-Klassendiagramm per Drag-and-drop und schreibt den Code mit', async () => {
+  writeFileSync(
+    path.join(vault, 'Modell.md'),
+    '# Modell\n\n```mermaid\nclassDiagram\n  class Tier\n```\n'
+  )
+  await win.locator('.tree-row .name', { hasText: 'Modell' }).click()
+  await expect(win.locator('.mermaid-preview svg')).toBeVisible({ timeout: 15000 })
+  await win.locator('.mermaid-block').hover()
+  await win.locator('.mermaid-toggle').click()
+  const code = win.locator('.mermaid-input')
+  const node = (name: string): Locator => win.locator(`.mermaid-preview g[id*="-classId-${name}-"]`)
+  // dnd-kit follows the pointer, so plain mouse moves drag (with a few steps to start)
+  const drag = async (from: Locator, to: Locator): Promise<void> => {
+    const a = (await from.boundingBox())!
+    const b = (await to.boundingBox())!
+    await win.mouse.move(a.x + a.width / 2, a.y + a.height / 2)
+    await win.mouse.down()
+    await win.mouse.move(a.x + a.width / 2 + 12, a.y + a.height / 2 + 12, { steps: 3 })
+    await win.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 10 })
+    await win.mouse.up()
+  }
+
+  await drag(
+    win.getByRole('button', { name: 'Klasse', exact: true }),
+    win.locator('.mermaid-preview')
+  )
+  await expect(code).toHaveValue('classDiagram\n  class Tier\n  class Klasse')
+  await expect(node('Klasse')).toBeVisible()
+
+  await drag(win.getByRole('button', { name: 'Attribut' }), node('Tier'))
+  await expect(code).toHaveValue(/class Tier \{\n {4}\+attribut: String\n {2}\}/)
+  // The drawing follows the code a moment later; measure the classes only once it has
+  await expect(node('Tier')).toContainText('+attribut: String')
+
+  await win.getByRole('radio', { name: 'Vererbung' }).click()
+  await drag(node('Klasse'), node('Tier'))
+  await expect(code).toHaveValue(/\n {2}Tier <\|-- Klasse$/)
+
+  await code.press('Escape')
+  await eventually(() =>
+    expect(read('Modell.md')).toContain(
+      '```mermaid\nclassDiagram\n  class Tier {\n    +attribut: String\n  }\n  class Klasse\n  Tier <|-- Klasse\n```'
+    )
+  )
 })
 
 test('zeigt die Verknüpfungen als Graph, global und um eine Seite', async () => {

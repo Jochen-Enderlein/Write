@@ -277,6 +277,109 @@
   place-items: center;
 }
 
+/* Building a UML class diagram: chips above the graph, the code grows beside it */
+.uml-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.uml-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 10px 12px 0;
+  /* Keep clear of the enlarge and code buttons in the corner */
+  padding-right: 84px;
+  user-select: none;
+}
+
+.uml-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.uml-chip,
+.uml-relation {
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--fill);
+  color: var(--label);
+  font: 500 12px/1.4 var(--font-ui);
+  cursor: grab;
+}
+
+.uml-chip:hover,
+.uml-relation:hover {
+  background: var(--fill-press);
+}
+
+.uml-chip:active {
+  cursor: grabbing;
+}
+
+/* The chip stays in the palette; a copy follows the pointer */
+.uml-chip.lifted {
+  opacity: 0.4;
+}
+
+.uml-overlay {
+  /* The drop target is found under the pointer, so the copy must not be hit itself */
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.uml-overlay .uml-chip {
+  box-shadow: var(--glass-shadow-small);
+  cursor: grabbing;
+}
+
+.uml-member {
+  color: var(--label-2);
+  border: 0.5px dashed var(--separator-strong);
+  background: transparent;
+}
+
+.uml-relation {
+  padding: 3px 7px;
+  font: 600 12px/1.4 var(--font-mono);
+  color: var(--label-2);
+  cursor: pointer;
+}
+
+.uml-relation[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* Classes are where relations start, so they show they can be grabbed */
+.uml-stage .mermaid-preview g[id*='-classId-'] {
+  cursor: crosshair;
+}
+
+/* The node's shapes differ by Mermaid version; a glow around the whole group fits them all */
+.uml-stage .mermaid-preview g.uml-target {
+  filter: drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 4px var(--accent));
+}
+
+.uml-connect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.uml-connect line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
 /* A diagram across the whole window (and in full screen on request) */
 .diagram-viewer {
   position: fixed;

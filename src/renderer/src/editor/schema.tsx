@@ -16,6 +16,8 @@ import { IMAGE_EXT_RE, linkLabel, parseLinkTarget } from '@shared/wikilinks'
 import { t } from '../i18n'
 import { renderMermaid } from './mermaid'
 import { DiagramViewer } from './DiagramViewer'
+import { UmlStage } from './UmlBuilder'
+import { isClassDiagram } from './umlCode'
 import { ExpandIcon } from '../components/Icons'
 import { renderTex } from './katex'
 import { editForKey } from './codeIndent'
@@ -474,21 +476,35 @@ function SourceBlockView({
     if (open) field.current?.focus()
   }, [open])
 
+  // With the code open, a class diagram (or a still empty one) can be built by drag and drop
+  const building =
+    kind === 'mermaid' && editor.isEditable && open && (!draft.trim() || isClassDiagram(draft))
+
+  const preview = (
+    <div
+      className={`${kind}-preview ${error && !svg ? 'error' : ''}`}
+      onDoubleClick={() => {
+        if (editor.isEditable) setOpen(true)
+        else if (kind === 'mermaid' && svg) setEnlarged(true)
+      }}
+    >
+      {svg ? (
+        <div className={`${kind}-svg`} dangerouslySetInnerHTML={{ __html: svg }} />
+      ) : (
+        error || (!draft.trim() && <span className={`${kind}-empty`}>{LABELS[kind]}</span>)
+      )}
+    </div>
+  )
+
   return (
     <div className={`${kind}-block ${open ? 'open' : ''}`} contentEditable={false}>
-      <div
-        className={`${kind}-preview ${error && !svg ? 'error' : ''}`}
-        onDoubleClick={() => {
-          if (editor.isEditable) setOpen(true)
-          else if (kind === 'mermaid' && svg) setEnlarged(true)
-        }}
-      >
-        {svg ? (
-          <div className={`${kind}-svg`} dangerouslySetInnerHTML={{ __html: svg }} />
-        ) : (
-          error || (!draft.trim() && <span className={`${kind}-empty`}>{LABELS[kind]}</span>)
-        )}
-      </div>
+      {building ? (
+        <UmlStage source={draft} onChange={change}>
+          {preview}
+        </UmlStage>
+      ) : (
+        preview
+      )}
       {open && (
         <div className={`${kind}-code`}>
           <div className={`${kind}-label`}>{LABELS[kind]}</div>

@@ -542,6 +542,27 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
           }
         },
         {
+          title: t('uml.slash'),
+          subtext: t('uml.slashHint'),
+          aliases: ['uml', 'klassendiagramm', 'class diagram', 'klasse', 'class'],
+          group: t('editor.groupMarkdown'),
+          icon: <DiagramIcon size={18} />,
+          onItemClick: () => {
+            // Opens with the code panel, so the building blocks are right there
+            const name = t('uml.classBase')
+            const block = {
+              id: makeId(),
+              type: 'mermaid',
+              props: { source: `classDiagram\n  class ${name}` }
+            } as const
+            openSourceEditor(block.id)
+            const cur = editor.getTextCursorPosition().block
+            if (Array.isArray(cur.content) && cur.content.length === 0)
+              editor.replaceBlocks([cur], [block])
+            else editor.insertBlocks([block], cur, 'after')
+          }
+        },
+        {
           title: t('editor.math'),
           subtext: t('editor.mathHint'),
           aliases: ['formel', 'math', 'latex', 'katex', 'gleichung', 'equation'],
