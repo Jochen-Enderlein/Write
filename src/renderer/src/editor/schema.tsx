@@ -16,9 +16,8 @@ import { IMAGE_EXT_RE, linkLabel, parseLinkTarget } from '@shared/wikilinks'
 import { t } from '../i18n'
 import { renderMermaid } from './mermaid'
 import { DiagramViewer } from './DiagramViewer'
-import { UmlStage } from './UmlBuilder'
-import { isClassDiagram } from './umlCode'
-import { ExpandIcon } from '../components/Icons'
+import { DiagramEditor } from './diagram/DiagramEditor'
+import { ExpandIcon, PenIcon } from '../components/Icons'
 import { renderTex } from './katex'
 import { editForKey } from './codeIndent'
 import { editorBridge } from './bridge'
@@ -373,6 +372,12 @@ export function openSourceEditor(id: string): void {
   openOnMount.add(id)
 }
 
+/** Fresh diagram blocks that open straight into the large diagram editor. */
+const editorOnMount = new Set<string>()
+export function openDiagramEditor(id: string): void {
+  editorOnMount.add(id)
+}
+
 type SourceKind = 'mermaid' | 'math'
 
 const RENDERERS: Record<SourceKind, (src: string) => Promise<{ svg: string } | { error: string }>> =
@@ -408,6 +413,7 @@ function SourceBlockView({
   const [svg, setSvg] = useState('')
   const [error, setError] = useState('')
   const [enlarged, setEnlarged] = useState(false)
+  const [editing, setEditing] = useState(() => editorOnMount.delete(block.id))
   const field = useRef<HTMLTextAreaElement>(null)
   const commitTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const caret = useRef<[number, number] | null>(null)
@@ -476,10 +482,6 @@ function SourceBlockView({
     if (open) field.current?.focus()
   }, [open])
 
-  // With the code open, a class diagram (or a still empty one) can be built by drag and drop
-  const building =
-    kind === 'mermaid' && editor.isEditable && open && (!draft.trim() || isClassDiagram(draft))
-
   const preview = (
     <div
       className={`${kind}-preview ${error && !svg ? 'error' : ''}`}
@@ -498,13 +500,7 @@ function SourceBlockView({
 
   return (
     <div className={`${kind}-block ${open ? 'open' : ''}`} contentEditable={false}>
-      {building ? (
-        <UmlStage source={draft} onChange={change}>
-          {preview}
-        </UmlStage>
-      ) : (
-        preview
-      )}
+      {preview}
       {open && (
         <div className={`${kind}-code`}>
           <div className={`${kind}-label`}>{LABELS[kind]}</div>
@@ -562,6 +558,18 @@ function SourceBlockView({
             <ExpandIcon size={12} />
           </button>
         )}
+        {kind === 'mermaid' && editor.isEditable && (
+          <button
+            type="button"
+            className="mermaid-enlarge"
+            title={t('diagramEditor.open')}
+            aria-label={t('diagramEditor.open')}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setEditing(true)}
+          >
+            <PenIcon size={12} />
+          </button>
+        )}
         {editor.isEditable && (
           <button
             type="button"
@@ -576,6 +584,9 @@ function SourceBlockView({
         )}
       </div>
       {enlarged && svg && <DiagramViewer svg={svg} onClose={() => setEnlarged(false)} />}
+      {editing && (
+        <DiagramEditor source={draft} onChange={change} onClose={() => setEditing(false)} />
+      )}
     </div>
   )
 }

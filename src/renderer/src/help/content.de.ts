@@ -591,7 +591,15 @@ export const de: HelpContent = {
         'einrückung',
         'zoom',
         'vollbild',
-        'vergrößern'
+        'vergrößern',
+        'uml',
+        'klassendiagramm',
+        'sequenzdiagramm',
+        'zustandsdiagramm',
+        'aktivitätsdiagramm',
+        'er-diagramm',
+        'vererbung',
+        'drag and drop'
       ],
       blocks: [
         {
@@ -611,14 +619,19 @@ export const de: HelpContent = {
           kind: 'p',
           text: 'Große Diagramme zeigt der Knopf mit den zwei Pfeilen über das ganze Fenster. Dort zoomst du mit zwei Fingern, ⌘ und Scrollen oder **+** und **−**, verschiebst durch Ziehen, **0** zeigt wieder alles, **F** schaltet auf Vollbild und **Escape** schließt die Ansicht.'
         },
-        { kind: 'h', text: 'UML-Klassendiagramme bauen' },
+        { kind: 'h', text: 'UML-Diagramme bauen' },
         {
           kind: 'p',
-          text: 'Mit `/UML` entsteht ein Klassendiagramm mit offenem Code. Über dem Diagramm liegen Bausteine: **Klasse**, **Interface**, **Abstrakt** und **Enum** ziehst du ins Diagramm oder klickst sie an, **Attribut** und **Methode** ziehst du auf eine Klasse. Für Beziehungen wählst du in der Leiste Vererbung, Realisierung, Assoziation, Abhängigkeit, Aggregation oder Komposition und ziehst im Diagramm von einer Klasse zur anderen – bei Vererbung von der Unterklasse zur Oberklasse, bei Aggregation und Komposition vom Ganzen zum Teil.'
+          text: 'Mit `/UML` – oder dem Stift-Knopf an einem Diagramm – öffnet sich der Diagramm-Editor über das ganze Fenster: links die Bausteine, in der Mitte das Diagramm, rechts der Mermaid-Code. Bei einem neuen Diagramm wählst du zuerst die Art: **Klassen-**, **Sequenz-**, **Zustands-**, **Aktivitäts-** oder **ER-Diagramm**.'
         },
         {
-          kind: 'p',
-          text: 'Jeder Handgriff schreibt die passende Zeile in den Mermaid-Code daneben; Namen und Typen änderst du direkt dort. Die Bausteine erscheinen bei jedem Klassendiagramm, sobald sein Code offen ist.'
+          kind: 'list',
+          items: [
+            '**Elemente** (Klasse, Teilnehmer, Zustand, Aktion, Entität …) ziehst du ins Diagramm oder klickst sie an.',
+            'Was zu einem Element gehört – Attribut, Methode, Notiz, Start oder Ende – ziehst du auf das Element; es leuchtet auf, wo es landet.',
+            '**Verbindungen** wählst du links und ziehst sie im Diagramm von einem Element zum anderen: bei Vererbung von der Unterklasse zur Oberklasse, bei Aggregation und Komposition vom Ganzen zum Teil, im Sequenzdiagramm von Lebenslinie zu Lebenslinie.',
+            'Jeder Handgriff schreibt die passende Zeile in den Code; Namen und Beschriftungen änderst du direkt dort. **⌘Z** und **⇧⌘Z** nehmen Schritte zurück und wieder her, **F** schaltet auf Vollbild, **Fertig** oder **Escape** schließt den Editor.'
+          ]
         },
         {
           kind: 'example',

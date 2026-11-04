@@ -20,14 +20,19 @@ export function clampScale(scale: number): number {
 }
 
 /** The whole content, centred, as large as fits with `padding` left on every side. */
-export function fitView(content: Size, box: Size, padding = 32): ZoomView {
+export function fitView(
+  content: Size,
+  box: Size,
+  padding = 32,
+  maxScale = MAX_FIT_SCALE
+): ZoomView {
   if (content.width <= 0 || content.height <= 0) return { scale: 1, x: 0, y: 0 }
   const room = {
     width: Math.max(1, box.width - 2 * padding),
     height: Math.max(1, box.height - 2 * padding)
   }
   const scale = clampScale(
-    Math.min(room.width / content.width, room.height / content.height, MAX_FIT_SCALE)
+    Math.min(room.width / content.width, room.height / content.height, maxScale)
   )
   return {
     scale,

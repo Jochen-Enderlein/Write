@@ -277,109 +277,6 @@
   place-items: center;
 }
 
-/* Building a UML class diagram: chips above the graph, the code grows beside it */
-.uml-stage {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.uml-palette {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  padding: 10px 12px 0;
-  /* Keep clear of the enlarge and code buttons in the corner */
-  padding-right: 84px;
-  user-select: none;
-}
-
-.uml-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.uml-chip,
-.uml-relation {
-  padding: 3px 9px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--fill);
-  color: var(--label);
-  font: 500 12px/1.4 var(--font-ui);
-  cursor: grab;
-}
-
-.uml-chip:hover,
-.uml-relation:hover {
-  background: var(--fill-press);
-}
-
-.uml-chip:active {
-  cursor: grabbing;
-}
-
-/* The chip stays in the palette; a copy follows the pointer */
-.uml-chip.lifted {
-  opacity: 0.4;
-}
-
-.uml-overlay {
-  /* The drop target is found under the pointer, so the copy must not be hit itself */
-  pointer-events: none;
-  z-index: 1000;
-}
-
-.uml-overlay .uml-chip {
-  box-shadow: var(--glass-shadow-small);
-  cursor: grabbing;
-}
-
-.uml-member {
-  color: var(--label-2);
-  border: 0.5px dashed var(--separator-strong);
-  background: transparent;
-}
-
-.uml-relation {
-  padding: 3px 7px;
-  font: 600 12px/1.4 var(--font-mono);
-  color: var(--label-2);
-  cursor: pointer;
-}
-
-.uml-relation[aria-checked='true'] {
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-/* Classes are where relations start, so they show they can be grabbed */
-.uml-stage .mermaid-preview g[id*='-classId-'] {
-  cursor: crosshair;
-}
-
-/* The node's shapes differ by Mermaid version; a glow around the whole group fits them all */
-.uml-stage .mermaid-preview g.uml-target {
-  filter: drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 4px var(--accent));
-}
-
-.uml-connect {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.uml-connect line {
-  stroke: var(--accent);
-  stroke-width: 2;
-  stroke-dasharray: 5 4;
-}
-
 /* A diagram across the whole window (and in full screen on request) */
 .diagram-viewer {
   position: fixed;
@@ -450,6 +347,334 @@
     animation: none;
   }
   .diagram-content.glide {
+    transition: none;
+  }
+}
+
+/* The large diagram editor: building blocks, canvas and code side by side */
+.diagram-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--editor-bg);
+  outline: none;
+  animation: diagram-in var(--dur) var(--ease-out);
+}
+
+.de-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: var(--toolbar-h);
+  /* Room for the window buttons on the left */
+  padding: 0 14px 0 84px;
+  border-bottom: 0.5px solid var(--separator);
+  user-select: none;
+}
+
+.de-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font: 600 14px/1 var(--font-ui);
+  color: var(--label);
+}
+
+.de-type {
+  font-weight: 400;
+  color: var(--label-2);
+}
+
+.de-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.de-actions .button.primary {
+  margin-left: 10px;
+}
+
+.de-sep {
+  width: 0.5px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--separator);
+}
+
+.de-body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(260px, 30%);
+  min-height: 0;
+}
+
+.de-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 14px;
+  border-right: 0.5px solid var(--separator);
+  overflow-y: auto;
+  user-select: none;
+}
+
+.de-palette h3 {
+  margin: 0 0 8px;
+  font: 600 10.5px/1.2 var(--font-ui);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--label-3);
+}
+
+.de-hint {
+  margin: -2px 0 8px;
+  font: 12px/1.4 var(--font-ui);
+  color: var(--label-2);
+}
+
+.de-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.de-chip {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill);
+  color: var(--label);
+  font: 500 12.5px/1.3 var(--font-ui);
+  cursor: grab;
+  touch-action: none;
+}
+
+.de-chip:hover {
+  background: var(--fill-press);
+}
+
+.de-chip.on-node {
+  color: var(--label-2);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--separator-strong);
+  border-radius: 999px;
+}
+
+/* The chip stays in the palette; a copy follows the pointer */
+.de-chip.lifted {
+  opacity: 0.35;
+}
+
+.de-overlay {
+  /* The drop target is found under the pointer, so the copy must not be hit itself */
+  pointer-events: none;
+}
+
+.de-overlay .de-chip {
+  box-shadow: var(--glass-shadow-small);
+  cursor: grabbing;
+}
+
+.de-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.de-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--label);
+  font: 13px/1.3 var(--font-ui);
+  text-align: left;
+}
+
+.de-link:hover {
+  background: var(--fill-hover);
+}
+
+.de-link .glyph {
+  min-width: 28px;
+  font: 600 12px/1 var(--font-mono);
+  color: var(--label-2);
+}
+
+.de-link[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.de-link[aria-checked='true'] .glyph {
+  color: inherit;
+}
+
+.de-canvas {
+  position: relative;
+  min-width: 0;
+  background:
+    radial-gradient(circle, var(--separator) 1px, transparent 1px) 0 0 / 20px 20px,
+    var(--editor-bg);
+}
+
+.de-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.de-stage:active {
+  cursor: grabbing;
+}
+
+.de-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  font-family: var(--font-ui);
+  user-select: none;
+}
+
+.de-content.glide {
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.de-content svg {
+  display: block;
+}
+
+/* Elements are where connections start */
+.de-content g.node,
+.de-content [name] {
+  cursor: crosshair;
+}
+
+/* The shapes differ by diagram and Mermaid version; a glow around the whole element fits all */
+.de-content .de-target {
+  filter: drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 5px var(--accent));
+}
+
+.de-connect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.de-connect line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.de-error {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  padding: 8px 12px;
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--red) 12%, var(--editor-bg));
+  color: var(--red);
+  font: 12px/1.4 var(--font-ui);
+}
+
+.de-picker {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  cursor: default;
+}
+
+.de-picker h2 {
+  margin: 0;
+  font: 600 20px/1.3 var(--font-display);
+  color: var(--label);
+}
+
+.de-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  width: min(640px, 100%);
+}
+
+.de-type-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--radius-m);
+  background: var(--fill);
+  color: var(--label);
+  text-align: left;
+  font: 13px/1.35 var(--font-ui);
+}
+
+.de-type-card:hover {
+  background: var(--fill-press);
+}
+
+.de-type-card span {
+  color: var(--label-2);
+  font-size: 12px;
+}
+
+.de-code {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-left: 0.5px solid var(--separator);
+  background: var(--fill-2);
+}
+
+.de-code-label {
+  padding: 12px 16px 4px;
+  font: 600 10.5px/1.2 var(--font-ui);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  user-select: none;
+}
+
+.de-input {
+  flex: 1;
+  margin: 0;
+  padding: 6px 16px 16px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--label);
+  font: 13px/1.6 var(--font-mono);
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram-editor {
+    animation: none;
+  }
+  .de-content.glide {
     transition: none;
   }
 }

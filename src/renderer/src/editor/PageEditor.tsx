@@ -69,7 +69,13 @@ import {
   TableIcon
 } from '../components/Icons'
 import { buildExportHtml } from './exportHtml'
-import { openSourceEditor, prepareBlocks, schema, type WriteEditor } from './schema'
+import {
+  openDiagramEditor,
+  openSourceEditor,
+  prepareBlocks,
+  schema,
+  type WriteEditor
+} from './schema'
 
 export interface PageEditorHandle {
   flush(): Promise<void>
@@ -542,20 +548,26 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
           }
         },
         {
-          title: t('uml.slash'),
-          subtext: t('uml.slashHint'),
-          aliases: ['uml', 'klassendiagramm', 'class diagram', 'klasse', 'class'],
+          title: t('diagramEditor.slash'),
+          subtext: t('diagramEditor.slashHint'),
+          aliases: [
+            'uml',
+            'klassendiagramm',
+            'sequenzdiagramm',
+            'zustandsdiagramm',
+            'aktivitätsdiagramm',
+            'er',
+            'class diagram',
+            'sequence',
+            'state',
+            'activity'
+          ],
           group: t('editor.groupMarkdown'),
           icon: <DiagramIcon size={18} />,
           onItemClick: () => {
-            // Opens with the code panel, so the building blocks are right there
-            const name = t('uml.classBase')
-            const block = {
-              id: makeId(),
-              type: 'mermaid',
-              props: { source: `classDiagram\n  class ${name}` }
-            } as const
-            openSourceEditor(block.id)
+            // Opens in the large editor, which asks for the kind of diagram first
+            const block = { id: makeId(), type: 'mermaid', props: { source: '' } } as const
+            openDiagramEditor(block.id)
             const cur = editor.getTextCursorPosition().block
             if (Array.isArray(cur.content) && cur.content.length === 0)
               editor.replaceBlocks([cur], [block])

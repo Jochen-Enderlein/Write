@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## Unveröffentlicht
+
+### Verbessert
+
+- **Diagramm-Editor für alle UML-Diagramme:** Mit `/UML` oder dem Stift-Knopf an einem Diagramm baust du jetzt in einem eigenen Editor über das ganze Fenster – auch im Vollbild. Links liegen die Bausteine, in der Mitte das Diagramm zum Zoomen und Verschieben, rechts wächst der Mermaid-Code mit. Neben Klassendiagrammen gehen jetzt auch **Sequenz-**, **Zustands-**, **Aktivitäts-** und **ER-Diagramme**: Elemente reinziehen, Attribute oder Notizen auf ein Element ziehen, Verbindungen von Element zu Element ziehen. Mit ⌘Z nimmst du Schritte zurück.
+
 ## 0.7.0 – 2026-11-04
 
 ### Neu

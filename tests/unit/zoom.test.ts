@@ -13,6 +13,12 @@ describe('Diagramm einpassen', () => {
     expect(fitView({ width: 100, height: 50 }, { width: 2000, height: 1200 }).scale).toBe(3)
   })
 
+  it('hält sich an eine engere Obergrenze, wenn sie vorgegeben ist', () => {
+    expect(fitView({ width: 100, height: 50 }, { width: 2000, height: 1200 }, 48, 1.5).scale).toBe(
+      1.5
+    )
+  })
+
   it('verkleinert ein Diagramm, das größer als das Fenster ist', () => {
     expect(fitView({ width: 4000, height: 400 }, { width: 2064, height: 900 }).scale).toBe(0.5)
   })

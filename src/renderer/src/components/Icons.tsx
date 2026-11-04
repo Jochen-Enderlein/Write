@@ -359,3 +359,15 @@ export const FitIcon = (p: P) => (
     <rect x="5.5" y="6" width="5" height="4" rx="0.75" />
   </Icon>
 )
+
+export const UndoIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5.5 4 2.5 7l3 3M2.5 7h7a4 4 0 0 1 0 8H8" />
+  </Icon>
+)
+
+export const RedoIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="m10.5 4 3 3-3 3M13.5 7h-7a4 4 0 0 0 0 8H8" />
+  </Icon>
+)

@@ -14,7 +14,7 @@ import { fitView, zoomAt, type Size, type ZoomView } from '../lib/zoom'
 const STEP = 1.25
 
 /** Natural size of a rendered diagram, from its viewBox; Mermaid only sets a max-width. */
-function naturalSize(svg: SVGSVGElement): Size {
+export function naturalSize(svg: SVGSVGElement): Size {
   const box = svg.viewBox.baseVal
   if (box && box.width > 0 && box.height > 0) return { width: box.width, height: box.height }
   const r = svg.getBoundingClientRect()

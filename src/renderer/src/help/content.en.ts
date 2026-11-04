@@ -572,7 +572,15 @@ export const en: HelpContent = {
         'indent',
         'zoom',
         'full screen',
-        'enlarge'
+        'enlarge',
+        'uml',
+        'class diagram',
+        'sequence diagram',
+        'state diagram',
+        'activity diagram',
+        'er diagram',
+        'inheritance',
+        'drag and drop'
       ],
       blocks: [
         {
@@ -592,14 +600,19 @@ export const en: HelpContent = {
           kind: 'p',
           text: 'The button with the two arrows shows a large diagram across the whole window. Zoom there with two fingers, ⌘ and scrolling or **+** and **−**, move it by dragging; **0** shows it all again, **F** switches to full screen and **Escape** closes the view.'
         },
-        { kind: 'h', text: 'Building UML class diagrams' },
+        { kind: 'h', text: 'Building UML diagrams' },
         {
           kind: 'p',
-          text: '`/UML` adds a class diagram with its code open. Building blocks sit above the diagram: drag **Class**, **Interface**, **Abstract** and **Enum** into the diagram or click them, and drag **Attribute** and **Method** onto a class. For relations, pick inheritance, realization, association, dependency, aggregation or composition in the bar and drag in the diagram from one class to another – for inheritance from the subclass to the superclass, for aggregation and composition from the whole to the part.'
+          text: '`/UML` – or the pen button on a diagram – opens the diagram editor across the whole window: building blocks on the left, the diagram in the middle, the Mermaid code on the right. For a new diagram you first pick the kind: **class**, **sequence**, **state**, **activity** or **ER diagram**.'
         },
         {
-          kind: 'p',
-          text: 'Every gesture writes the matching line into the Mermaid code beside it; change names and types right there. The building blocks appear for any class diagram once its code is open.'
+          kind: 'list',
+          items: [
+            'Drag **elements** (class, participant, state, action, entity …) into the diagram, or click them.',
+            'Drag what belongs to an element – attribute, method, note, start or end – onto it; it lights up where it will land.',
+            'Pick a **connection** on the left and drag it in the diagram from one element to another: for inheritance from the subclass to the superclass, for aggregation and composition from the whole to the part, in a sequence diagram from lifeline to lifeline.',
+            'Every gesture writes the matching line into the code; change names and labels right there. **⌘Z** and **⇧⌘Z** undo and redo steps, **F** switches to full screen, **Done** or **Escape** closes the editor.'
+          ]
         },
         {
           kind: 'example',

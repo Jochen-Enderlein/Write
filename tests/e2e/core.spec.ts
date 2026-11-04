@@ -422,50 +422,98 @@ test('zeigt ein Diagramm groß über das ganze Fenster und zoomt darin', async (
   expect(read('Diagramm.md')).toContain('```mermaid\ngraph TD\n  A --> B\n  B --> C\n```\n')
 })
 
-test('baut ein UML-Klassendiagramm per Drag-and-drop und schreibt den Code mit', async () => {
-  writeFileSync(
-    path.join(vault, 'Modell.md'),
-    '# Modell\n\n```mermaid\nclassDiagram\n  class Tier\n```\n'
-  )
-  await win.locator('.tree-row .name', { hasText: 'Modell' }).click()
-  await expect(win.locator('.mermaid-preview svg')).toBeVisible({ timeout: 15000 })
+/** Drags with plain mouse moves (dnd-kit follows the pointer), a few steps to get going. */
+async function dragBetween(
+  from: { x: number; y: number },
+  to: { x: number; y: number }
+): Promise<void> {
+  await win.mouse.move(from.x, from.y)
+  await win.mouse.down()
+  await win.mouse.move(from.x + 12, from.y + 12, { steps: 3 })
+  await win.mouse.move(to.x, to.y, { steps: 10 })
+  await win.mouse.up()
+}
+
+async function middle(l: Locator): Promise<{ x: number; y: number }> {
+  const r = (await l.boundingBox())!
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+}
+
+async function openDiagramEditor(page: string): Promise<Locator> {
+  writeFileSync(path.join(vault, `${page}.md`), `# ${page}\n\n\`\`\`mermaid\n\`\`\`\n`)
+  await win.locator('.tree-row .name', { hasText: page }).click()
+  await expect(win.locator('.page-title')).toHaveValue(page)
   await win.locator('.mermaid-block').hover()
-  await win.locator('.mermaid-toggle').click()
-  const code = win.locator('.mermaid-input')
-  const node = (name: string): Locator => win.locator(`.mermaid-preview g[id*="-classId-${name}-"]`)
-  // dnd-kit follows the pointer, so plain mouse moves drag (with a few steps to start)
-  const drag = async (from: Locator, to: Locator): Promise<void> => {
-    const a = (await from.boundingBox())!
-    const b = (await to.boundingBox())!
-    await win.mouse.move(a.x + a.width / 2, a.y + a.height / 2)
-    await win.mouse.down()
-    await win.mouse.move(a.x + a.width / 2 + 12, a.y + a.height / 2 + 12, { steps: 3 })
-    await win.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 10 })
-    await win.mouse.up()
-  }
+  await win.getByRole('button', { name: 'Im Editor bearbeiten' }).click()
+  return win.getByRole('dialog', { name: 'Diagramm bearbeiten' })
+}
 
-  await drag(
-    win.getByRole('button', { name: 'Klasse', exact: true }),
-    win.locator('.mermaid-preview')
+test('baut ein UML-Klassendiagramm im großen Editor und schreibt den Code mit', async () => {
+  const editor = await openDiagramEditor('Modell')
+  await editor.getByRole('button', { name: /^Klassendiagramm/ }).click()
+  const code = editor.locator('.de-input')
+  const stage = editor.locator('.de-stage')
+  const node = (name: string): Locator =>
+    editor.locator(`.de-content g.node[id*="-classId-${name}-"]`)
+
+  await dragBetween(
+    await middle(editor.getByRole('button', { name: 'Klasse', exact: true })),
+    await middle(stage)
   )
-  await expect(code).toHaveValue('classDiagram\n  class Tier\n  class Klasse')
-  await expect(node('Klasse')).toBeVisible()
+  await expect(code).toHaveValue('classDiagram\n  class Klasse')
+  await editor.getByRole('button', { name: 'Interface', exact: true }).click()
+  await expect(node('Schnittstelle')).toBeVisible()
 
-  await drag(win.getByRole('button', { name: 'Attribut' }), node('Tier'))
-  await expect(code).toHaveValue(/class Tier \{\n {4}\+attribut: String\n {2}\}/)
+  await dragBetween(
+    await middle(editor.getByRole('button', { name: 'Attribut' })),
+    await middle(node('Klasse'))
+  )
   // The drawing follows the code a moment later; measure the classes only once it has
-  await expect(node('Tier')).toContainText('+attribut: String')
+  await expect(node('Klasse')).toContainText('+attribut: String')
 
-  await win.getByRole('radio', { name: 'Vererbung' }).click()
-  await drag(node('Klasse'), node('Tier'))
-  await expect(code).toHaveValue(/\n {2}Tier <\|-- Klasse$/)
+  await editor.getByRole('radio', { name: 'Realisierung' }).click()
+  await dragBetween(await middle(node('Klasse')), await middle(node('Schnittstelle')))
+  await expect(code).toHaveValue(/\n {2}Schnittstelle <\|\.\. Klasse$/)
 
-  await code.press('Escape')
+  // ⌘Z takes back the last step, ⇧⌘Z brings it back
+  await win.keyboard.press('Meta+z')
+  await expect(code).not.toHaveValue(/<\|\.\./)
+  await win.keyboard.press('Meta+Shift+z')
+  await expect(code).toHaveValue(/Schnittstelle <\|\.\. Klasse$/)
+
+  await editor.getByRole('button', { name: 'Fertig' }).click()
+  await expect(editor).toHaveCount(0)
   await eventually(() =>
     expect(read('Modell.md')).toContain(
-      '```mermaid\nclassDiagram\n  class Tier {\n    +attribut: String\n  }\n  class Klasse\n  Tier <|-- Klasse\n```'
+      '```mermaid\nclassDiagram\n  class Klasse {\n    +attribut: String\n  }\n  class Schnittstelle {\n    <<interface>>\n  }\n  Schnittstelle <|.. Klasse\n```'
     )
   )
+})
+
+test('zieht im Sequenzdiagramm Nachrichten zwischen den Lebenslinien', async () => {
+  const editor = await openDiagramEditor('Ablaufplan')
+  await editor.getByRole('button', { name: /^Sequenzdiagramm/ }).click()
+  const stage = editor.locator('.de-stage')
+  await dragBetween(
+    await middle(editor.getByRole('button', { name: 'Akteur', exact: true })),
+    await middle(stage)
+  )
+  await dragBetween(
+    await middle(editor.getByRole('button', { name: 'Teilnehmer', exact: true })),
+    await middle(stage)
+  )
+  const lifeline = (name: string): Locator =>
+    editor.locator(`.de-content line.actor-line[name="${name}"]`)
+  await expect(lifeline('System')).toBeAttached()
+  // Anywhere along a lifeline counts, not only the thin line or the figure on top
+  const a = await middle(lifeline('Nutzer'))
+  const b = await middle(lifeline('System'))
+  await dragBetween({ x: a.x + 6, y: a.y }, { x: b.x - 6, y: b.y })
+  await expect(editor.locator('.de-input')).toHaveValue(
+    'sequenceDiagram\n  actor Nutzer\n  participant System\n  Nutzer->>System: Nachricht'
+  )
+  await win.keyboard.press('Escape')
+  await expect(editor).toHaveCount(0)
 })
 
 test('zeigt die Verknüpfungen als Graph, global und um eine Seite', async () => {
