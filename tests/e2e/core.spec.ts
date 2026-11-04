@@ -461,6 +461,9 @@ test('baut ein UML-Klassendiagramm im großen Editor und schreibt den Code mit',
     await middle(stage)
   )
   await expect(code).toHaveValue('classDiagram\n  class Klasse')
+  // Right after a drag dnd-kit swallows clicks for a moment; by the time the class is drawn
+  // that moment is long over
+  await expect(node('Klasse')).toBeVisible()
   await editor.getByRole('button', { name: 'Interface', exact: true }).click()
   await expect(node('Schnittstelle')).toBeVisible()
 
