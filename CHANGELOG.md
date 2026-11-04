@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## 0.7.2 – 2026-11-04
+
+### Verbessert
+
+- **Breitere Schreibspalte:** Seiten haben in der Einstellung „Normal“ jetzt mehr Platz (800 statt 720 Pixel), „Breit“ wächst entsprechend mit. Schmaler oder noch breiter stellst du es unter _Einstellungen → Darstellung → Zeilenbreite_ ein.
+
 ## 0.7.1 – 2026-11-04
 
 ### Verbessert

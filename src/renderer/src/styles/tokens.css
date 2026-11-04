@@ -69,7 +69,7 @@
   --radius-xl: 24px;
   --toolbar-h: 52px;
   --sidebar-w: 264px;
-  --column: 720px;
+  --column: 800px;
 
   /* Motion: critically damped defaults, see lib/spring.ts for gesture-driven motion */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);

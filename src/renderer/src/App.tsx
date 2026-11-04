@@ -46,8 +46,8 @@ const FONTS: Record<AppSettings['editorFont'], string> = {
 }
 const WIDTHS: Record<AppSettings['editorWidth'], string> = {
   narrow: '600px',
-  normal: '720px',
-  wide: '920px',
+  normal: '800px',
+  wide: '960px',
   full: '100vw'
 }
 
