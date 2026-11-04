@@ -324,3 +324,38 @@ export const QuestionIcon = (p: P) => (
     <path d="M8 11.5h.01" strokeWidth={1.8} />
   </Icon>
 )
+
+/** Two corner arrows pointing outward, like "arrow.up.left.and.arrow.down.right". */
+export const ExpandIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9" />
+  </Icon>
+)
+
+/** Corner brackets: show in full screen. */
+export const FullscreenIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M2.5 5.5v-3h3M10.5 2.5h3v3M13.5 10.5v3h-3M5.5 13.5h-3v-3" />
+  </Icon>
+)
+
+/** Corner brackets pointing inward: leave full screen. */
+export const ExitFullscreenIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5.5 2.5v3h-3M13.5 5.5h-3v-3M10.5 13.5v-3h3M2.5 10.5h3v3" />
+  </Icon>
+)
+
+export const MinusIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3.5 8h9" />
+  </Icon>
+)
+
+/** Frame with the content fitted inside. */
+export const FitIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="2.5" y="3.5" width="11" height="9" rx="1.5" />
+    <rect x="5.5" y="6" width="5" height="4" rx="0.75" />
+  </Icon>
+)

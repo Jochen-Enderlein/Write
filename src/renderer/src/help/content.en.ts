@@ -560,8 +560,20 @@ export const en: HelpContent = {
 
     code: {
       title: 'Code & Diagrams',
-      summary: 'Code with syntax colors, and Mermaid diagrams that take shape as you type.',
-      keywords: ['code', 'program', 'syntax', 'mermaid', 'diagram', 'flowchart', 'indent'],
+      summary:
+        'Code with syntax colors, and Mermaid diagrams that take shape as you type and can be shown large.',
+      keywords: [
+        'code',
+        'program',
+        'syntax',
+        'mermaid',
+        'diagram',
+        'flowchart',
+        'indent',
+        'zoom',
+        'full screen',
+        'enlarge'
+      ],
       blocks: [
         {
           kind: 'p',
@@ -575,6 +587,10 @@ export const en: HelpContent = {
         {
           kind: 'p',
           text: '`/Mermaid` adds a diagram. `</>` or a double-click opens its code beside it; the diagram updates as you type, and **Escape** folds the code away again.'
+        },
+        {
+          kind: 'p',
+          text: 'The button with the two arrows shows a large diagram across the whole window. Zoom there with two fingers, ⌘ and scrolling or **+** and **−**, move it by dragging; **0** shows it all again, **F** switches to full screen and **Escape** closes the view.'
         },
         {
           kind: 'example',

@@ -229,7 +229,8 @@
   padding: 0 14px 10px;
 }
 
-.mermaid-toggle {
+.mermaid-toggle,
+.mermaid-enlarge {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -245,7 +246,9 @@
 }
 
 .mermaid-block:hover .mermaid-toggle,
+.mermaid-block:hover .mermaid-enlarge,
 .mermaid-toggle:focus-visible,
+.mermaid-enlarge:focus-visible,
 .mermaid-toggle[aria-pressed='true'] {
   opacity: 1;
 }
@@ -253,6 +256,99 @@
 .mermaid-toggle[aria-pressed='true'] {
   background: var(--accent);
   color: var(--accent-text);
+}
+
+/* Enlarge and code buttons share the top right corner */
+.mermaid-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.mermaid-actions .mermaid-toggle,
+.mermaid-actions .mermaid-enlarge {
+  position: static;
+}
+
+.mermaid-enlarge {
+  display: inline-grid;
+  place-items: center;
+}
+
+/* A diagram across the whole window (and in full screen on request) */
+.diagram-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--editor-bg);
+  outline: none;
+  animation: diagram-in var(--dur) var(--ease-out);
+}
+
+@keyframes diagram-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+.diagram-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.diagram-stage.dragging {
+  cursor: grabbing;
+}
+
+.diagram-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  font-family: var(--font-ui);
+  user-select: none;
+}
+
+.diagram-content.glide {
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.diagram-content svg {
+  display: block;
+}
+
+.diagram-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--radius-m);
+}
+
+.diagram-scale {
+  min-width: 52px;
+  font: 500 12px/1 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--label-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram-viewer {
+    animation: none;
+  }
+  .diagram-content.glide {
+    transition: none;
+  }
 }
 
 /* Embedded table: rendered like the folder table; YAML folds out below */

@@ -401,6 +401,26 @@ test('bearbeitet Mermaid im ausklappbaren Codefeld mit Einrückung', async () =>
   )
 })
 
+test('zeigt ein Diagramm groß über das ganze Fenster und zoomt darin', async () => {
+  await win.locator('.mermaid-block').hover()
+  await win.getByRole('button', { name: 'Groß anzeigen' }).click()
+  const viewer = win.getByRole('dialog', { name: 'Diagramm' })
+  await expect(viewer.locator('svg .node')).toHaveCount(3)
+  await expect(viewer).toBeFocused()
+  // Fitted, a small graph grows well beyond its size on the page
+  const scale = viewer.locator('.diagram-scale')
+  const fitted = parseInt((await scale.textContent()) ?? '')
+  expect(fitted).toBeGreaterThan(100)
+  await win.keyboard.press('+')
+  await expect.poll(async () => parseInt((await scale.textContent()) ?? '')).toBeGreaterThan(fitted)
+  await viewer.getByRole('button', { name: 'Ganz zeigen' }).click()
+  await expect(scale).toHaveText(`${fitted} %`)
+  await win.keyboard.press('Escape')
+  await expect(viewer).toHaveCount(0)
+  // Viewing changes nothing in the file
+  expect(read('Diagramm.md')).toContain('```mermaid\ngraph TD\n  A --> B\n  B --> C\n```\n')
+})
+
 test('zeigt die Verknüpfungen als Graph, global und um eine Seite', async () => {
   await win.locator('.sidebar-item', { hasText: 'Graph' }).click()
   await expect(win.locator('.graph-canvas canvas')).toBeVisible({ timeout: 15000 })

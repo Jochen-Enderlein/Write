@@ -229,6 +229,16 @@
     "blockLinkCopied": "Link to block copied",
     "blockLinkNone": "There is no block here to link to"
   },
+  "diagram": {
+    "enlarge": "Show large",
+    "viewer": "Diagram",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Show all",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "close": "Close"
+  },
   "palette": {
     "placeholder": "Search pages or type a command …",
     "placeholderPages": "Open page …",

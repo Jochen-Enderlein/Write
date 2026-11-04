@@ -579,8 +579,20 @@ export const de: HelpContent = {
 
     code: {
       title: 'Code & Diagramme',
-      summary: 'Code mit Syntaxfarben und Mermaid-Diagramme, die beim Tippen entstehen.',
-      keywords: ['code', 'programm', 'syntax', 'mermaid', 'diagramm', 'flowchart', 'einrückung'],
+      summary:
+        'Code mit Syntaxfarben und Mermaid-Diagramme, die beim Tippen entstehen und sich groß zeigen lassen.',
+      keywords: [
+        'code',
+        'programm',
+        'syntax',
+        'mermaid',
+        'diagramm',
+        'flowchart',
+        'einrückung',
+        'zoom',
+        'vollbild',
+        'vergrößern'
+      ],
       blocks: [
         {
           kind: 'p',
@@ -594,6 +606,10 @@ export const de: HelpContent = {
         {
           kind: 'p',
           text: 'Mit `/Mermaid` erscheint ein Diagramm. Über `</>` oder einen Doppelklick klappt daneben der Code auf; das Diagramm aktualisiert sich beim Tippen, **Escape** klappt ihn wieder zu.'
+        },
+        {
+          kind: 'p',
+          text: 'Große Diagramme zeigt der Knopf mit den zwei Pfeilen über das ganze Fenster. Dort zoomst du mit zwei Fingern, ⌘ und Scrollen oder **+** und **−**, verschiebst durch Ziehen, **0** zeigt wieder alles, **F** schaltet auf Vollbild und **Escape** schließt die Ansicht.'
         },
         {
           kind: 'example',

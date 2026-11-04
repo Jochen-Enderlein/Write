@@ -5,6 +5,12 @@ veröffentlicht nur, wenn der Abschnitt zur Version in `package.json` existiert.
 zum GitHub-Release und erscheint nach dem Update einmal in der App. Geschrieben für Menschen,
 die Write benutzen – nicht für Entwickler.
 
+## Unveröffentlicht
+
+### Neu
+
+- **Diagramme groß anzeigen:** Flussdiagramme und andere Mermaid-Diagramme lassen sich über den Knopf mit den zwei Pfeilen über das ganze Fenster zeigen – und mit **F** im Vollbild. Dort zoomst du mit zwei Fingern, ⌘ und Scrollen oder **+** und **−**, verschiebst das Diagramm durch Ziehen, **0** zeigt wieder alles, **Escape** schließt.
+
 ## 0.6.2 – 2026-11-03
 
 ### Neu

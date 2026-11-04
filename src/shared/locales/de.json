@@ -229,6 +229,16 @@
     "blockLinkCopied": "Link auf den Block kopiert",
     "blockLinkNone": "Hier ist kein Block, auf den ein Link zeigen könnte"
   },
+  "diagram": {
+    "enlarge": "Groß anzeigen",
+    "viewer": "Diagramm",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "fit": "Ganz zeigen",
+    "fullscreen": "Vollbild",
+    "exitFullscreen": "Vollbild beenden",
+    "close": "Schließen"
+  },
   "palette": {
     "placeholder": "Seite suchen oder Befehl eingeben …",
     "placeholderPages": "Seite öffnen …",

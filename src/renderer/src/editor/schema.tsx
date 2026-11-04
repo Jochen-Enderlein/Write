@@ -15,6 +15,8 @@ import { CALLOUT_KINDS } from '@shared/markdown'
 import { IMAGE_EXT_RE, linkLabel, parseLinkTarget } from '@shared/wikilinks'
 import { t } from '../i18n'
 import { renderMermaid } from './mermaid'
+import { DiagramViewer } from './DiagramViewer'
+import { ExpandIcon } from '../components/Icons'
 import { renderTex } from './katex'
 import { editForKey } from './codeIndent'
 import { editorBridge } from './bridge'
@@ -403,6 +405,7 @@ function SourceBlockView({
   const [draft, setDraft] = useState(source)
   const [svg, setSvg] = useState('')
   const [error, setError] = useState('')
+  const [enlarged, setEnlarged] = useState(false)
   const field = useRef<HTMLTextAreaElement>(null)
   const commitTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const caret = useRef<[number, number] | null>(null)
@@ -475,7 +478,10 @@ function SourceBlockView({
     <div className={`${kind}-block ${open ? 'open' : ''}`} contentEditable={false}>
       <div
         className={`${kind}-preview ${error && !svg ? 'error' : ''}`}
-        onDoubleClick={() => editor.isEditable && setOpen(true)}
+        onDoubleClick={() => {
+          if (editor.isEditable) setOpen(true)
+          else if (kind === 'mermaid' && svg) setEnlarged(true)
+        }}
       >
         {svg ? (
           <div className={`${kind}-svg`} dangerouslySetInnerHTML={{ __html: svg }} />
@@ -527,18 +533,33 @@ function SourceBlockView({
           {error && svg && <div className={`${kind}-error`}>{error}</div>}
         </div>
       )}
-      {editor.isEditable && (
-        <button
-          type="button"
-          className={`${kind}-toggle`}
-          title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
-          aria-pressed={open}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setOpen((o) => !o)}
-        >
-          {'</>'}
-        </button>
-      )}
+      <div className={`${kind}-actions`}>
+        {kind === 'mermaid' && svg && (
+          <button
+            type="button"
+            className="mermaid-enlarge"
+            title={t('diagram.enlarge')}
+            aria-label={t('diagram.enlarge')}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setEnlarged(true)}
+          >
+            <ExpandIcon size={12} />
+          </button>
+        )}
+        {editor.isEditable && (
+          <button
+            type="button"
+            className={`${kind}-toggle`}
+            title={open ? t('editor.mermaidHideCode') : t('editor.mermaidEditCode')}
+            aria-pressed={open}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {'</>'}
+          </button>
+        )}
+      </div>
+      {enlarged && svg && <DiagramViewer svg={svg} onClose={() => setEnlarged(false)} />}
     </div>
   )
 }
